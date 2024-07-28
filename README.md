@@ -28,10 +28,7 @@
 - CI / Tooling
 - Tests
 - linter for calls to `make([]..., n)` that then use append
-- try this algo: inc end while score inc, then inc start while score inc, again until optimum
 
 ## Examples
 
 **[Pogacar 21 july 2022](https://www.strava.com/activities/7505784085)**
-
-- 43.0-45.5 ?

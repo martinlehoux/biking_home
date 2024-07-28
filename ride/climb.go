@@ -79,6 +79,13 @@ func bestClimbBetween(points []Point, start int, end int) Climb {
 			bestScore = score
 		}
 	}
+	for i := bestStart; i < bestEnd; i++ {
+		score := Score(points, i, bestEnd)
+		if score > bestScore {
+			bestStart = i
+			bestScore = score
+		}
+	}
 	climb := Climb{bestStart, bestEnd}
 
 	kcore.Assert(climb.start < climb.end, "empty climb")
