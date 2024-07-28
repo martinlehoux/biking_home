@@ -1,24 +1,44 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
+	"io"
 	"math"
 	"os"
+	"runtime/pprof"
 	"slices"
 
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/olekukonko/tablewriter"
 	"github.com/tkrajina/gpxgo/gpx"
 )
 
-func Score(points []gpx.GPXPoint) float64 {
-	distance := Distance(points)
+var ErrAssert = errors.New("assertion error")
+
+func Assert(cond bool, msg string) {
+	if !cond {
+		err := ErrAssert
+		if msg != "" {
+			err = fmt.Errorf("%w: %s", err, msg)
+		}
+		panic(err)
+	}
+}
+
+func Score(points []Point, start int, end int) float64 {
+	Assert(end > start, "no points for score")
+	distance := points[end].distance - points[start].distance
 	if distance == 0 {
 		return 0
 	}
 	// TODO: Expect NullableFloat64
-	slope := (points[len(points)-1].Elevation.Value() - points[0].Elevation.Value()) / distance * 100.0
+	dElevation := points[end].Elevation.Value() - points[start].Elevation.Value()
 
-	return math.Abs(slope) * slope * distance / 1000.0
+	return math.Abs(dElevation) * dElevation / distance * 100.0 * 100.0 / 1000.0
 }
 
 func Category(score float64) string {
@@ -43,72 +63,84 @@ type Climb struct {
 	end   int
 }
 
-func (c Climb) Score(points []gpx.GPXPoint) float64 {
-	return Score(points[c.start:c.end])
+type Point struct {
+	gpx.GPXPoint
+	distance float64
 }
 
-func BestUpHill(points []gpx.GPXPoint, start int, end int) Climb {
-	bestScore := Score(points[start:end])
-	bestStart := start
-	for i := start; i < end; i++ {
-		score := Score(points[i:end])
-		if score > bestScore {
-			bestStart = i
-			bestScore = score
-		}
-	}
-	bestEnd := end
-	for i := bestStart; i < end; i++ {
-		score := Score(points[bestStart:i])
-		if score > bestScore {
-			bestEnd = i
-			bestScore = score
-		}
-	}
-	return Climb{bestStart, bestEnd}
+type Ride struct {
+	points []Point
 }
 
-func BestDownHill(points []gpx.GPXPoint, start int, end int) Climb {
-	bestScore := Score(points[start:end])
-	bestStart := start
-	for i := start; i < end; i++ {
-		score := Score(points[i:end])
-		if score < bestScore {
-			bestStart = i
-			bestScore = score
-		}
-	}
-	bestEnd := end
-	for i := bestStart; i < end; i++ {
-		score := Score(points[bestStart:i])
-		if score < bestScore {
-			bestEnd = i
-			bestScore = score
-		}
-	}
-	return Climb{bestStart, bestEnd}
-}
-
-func Distance(points []gpx.GPXPoint) float64 {
+func ParseGPX(r io.Reader) Ride {
+	content, err := gpx.Parse(r)
+	kcore.Expect(err, "failed to parse GPX")
+	segment := content.Tracks[0].Segments[0]
+	points := make([]Point, len(segment.Points))
 	distance := 0.0
-	for i, point := range points {
-		if i > 0 {
-			distance += point.Distance2D(&points[i-1])
+	for i, p := range segment.Points {
+		if i != 0 {
+			distance += p.Distance2D(&segment.Points[i-1])
 		}
+		Assert(i == 0 || distance > 0, "zero distance")
+		points[i] = Point{p, distance}
 	}
-	return distance
+	return Ride{points}
 }
 
-func FindAllClimbs(points []gpx.GPXPoint, start int, end int) []Climb {
-	from := Distance(points[:start])
-	to := from + Distance(points[start:end])
-	fmt.Printf("Searching climbs between %.1fkm and %.1fkm (%d-%d)\n", from/1000, to/1000, start, end)
+func BestUpHill(points []Point, start int, end int) Climb {
+	Assert(end > start, "empty points")
+	bestScore := Score(points, start, end)
+	bestStart := start
+	for i := start; i < end; i++ {
+		score := Score(points, i, end)
+		if score > bestScore {
+			bestStart = i
+			bestScore = score
+		}
+	}
+	bestEnd := end
+	for i := end; i > bestStart; i-- {
+		score := Score(points, bestStart, i)
+		if score > bestScore {
+			bestEnd = i
+			bestScore = score
+		}
+	}
+	return Climb{bestStart, bestEnd}
+}
+
+func BestDownHill(points []Point, start int, end int) Climb {
+	Assert(len(points) > 0, "empty points")
+	bestScore := Score(points, start, end)
+	bestStart := start
+	for i := start; i < end; i++ {
+		score := Score(points, i, end)
+		if score < bestScore {
+			bestStart = i
+			bestScore = score
+		}
+	}
+	bestEnd := end
+	for i := end; i > bestStart; i-- {
+		score := Score(points, bestStart, i)
+		if score < bestScore {
+			bestEnd = i
+			bestScore = score
+		}
+	}
+	return Climb{bestStart, bestEnd}
+}
+
+func FindAllClimbs(points []Point, start int, end int) []Climb {
+	fmt.Printf("Searching climbs between %.1fkm and %.1fkm\n", points[start].distance/1000, points[end].distance/1000)
+	climbs := []Climb{}
 	climb := BestUpHill(points, start, end)
 	descent := BestDownHill(points, start, end)
-	climbs := []Climb{}
+	Assert(climb.start < climb.end, "empty climb")
 
-	if climb.Score(points) < 35 {
-		if descent.Score(points) < -35 {
+	if Score(points, climb.start, climb.end) < 35 {
+		if Score(points, descent.start, descent.end) < -35 {
 			if descent.start > start {
 				climbs = append(climbs, FindAllClimbs(points, start, descent.start)...)
 			}
@@ -118,6 +150,7 @@ func FindAllClimbs(points []gpx.GPXPoint, start int, end int) []Climb {
 		}
 	} else {
 		climbs = append(climbs, climb)
+		fmt.Printf("Found climb between %.1fkm and %.1fkm\n", points[climb.start].distance/1000, points[climb.end].distance/1000)
 		if climb.start > start {
 			climbs = append(climbs, FindAllClimbs(points, start, climb.start)...)
 		}
@@ -129,18 +162,38 @@ func FindAllClimbs(points []gpx.GPXPoint, start int, end int) []Climb {
 	return climbs
 }
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 func main() {
-	example, err := gpx.ParseFile("examples/2022-07-21.Pogacar.gpx")
-	if err != nil {
-		panic(err)
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		kcore.Expect(err, "failed to create CPU profile")
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
-	segment := example.Tracks[0].Segments[0]
-	climbs := FindAllClimbs(segment.Points, 0, len(segment.Points)-1)
+	gpxFile, err := os.Open("examples/2022-07-21.Pogacar.gpx")
+	kcore.Expect(err, "failed to open GPX file")
+	ride := ParseGPX(gpxFile)
+	Assert(len(ride.points) > 0, "no points in ride")
+	fmt.Printf("Ride loaded:\t%.1fkm\t%d points\n", ride.points[len(ride.points)-1].distance/1000, len(ride.points))
+	climbs := FindAllClimbs(ride.points, 0, len(ride.points)-1)
 	slices.SortFunc(climbs, func(i, j Climb) int { return i.start - j.start })
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Score", "Distance", "Category", "Slope", "From", "To"})
+	table.SetHeader([]string{"Score", "Distance", "Category", "Slope", "From", "To", "Point span"})
 	for _, climb := range climbs {
-		table.Append([]string{fmt.Sprintf("%d", int(climb.Score(segment.Points))), fmt.Sprintf("%.1fkm", Distance(segment.Points[climb.start:climb.end])/1000), Category(climb.Score(segment.Points)), fmt.Sprintf("%.1f%%", (segment.Points[climb.end].Elevation.Value()-segment.Points[climb.start].Elevation.Value())/Distance(segment.Points[climb.start:climb.end])*100), fmt.Sprintf("%.1fkm", Distance(segment.Points[:climb.start])/1000), fmt.Sprintf("%.1fkm", Distance(segment.Points[:climb.end])/1000)})
+		table.Append([]string{fmt.Sprintf("%d", int(Score(ride.points, climb.start, climb.end))), fmt.Sprintf("%.1fkm", (ride.points[climb.end].distance-ride.points[climb.start].distance)/1000), Category(Score(ride.points, climb.start, climb.end)), fmt.Sprintf("%.1f%%", (ride.points[climb.end].Elevation.Value()-ride.points[climb.start].Elevation.Value())/(ride.points[climb.end].distance-ride.points[climb.start].distance)*100), fmt.Sprintf("%.1fkm", ride.points[climb.start].distance/1000), fmt.Sprintf("%.1fkm", ride.points[climb.end].distance/1000), fmt.Sprintf("%d", climb.end-climb.start)})
 	}
 	table.Render()
+	charts.NewLine()
+	scatter := charts.NewLine()
+	values := make([]opts.LineData, len(ride.points))
+	for i, p := range ride.points {
+		values[i] = opts.LineData{Value: []any{i, p.distance}}
+	}
+	scatter.AddSeries("distance", values)
+	f, err := os.Create("scatter.html")
+	kcore.Expect(err, "failed to create scatter plot")
+	defer f.Close()
+	scatter.Render(f)
 }
