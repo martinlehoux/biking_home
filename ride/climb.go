@@ -98,7 +98,7 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 		}
 	}
 	// TODO: Use descent to reduce recursion
-	if highest == start {
+	if points[highest].distance-points[start].distance < ClimbDistanceMinimum {
 		return climbsBetween(points, start+1, end)
 	}
 	climb := bestClimbBetween(points, start, highest)

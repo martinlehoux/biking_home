@@ -17,8 +17,6 @@
 - Get back what is interesting in previous projects
   - Go bike:
     - Only tooling for golang, project is different
-  - Rust bike
-    - Algorithm + example
   - Django bike
 - https://github.com/paulmach/osm
 - https://github.com/tkrajina/gpxgo
@@ -30,6 +28,7 @@
 - CI / Tooling
 - Tests
 - linter for calls to `make([]..., n)` that then use append
+- try this algo: inc end while score inc, then inc start while score inc, again until optimum
 
 ## Examples
 

@@ -66,6 +66,14 @@ func TestClimbThenFalseFlat(t *testing.T) {
 	assert.Equal(t, "0.0km-2.0km: 2.0km at 7.0% (98 pts - Cat 3)", r.String(climbs[0]))
 }
 
+func TestSmallClimbWithDescentInsideFalseFlat(t *testing.T) {
+	r := RideBuilder{precision: 100}.WithSection("10km at 1%").WithSection("2km at 7%").WithSection("1km at -7%").WithSection("10km at 1%").Build()
+	climbs := r.AllClimbs()
+
+	assert.Len(t, climbs, 1)
+	assert.Equal(t, "10.0km-12.0km: 2.0km at 7.0% (98 pts - Cat 3)", r.String(climbs[0]))
+}
+
 func TestPogacar20220721(t *testing.T) {
 	gpxContent, err := gpx.ParseFile("../examples/2022-07-21.Pogacar.gpx")
 	assert.NoError(t, err)

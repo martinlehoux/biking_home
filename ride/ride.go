@@ -44,3 +44,18 @@ func (r *Ride) String(climb Climb) string {
 	score := Score(r.points, climb.start, climb.end)
 	return fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", start.distance/1000, end.distance/1000, (end.distance-start.distance)/1000, Slope(start, end)*100, int(score), Category(score))
 }
+
+func (r *Ride) ScoreFromKm(start, end float64) float64 {
+	i := 0
+	j := 0
+	for k, p := range r.points {
+		if i == 0 && p.distance >= start*1000 {
+			i = k
+		}
+		if j == 0 && p.distance >= end*1000 {
+			j = k
+			break
+		}
+	}
+	return Score(r.points, i, j)
+}
