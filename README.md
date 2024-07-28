@@ -48,3 +48,4 @@
 
 - add min slope to prevent long false up ?
 - check score of 60km-76km vs 32km-76km
+  - as expected, the score is better but not found

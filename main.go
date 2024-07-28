@@ -179,12 +179,27 @@ func main() {
 	fmt.Printf("Ride loaded:\t%.1fkm\t%d points\n", ride.points[len(ride.points)-1].distance/1000, len(ride.points))
 	climbs := FindAllClimbs(ride.points, 0, len(ride.points)-1)
 	slices.SortFunc(climbs, func(i, j Climb) int { return i.start - j.start })
+	expectedClimb := Climb{start: 0, end: 0}
+	for i, p := range ride.points {
+		if expectedClimb.start == 0 && p.distance > 60_000 {
+			expectedClimb.start = i
+		}
+		if expectedClimb.end == 0 && p.distance > 76_400 {
+			expectedClimb.end = i
+			break
+		}
+	}
+	println("Expected climb", expectedClimb.start, expectedClimb.end)
+
+	viewer := Viewer(ride)
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Score", "Distance", "Category", "Slope", "From", "To", "Point span"})
 	for _, climb := range climbs {
-		table.Append([]string{fmt.Sprintf("%d", int(Score(ride.points, climb.start, climb.end))), fmt.Sprintf("%.1fkm", (ride.points[climb.end].distance-ride.points[climb.start].distance)/1000), Category(Score(ride.points, climb.start, climb.end)), fmt.Sprintf("%.1f%%", (ride.points[climb.end].Elevation.Value()-ride.points[climb.start].Elevation.Value())/(ride.points[climb.end].distance-ride.points[climb.start].distance)*100), fmt.Sprintf("%.1fkm", ride.points[climb.start].distance/1000), fmt.Sprintf("%.1fkm", ride.points[climb.end].distance/1000), fmt.Sprintf("%d", climb.end-climb.start)})
+		table.Append([]string{viewer.Score(climb), viewer.Distance(climb), Category(Score(ride.points, climb.start, climb.end)), viewer.Slope(climb), fmt.Sprintf("%.1fkm", ride.points[climb.start].distance/1000), fmt.Sprintf("%.1fkm", ride.points[climb.end].distance/1000), fmt.Sprintf("%d", climb.end-climb.start)})
 	}
+	table.Append([]string{viewer.Score(expectedClimb), viewer.Distance(expectedClimb), Category(Score(ride.points, expectedClimb.start, expectedClimb.end)), viewer.Slope(expectedClimb), fmt.Sprintf("%.1fkm", ride.points[expectedClimb.start].distance/1000), fmt.Sprintf("%.1fkm", ride.points[expectedClimb.end].distance/1000), fmt.Sprintf("%d", expectedClimb.end-expectedClimb.start)})
 	table.Render()
+
 	charts.NewLine()
 	scatter := charts.NewLine()
 	values := make([]opts.LineData, len(ride.points))
@@ -196,4 +211,20 @@ func main() {
 	kcore.Expect(err, "failed to create scatter plot")
 	defer f.Close()
 	scatter.Render(f)
+}
+
+type Viewer struct {
+	points []Point
+}
+
+func (v *Viewer) Score(climb Climb) string {
+	return fmt.Sprintf("%.0f", Score(v.points, climb.start, climb.end))
+}
+
+func (v *Viewer) Distance(climb Climb) string {
+	return fmt.Sprintf("%.1fkm", (v.points[climb.end].distance-v.points[climb.start].distance)/1000)
+}
+
+func (v *Viewer) Slope(climb Climb) string {
+	return fmt.Sprintf("%.1f%%", (v.points[climb.end].Elevation.Value()-v.points[climb.start].Elevation.Value())/(v.points[climb.end].distance-v.points[climb.start].distance)*100)
 }
