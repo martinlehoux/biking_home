@@ -59,7 +59,7 @@ func Category(score float64) string {
 	}
 }
 
-func bestClimbUntilEnd(points []Point, start int, end int) Climb {
+func bestClimbBetween(points []Point, start int, end int) Climb {
 	kcore.Assert(end > start, "empty points")
 
 	bestScore := Score(points, start, end)
@@ -71,7 +71,15 @@ func bestClimbUntilEnd(points []Point, start int, end int) Climb {
 			bestScore = score
 		}
 	}
-	climb := Climb{bestStart, end}
+	bestEnd := end
+	for i := end; i > bestStart; i-- {
+		score := Score(points, bestStart, i)
+		if score > bestScore {
+			bestEnd = i
+			bestScore = score
+		}
+	}
+	climb := Climb{bestStart, bestEnd}
 
 	kcore.Assert(climb.start < climb.end, "empty climb")
 	return climb
@@ -84,7 +92,7 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 	}
 	fmt.Printf("Searching climbs between %.1fkm and %.1fkm\n", points[start].distance/1000, points[end].distance/1000)
 	highest := start
-	for i := start; i < end; i++ {
+	for i := start; i <= end; i++ {
 		if points[i].elevation > points[highest].elevation {
 			highest = i
 		}
@@ -93,7 +101,7 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 	if highest == start {
 		return climbsBetween(points, start+1, end)
 	}
-	climb := bestClimbUntilEnd(points, start, highest)
+	climb := bestClimbBetween(points, start, highest)
 	if Score(points, climb.start, climb.end) >= 35 {
 		fmt.Printf("Found climb between %.1fkm and %.1fkm\n", points[climb.start].distance/1000, points[climb.end].distance/1000)
 		climbs = append(climbs, climb)
