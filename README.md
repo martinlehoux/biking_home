@@ -9,6 +9,10 @@
 - Auto detect climbs from GPX
 - Compute estimated power
 - Export data from Strava, Garmin
+  - Garmin GPX exports has elevation, time, temp, heart rate, cadence
+  - Garmin TCX export has stats (cal, heart rate, time, cadence), time, pos, alt, distance, hr, cadence, speed
+  - Garmin Fit export has (time, sport, lap/split, gps, sensor, events)?
+  - KML ?
 
 ## Implementation
 
@@ -20,6 +24,7 @@
   - Django bike
 - https://github.com/paulmach/osm
 - https://github.com/tkrajina/gpxgo
+- https://github.com/tormoder/fit
 - https://github.com/brendangregg/FlameGraph
 - `go tool pprof -http=":8081"`
 
