@@ -88,3 +88,18 @@ func TestPogacar20220721(t *testing.T) {
 	assert.Equal(t, "99.2km-109.3km: 10.2km at 8.4% (710 pts - HC)", r.String(climbs[4]))
 	assert.Equal(t, "128.6km-142.2km: 13.6km at 7.8% (832 pts - HC)", r.String(climbs[5]))
 }
+
+func TestBouclesVerdon2024(t *testing.T) {
+	gpxContent, err := gpx.ParseFile("../examples/2024-06-29.BouclesVerdon.gpx")
+	assert.NoError(t, err)
+	r := ride.FromGPX(gpxContent)
+	climbs := r.AllClimbs()
+
+	assert.Len(t, climbs, 6)
+	assert.Equal(t, "3.6km-13.8km: 10.3km at 2.1% (44 pts - Cat 4)", r.String(climbs[0])) // TODO: Not steep enough
+	assert.Equal(t, "34.7km-37.3km: 2.5km at 5.0% (62 pts - Cat 4)", r.String(climbs[1]))
+	assert.Equal(t, "41.9km-51.0km: 9.0km at 2.5% (55 pts - Cat 4)", r.String(climbs[2])) // TODO: Not steep enough
+	assert.Equal(t, "57.6km-60.8km: 3.1km at 6.3% (124 pts - Cat 3)", r.String(climbs[3]))
+	assert.Equal(t, "71.7km-74.7km: 3.0km at 5.3% (84 pts - Cat 3)", r.String(climbs[4]))
+	assert.Equal(t, "77.4km-78.7km: 1.3km at 5.3% (37 pts - Cat 4)", r.String(climbs[5]))
+}

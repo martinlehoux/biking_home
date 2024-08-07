@@ -59,3 +59,17 @@ func (r *Ride) ScoreFromKm(start, end float64) float64 {
 	}
 	return Score(r.points, i, j)
 }
+
+func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {
+	start, end := 0, 0
+	for i, p := range r.points {
+		if start == 0 && p.distance >= startDist {
+			start = i
+		}
+		if end == 0 && p.distance >= endDist {
+			end = i
+			break
+		}
+	}
+	return Climb{start, end}
+}

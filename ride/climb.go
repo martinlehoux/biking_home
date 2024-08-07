@@ -109,7 +109,7 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 		return climbsBetween(points, start+1, end)
 	}
 	climb := bestClimbBetween(points, start, highest)
-	if Score(points, climb.start, climb.end) >= 35 {
+	if Score(points, climb.start, climb.end) >= 35 && points[climb.end].distance-points[climb.start].distance >= ClimbDistanceMinimum {
 		fmt.Printf("Found climb between %.1fkm and %.1fkm\n", points[climb.start].distance/1000, points[climb.end].distance/1000)
 		climbs = append(climbs, climb)
 	}
