@@ -1,7 +1,7 @@
 package ride
 
 import (
-	"fmt"
+	"log/slog"
 	"math"
 	"slices"
 
@@ -97,7 +97,7 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 	if points[end].distance-points[start].distance < ClimbDistanceMinimum {
 		return climbs
 	}
-	fmt.Printf("Searching climbs between %.1fkm and %.1fkm\n", points[start].distance/1000, points[end].distance/1000)
+	slog.Debug("Searching climbs between", slog.Int("start", int(points[start].distance)), slog.Int("end", int(points[end].distance)))
 	highest := start
 	for i := start; i <= end; i++ {
 		if points[i].elevation > points[highest].elevation {
@@ -110,7 +110,7 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 	}
 	climb := bestClimbBetween(points, start, highest)
 	if Score(points, climb.start, climb.end) >= 35 && points[climb.end].distance-points[climb.start].distance >= ClimbDistanceMinimum {
-		fmt.Printf("Found climb between %.1fkm and %.1fkm\n", points[climb.start].distance/1000, points[climb.end].distance/1000)
+		slog.Debug("Found climb between", slog.Int("start", int(points[climb.start].distance)), slog.Int("end", int(points[climb.end].distance)))
 		climbs = append(climbs, climb)
 	}
 	climbs = append(climbs, climbsBetween(points, start, climb.start)...)

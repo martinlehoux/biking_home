@@ -103,3 +103,14 @@ func TestBouclesVerdon2024(t *testing.T) {
 	assert.Equal(t, "71.7km-74.7km: 3.0km at 5.3% (84 pts - Cat 3)", r.String(climbs[4]))
 	assert.Equal(t, "77.4km-78.7km: 1.3km at 5.3% (37 pts - Cat 4)", r.String(climbs[5]))
 }
+
+func TestMimetArbois20241229(t *testing.T) {
+	gpxContent, err := gpx.ParseFile("../examples/2024-12-29.MimetArbois.gpx")
+	assert.NoError(t, err)
+	r := ride.FromGPX(gpxContent)
+	climbs := r.AllClimbs()
+
+	assert.Len(t, climbs, 2)
+	assert.Equal(t, "3.9km-5.3km: 1.4km at 10.3% (153 pts - Cat 3)", r.String(climbs[0]))
+	assert.Equal(t, "14.4km-19.8km: 5.4km at 4.3% (98 pts - Cat 3)", r.String(climbs[1]))
+}
