@@ -114,3 +114,30 @@ func TestMimetArbois20241229(t *testing.T) {
 	assert.Equal(t, "3.9km-5.3km: 1.4km at 10.3% (153 pts - Cat 3)", r.String(climbs[0]))
 	assert.Equal(t, "14.4km-19.8km: 5.4km at 4.3% (98 pts - Cat 3)", r.String(climbs[1]))
 }
+
+func TestMimetArbois20250104(t *testing.T) {
+	gpxContent, err := gpx.ParseFile("../examples/2025-01-04.MimetArbois.gpx")
+	assert.NoError(t, err)
+	r := ride.FromGPX(gpxContent)
+	climbs := r.AllClimbs()
+
+	assert.Len(t, climbs, 2)
+	assert.Equal(t, "4.5km-5.9km: 1.4km at 10.1% (148 pts - Cat 3)", r.String(climbs[0]))
+	assert.Equal(t, "12.0km-20.2km: 8.2km at 2.9% (67 pts - Cat 4)", r.String(climbs[1])) // TODO: Not steep enough
+}
+
+// https://www.strava.com/activities/9282265844
+func TestAlpesVerdonTour20230617(t *testing.T) {
+	gpxContent, err := gpx.ParseFile("../examples/2023-06-17.AlpesVerdonTour.gpx")
+	assert.NoError(t, err)
+	r := ride.FromGPX(gpxContent)
+	climbs := r.AllClimbs()
+
+	assert.Len(t, climbs, 6)
+	assert.Equal(t, "0.7km-18.6km: 17.9km at 3.5% (217 pts - Cat 2)", r.String(climbs[0])) // TODO: Should split in 2 (10km at 4.5% is Cat 2)
+	assert.Equal(t, "36.1km-41.6km: 5.4km at 5.8% (182 pts - Cat 2)", r.String(climbs[1]))
+	assert.Equal(t, "47.0km-48.2km: 1.2km at 6.1% (45 pts - Cat 4)", r.String(climbs[2]))
+	assert.Equal(t, "51.9km-54.7km: 2.8km at 4.0% (45 pts - Cat 4)", r.String(climbs[3]))
+	assert.Equal(t, "86.7km-92.8km: 6.1km at 2.7% (44 pts - Cat 4)", r.String(climbs[4]))
+	assert.Equal(t, "114.1km-114.7km: 0.6km at 14.3% (118 pts - Cat 3)", r.String(climbs[5]))
+}
