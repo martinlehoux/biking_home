@@ -21,6 +21,11 @@ type Climb struct {
 func (climb Climb) Duration() time.Duration {
 	return climb.points[len(climb.points)-1].Timestamp.Sub(climb.points[0].Timestamp)
 }
+
+func (climb Climb) Speed() float64 {
+	return (climb.End().DistanceM - climb.Start().DistanceM) / climb.Duration().Seconds()
+}
+
 func (climb Climb) Start() Point {
 	return climb.points[0]
 }

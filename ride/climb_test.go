@@ -9,7 +9,6 @@ import (
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/stretchr/testify/assert"
-	"github.com/tkrajina/gpxgo/gpx"
 )
 
 type RideBuilderSection struct {
@@ -60,6 +59,8 @@ func (b RideBuilder) Build() ride.Ride {
 	return ride.FromPoints(points)
 }
 
+var parser = ride.GPXRideParser{}
+
 func TestClimbThenFalseFlat(t *testing.T) {
 	r := RideBuilder{precision: 100}.WithSection("2km at 7%").WithSection("10km at 1%").Build()
 	climbs := r.AllClimbs()
@@ -77,9 +78,8 @@ func TestSmallClimbWithDescentInsideFalseFlat(t *testing.T) {
 }
 
 func TestPogacar20220721(t *testing.T) {
-	gpxContent, err := gpx.ParseFile("../examples/2022-07-21.Pogacar.gpx")
+	r, err := ride.ParseFile(parser, "../examples/2022-07-21.Pogacar.gpx")
 	assert.NoError(t, err)
-	r := ride.FromGPX(gpxContent)
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 6)
@@ -92,9 +92,8 @@ func TestPogacar20220721(t *testing.T) {
 }
 
 func TestBouclesVerdon2024(t *testing.T) {
-	gpxContent, err := gpx.ParseFile("../examples/2024-06-29.BouclesVerdon.gpx")
+	r, err := ride.ParseFile(parser, "../examples/2024-06-29.BouclesVerdon.gpx")
 	assert.NoError(t, err)
-	r := ride.FromGPX(gpxContent)
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 6)
@@ -107,9 +106,8 @@ func TestBouclesVerdon2024(t *testing.T) {
 }
 
 func TestMimetArbois20241229(t *testing.T) {
-	gpxContent, err := gpx.ParseFile("../examples/2024-12-29.MimetArbois.gpx")
+	r, err := ride.ParseFile(parser, "../examples/2024-12-29.MimetArbois.gpx")
 	assert.NoError(t, err)
-	r := ride.FromGPX(gpxContent)
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 2)
@@ -118,9 +116,8 @@ func TestMimetArbois20241229(t *testing.T) {
 }
 
 func TestMimetArbois20250104(t *testing.T) {
-	gpxContent, err := gpx.ParseFile("../examples/2025-01-04.MimetArbois.gpx")
+	r, err := ride.ParseFile(parser, "../examples/2025-01-04.MimetArbois.gpx")
 	assert.NoError(t, err)
-	r := ride.FromGPX(gpxContent)
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 2)
@@ -130,9 +127,8 @@ func TestMimetArbois20250104(t *testing.T) {
 
 // https://www.strava.com/activities/9282265844
 func TestAlpesVerdonTour20230617(t *testing.T) {
-	gpxContent, err := gpx.ParseFile("../examples/2023-06-17.AlpesVerdonTour.gpx")
+	r, err := ride.ParseFile(parser, "../examples/2023-06-17.AlpesVerdonTour.gpx")
 	assert.NoError(t, err)
-	r := ride.FromGPX(gpxContent)
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 6)

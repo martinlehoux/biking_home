@@ -3,6 +3,8 @@
 ## Features
 
 - [ ] Detect similar climbs + PRs
+- On this climb (examples/activity_18679866717.gpx), the climb algo should detect several possible climbs and let you choose
+- Once you have chosen, new activities should have remembered the choice (looking into the index should be enough)
 - Handling my historical data
 - Blog with pictures and markdown
 - Storing GPX
