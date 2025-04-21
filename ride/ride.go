@@ -1,6 +1,8 @@
 package ride
 
 import (
+	"time"
+
 	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/tkrajina/gpxgo/gpx"
@@ -8,6 +10,13 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 )
+
+type Point struct {
+	DistanceM  float64
+	ElevationM float64
+	Coord      geodist.Coord
+	Timestamp  time.Time
+}
 
 type Ride struct {
 	points []Point

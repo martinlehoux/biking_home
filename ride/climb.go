@@ -7,7 +7,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 )
 
@@ -37,11 +36,8 @@ func (climb Climb) String() string {
 	return fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", start.DistanceM/1000, end.DistanceM/1000, (end.DistanceM-start.DistanceM)/1000, Slope(start, end)*100, int(score), Category(score))
 }
 
-type Point struct {
-	DistanceM  float64
-	ElevationM float64
-	Coord      geodist.Coord
-	Timestamp  time.Time
+func (climb Climb) Score() float64 {
+	return Score(climb.points, 0, len(climb.points)-1)
 }
 
 func Slope(start, end Point) float64 {
@@ -126,8 +122,8 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 		return climbsBetween(points, start+1, end)
 	}
 	climb := bestClimbBetween(points, start, highest)
-	if Score(points, climb.rideStart, climb.rideEnd) >= 35 && points[climb.rideEnd].DistanceM-points[climb.rideStart].DistanceM >= ClimbDistanceMinimum {
-		slog.Debug("Found climb between", slog.Int("start", int(points[climb.rideStart].DistanceM)), slog.Int("end", int(points[climb.rideEnd].DistanceM)))
+	if climb.Score() >= 35 && climb.End().DistanceM-climb.Start().DistanceM >= ClimbDistanceMinimum {
+		slog.Debug("Found climb between", slog.Int("start", int(climb.Start().DistanceM)), slog.Int("end", int(climb.End().DistanceM)))
 		climbs = append(climbs, climb)
 	}
 	climbs = append(climbs, climbsBetween(points, start, climb.rideStart)...)
