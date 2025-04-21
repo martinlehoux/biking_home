@@ -1,8 +1,7 @@
 package ride
 
 import (
-	"fmt"
-
+	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/tkrajina/gpxgo/gpx"
 )
@@ -25,7 +24,7 @@ func FromGPX(content *gpx.GPX) Ride {
 		}
 		kcore.Assert(i == 0 || distance > 0, "zero distance")
 		kcore.Assert(p.Elevation.NotNull(), "points without elevation")
-		points[i] = Point{distance: distance, elevation: p.Elevation.Value()}
+		points[i] = Point{DistanceM: distance, ElevationM: p.Elevation.Value(), Coord: geodist.Coord{Lat: p.Latitude, Lon: p.Longitude}, Timestamp: p.Timestamp}
 	}
 	ride := Ride{points}
 	ride.check()
@@ -38,21 +37,14 @@ func FromPoints(points []Point) Ride {
 	return ride
 }
 
-func (r *Ride) String(climb Climb) string {
-	start := r.points[climb.start]
-	end := r.points[climb.end]
-	score := Score(r.points, climb.start, climb.end)
-	return fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", start.distance/1000, end.distance/1000, (end.distance-start.distance)/1000, Slope(start, end)*100, int(score), Category(score))
-}
-
 func (r *Ride) ScoreFromKm(start, end float64) float64 {
 	i := 0
 	j := 0
 	for k, p := range r.points {
-		if i == 0 && p.distance >= start*1000 {
+		if i == 0 && p.DistanceM >= start*1000 {
 			i = k
 		}
-		if j == 0 && p.distance >= end*1000 {
+		if j == 0 && p.DistanceM >= end*1000 {
 			j = k
 			break
 		}
@@ -63,13 +55,13 @@ func (r *Ride) ScoreFromKm(start, end float64) float64 {
 func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {
 	start, end := 0, 0
 	for i, p := range r.points {
-		if start == 0 && p.distance >= startDist {
+		if start == 0 && p.DistanceM >= startDist {
 			start = i
 		}
-		if end == 0 && p.distance >= endDist {
+		if end == 0 && p.DistanceM >= endDist {
 			end = i
 			break
 		}
 	}
-	return Climb{start, end}
+	return Climb{start: start, end: end, points: r.points[start : end+1]}
 }

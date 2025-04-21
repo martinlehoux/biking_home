@@ -2,10 +2,12 @@
 
 ## Features
 
+- [ ] Detect similar climbs + PRs
 - Handling my historical data
 - Blog with pictures and markdown
 - Storing GPX
 - Export mountain pass from OSM and auto detect when pass is crossed
+  - https://www.jmspae.se/write-ups/kebabs-train-stations/
 - Auto detect climbs from GPX
 - Compute estimated power
 - Export data from Strava, Garmin
@@ -13,6 +15,7 @@
   - Garmin TCX export has stats (cal, heart rate, time, cadence), time, pos, alt, distance, hr, cadence, speed
   - Garmin Fit export has (time, sport, lap/split, gps, sensor, events)?
   - KML ?
+- Strava seems the simpler to use
 
 ## Implementation
 
@@ -27,6 +30,13 @@
 - https://github.com/tormoder/fit
 - https://github.com/brendangregg/FlameGraph
 - `go tool pprof -http=":8081"`
+- https://developer.garmin.com/gc-developer-program/activity-api/
+- https://github.com/matin/garth
+- https://developers.strava.com/docs/webhooks/
+- https://developers.strava.com/docs/getting-started/
+- https://connect.garmin.com/modern/activities to CSV
+- https://github.com/SamR1/FitTrackee
+- https://github.com/jovandeginste/workout-tracker
 
 ## TODO
 
