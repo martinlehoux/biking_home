@@ -4,6 +4,9 @@ import (
 	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/tkrajina/gpxgo/gpx"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 )
 
 type Ride struct {
@@ -63,5 +66,27 @@ func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {
 			break
 		}
 	}
-	return Climb{start: start, end: end, points: r.points[start : end+1]}
+	return Climb{rideStart: start, rideEnd: end, points: r.points[start : end+1]}
+}
+
+func Plot(r *Ride, outputFile string) {
+	r.check()
+
+	pts := make(plotter.XYs, len(r.points))
+	for i, p := range r.points {
+		pts[i].X = p.DistanceM / 1000 // Convert distance to kilometers
+		pts[i].Y = p.ElevationM
+	}
+
+	p := plot.New()
+	p.Title.Text = "Ride Elevation Profile"
+	p.X.Label.Text = "Distance (km)"
+	p.Y.Label.Text = "Elevation (m)"
+
+	line, err := plotter.NewLine(pts)
+	kcore.Expect(err, "failed to create line plot")
+	p.Add(line)
+
+	err = p.Save(10*vg.Inch, 4*vg.Inch, outputFile)
+	kcore.Expect(err, "failed to save plot")
 }

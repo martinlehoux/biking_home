@@ -14,9 +14,20 @@ import (
 const ClimbDistanceMinimum = 500
 
 type Climb struct {
-	start  int
-	end    int
-	points []Point
+	rideStart int
+	rideEnd   int
+	points    []Point
+}
+
+func (climb Climb) Duration() time.Duration {
+	return climb.points[len(climb.points)-1].Timestamp.Sub(climb.points[0].Timestamp)
+}
+func (climb Climb) Start() Point {
+	return climb.points[0]
+}
+
+func (climb Climb) End() Point {
+	return climb.points[len(climb.points)-1]
 }
 
 func (climb Climb) String() string {
@@ -92,9 +103,9 @@ func bestClimbBetween(points []Point, start int, end int) Climb {
 			bestScore = score
 		}
 	}
-	climb := Climb{start: bestStart, end: bestEnd, points: points[bestStart : bestEnd+1]}
+	kcore.Assert(bestStart < bestEnd, "empty climb")
+	climb := Climb{rideStart: bestStart, rideEnd: bestEnd, points: points[bestStart : bestEnd+1]}
 
-	kcore.Assert(climb.start < climb.end, "empty climb")
 	return climb
 }
 
@@ -115,12 +126,12 @@ func climbsBetween(points []Point, start int, end int) []Climb {
 		return climbsBetween(points, start+1, end)
 	}
 	climb := bestClimbBetween(points, start, highest)
-	if Score(points, climb.start, climb.end) >= 35 && points[climb.end].DistanceM-points[climb.start].DistanceM >= ClimbDistanceMinimum {
-		slog.Debug("Found climb between", slog.Int("start", int(points[climb.start].DistanceM)), slog.Int("end", int(points[climb.end].DistanceM)))
+	if Score(points, climb.rideStart, climb.rideEnd) >= 35 && points[climb.rideEnd].DistanceM-points[climb.rideStart].DistanceM >= ClimbDistanceMinimum {
+		slog.Debug("Found climb between", slog.Int("start", int(points[climb.rideStart].DistanceM)), slog.Int("end", int(points[climb.rideEnd].DistanceM)))
 		climbs = append(climbs, climb)
 	}
-	climbs = append(climbs, climbsBetween(points, start, climb.start)...)
-	climbs = append(climbs, climbsBetween(points, climb.end, end)...)
+	climbs = append(climbs, climbsBetween(points, start, climb.rideStart)...)
+	climbs = append(climbs, climbsBetween(points, climb.rideEnd, end)...)
 
 	return climbs
 }
@@ -131,4 +142,4 @@ func (ride *Ride) AllClimbs() []Climb {
 	return climbs
 }
 
-func climbCmpStart(a, b Climb) int { return a.start - b.start }
+func climbCmpStart(a, b Climb) int { return a.rideStart - b.rideStart }
