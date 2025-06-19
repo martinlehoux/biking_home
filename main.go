@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime/pprof"
 
+	"github.com/martinlehoux/biking_home/importer"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/kagamigo/kcore"
 )
@@ -39,4 +40,6 @@ func main() {
 		slog.Info("Climb", "climb", climb, "duration", climb.Duration(), "speed", climb.Speed()*3.6)
 	}
 	ride.PlotScore(&ride30Mar, 61.2, 66.7, "Ride 30 Mar.png")
+	i := importer.GarminImporter{}
+	i.Run()
 }
