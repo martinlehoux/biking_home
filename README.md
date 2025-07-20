@@ -18,6 +18,7 @@
   - Garmin Fit export has (time, sport, lap/split, gps, sensor, events)?
   - KML ?
 - Strava seems the simpler to use
+- in a single chart, plot (speed, slope) for all segments. color with heartbeat
 
 ## Implementation
 
