@@ -46,7 +46,7 @@ func (i *GarminImporter) Run() {
 	fmt.Print("password> ")
 	fmt.Scanln(&password)
 	url := "https://sso.garmin.com/portal/api/login?clientId=GarminConnect&locale=en-GB&service=https://connect.garmin.com/modern"
-	data := []byte(fmt.Sprintf(`{"username":"martin@lehoux.net","password":"ejbSZrQZU7HDcshP","rememberMe":false,"captchaToken":""}`))
+	data := []byte(fmt.Sprintf(`{"username":"%s","password":"%s","rememberMe":false,"captchaToken":""}`, email, password))
 	res, err := http.Post(url, "application/json", bytes.NewReader(data))
 	kcore.Expect(err, "failed to post login")
 	defer res.Body.Close()
