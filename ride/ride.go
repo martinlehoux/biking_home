@@ -93,7 +93,10 @@ func (r *Ride) ScoreFromKm(start, end float64) float64 {
 }
 
 func (r *Ride) DifficultyScore() float64 {
-	points := r.points
+	return difficultyScore(r.points)
+}
+
+func difficultyScore(points []Point) float64 {
 	if len(points) < 2 {
 		return 0
 	}
@@ -103,7 +106,7 @@ func (r *Ride) DifficultyScore() float64 {
 	}
 	score := 0.0
 	i := 0
-	for start := 0.0; start < last.DistanceM; start += 100 {
+	for start := points[0].DistanceM; start < last.DistanceM; start += 100 {
 		end := math.Min(start+100, last.DistanceM)
 		for i < len(points)-1 && points[i+1].DistanceM <= start {
 			i++

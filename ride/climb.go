@@ -45,6 +45,10 @@ func (climb Climb) Score() float64 {
 	return Score(climb.points, 0, len(climb.points)-1)
 }
 
+func (climb Climb) DifficultyScore() float64 {
+	return difficultyScore(climb.points)
+}
+
 func Slope(start, end Point) float64 {
 	return (end.ElevationM - start.ElevationM) / (end.DistanceM - start.DistanceM)
 }

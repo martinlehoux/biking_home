@@ -40,3 +40,20 @@ func TestDifficultyScoreExampleRide(t *testing.T) {
 	assert.NoError(t, err)
 	assert.InDelta(t, 3049.0, r.DifficultyScore(), 1)
 }
+
+func TestDifficultyScoreClimbNotAtStart(t *testing.T) {
+	r := RideBuilder{precision: 100}.WithSection("1km at 0%").WithSection("2km at 7%").Build()
+	climbs := r.AllClimbs()
+	assert.Len(t, climbs, 1)
+	assert.InDelta(t, 98.0, climbs[0].DifficultyScore(), 1e-9)
+}
+
+func TestDifficultyScoreHautacamClimbfinderReference(t *testing.T) {
+	r, err := ride.ParseFile(parser, "../examples/2022-07-21.Pogacar.gpx")
+	assert.NoError(t, err)
+	climbs := r.AllClimbs()
+	assert.Len(t, climbs, 6)
+	hautacam := climbs[5]
+	assert.InDelta(t, 128.6, hautacam.Start().DistanceM/1000, 0.1)
+	assert.InDelta(t, 930.0, hautacam.DifficultyScore(), 10)
+}
