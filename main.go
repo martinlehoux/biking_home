@@ -1,20 +1,47 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log/slog"
 	"os"
 	"runtime/pprof"
+	"time"
 
+	mountainpass "github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/kagamigo/kcore"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-var parser = ride.GPXRideParser{}
+var (
+	download   = flag.Bool("download", false, "download mountain passes into the database")
+	resume     = flag.Bool("resume", false, "skip departments already cached on disk")
+	demo       = flag.Bool("demo", false, "run the climb similarity demo")
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	parser     = ride.GPXRideParser{}
+)
 
 func main() {
 	flag.Parse()
+	if *download {
+		runDownload()
+		return
+	}
+	if *demo {
+		runDemo()
+	}
+}
+
+func runDownload() {
+	db, err := sql.Open("sqlite3", "biking_home.db")
+	kcore.Expect(err, "failed to open database")
+	defer db.Close()
+	err = mountainpass.DownloadMountainPasses(db, 5*time.Second, *resume)
+	kcore.Expect(err, "failed to download mountain passes")
+}
+
+func runDemo() {
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		kcore.Expect(err, "failed to create CPU profile")

@@ -8,14 +8,14 @@ type RideClimbsIndex interface {
 }
 
 type FlatRideClimbsIndex struct {
-	sensibility float64
+	sensitivity float64
 	climbs      []Climb
 }
 
-func NewFlatRideClimbsIndex(sensibility float64) *FlatRideClimbsIndex {
+func NewFlatRideClimbsIndex(sensitivity float64) *FlatRideClimbsIndex {
 	return &FlatRideClimbsIndex{
 		climbs:      make([]Climb, 0),
-		sensibility: sensibility,
+		sensitivity: sensitivity,
 	}
 }
 
@@ -28,7 +28,7 @@ func (index *FlatRideClimbsIndex) Similar(ride Ride, climb Climb) []Climb {
 	for _, c := range index.climbs {
 		_, startDistance := geodist.HaversineDistance(c.Start().Coord, climb.Start().Coord)
 		_, endDistance := geodist.HaversineDistance(c.End().Coord, climb.End().Coord)
-		if startDistance <= index.sensibility/1000 && endDistance <= index.sensibility/1000 {
+		if startDistance <= index.sensitivity/1000 && endDistance <= index.sensitivity/1000 {
 			results = append(results, c)
 		}
 	}

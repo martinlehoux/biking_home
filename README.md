@@ -10,6 +10,7 @@
 - Storing GPX
 - Export mountain pass from OSM and auto detect when pass is crossed
   - https://www.jmspae.se/write-ups/kebabs-train-stations/
+- Download French mountain passes from centcols.org into a SQLite database (`go run . -download`, resume with `-resume`)
 - Auto detect climbs from GPX
 - Compute estimated power
 - Export data from Strava, Garmin
