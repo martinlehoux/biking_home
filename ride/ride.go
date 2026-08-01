@@ -3,6 +3,7 @@ package ride
 import (
 	"errors"
 	"io"
+	"math"
 	"os"
 	"time"
 
@@ -89,6 +90,45 @@ func (r *Ride) ScoreFromKm(start, end float64) float64 {
 		}
 	}
 	return Score(r.points, i, j)
+}
+
+func (r *Ride) DifficultyScore() float64 {
+	points := r.points
+	if len(points) < 2 {
+		return 0
+	}
+	last := points[len(points)-1]
+	if last.DistanceM <= 0 {
+		return 0
+	}
+	score := 0.0
+	i := 0
+	for start := 0.0; start < last.DistanceM; start += 100 {
+		end := math.Min(start+100, last.DistanceM)
+		for i < len(points)-1 && points[i+1].DistanceM <= start {
+			i++
+		}
+		startElevation := interpolateElevation(points, i, start)
+		for i < len(points)-1 && points[i+1].DistanceM < end {
+			i++
+		}
+		endElevation := interpolateElevation(points, i, end)
+		slope := (endElevation - startElevation) / (end - start)
+		if slope > 0 {
+			score += (end - start) / 1000 * (slope * 100) * (slope * 100)
+		}
+	}
+	return score
+}
+
+func interpolateElevation(points []Point, i int, distance float64) float64 {
+	if i+1 >= len(points) {
+		return points[i].ElevationM
+	}
+	start := points[i]
+	end := points[i+1]
+	t := (distance - start.DistanceM) / (end.DistanceM - start.DistanceM)
+	return start.ElevationM + t*(end.ElevationM-start.ElevationM)
 }
 
 func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {

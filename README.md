@@ -3,6 +3,7 @@
 ## Features
 
 - [ ] Detect similar climbs + PRs
+- Compute a ride difficulty score (Cotacol method): split into 100m segments, each scores 0.1km × slope²
 - On this climb (examples/activity_18679866717.gpx), the climb algo should detect several possible climbs and let you choose
 - Once you have chosen, new activities should have remembered the choice (looking into the index should be enough)
 - Handling my historical data

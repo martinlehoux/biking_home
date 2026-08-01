@@ -51,6 +51,9 @@ func runDemo() {
 	ride19Jan, _ := ride.ParseFile(parser, "examples/activity_18043356988.gpx")
 	ride30Mar, _ := ride.ParseFile(parser, "examples/activity_18679866717.gpx")
 	ride20Apr, _ := ride.ParseFile(parser, "examples/activity_18880605641.gpx")
+	for _, r := range []*ride.Ride{&ride19Jan, &ride30Mar, &ride20Apr} {
+		slog.Info("Ride", "difficulty", r.DifficultyScore())
+	}
 	index := ride.NewFlatRideClimbsIndex(30)
 	index.Insert(ride19Jan)
 	index.Insert(ride30Mar)
