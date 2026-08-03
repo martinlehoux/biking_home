@@ -1,6 +1,8 @@
 .env
+.strava-last-sync
 *.db
 *.png
+rides/
 debug_department_*.csv
 france-latest.osm.pbf
 biking_home
