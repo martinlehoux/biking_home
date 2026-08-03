@@ -1,4 +1,4 @@
-package mountainpass
+package mountain_pass
 
 import (
 	"os"
@@ -47,7 +47,7 @@ func TestSplitCountryDepartment(t *testing.T) {
 
 func TestLoadCachedDepartment(t *testing.T) {
 	cacheFile := filepath.Join(t.TempDir(), "debug_department_01.csv")
-	err := os.WriteFile(cacheFile, []byte("Brevet\tcode\tnom\taltitude\nFR-01\tFR-01-1500\tCol du Colombier\t1498\n"), 0644)
+	err := os.WriteFile(cacheFile, []byte("Brevet\tcode\tnom\taltitude\nFR-01\tFR-01-1500\tCol du Colombier\t1498\n"), 0o644)
 	require.NoError(t, err)
 
 	mountainPasses, found, err := loadCachedDepartment(cacheFile)
@@ -65,7 +65,7 @@ func TestLoadCachedDepartmentMissing(t *testing.T) {
 
 func TestLoadCachedDepartmentCorrupt(t *testing.T) {
 	cacheFile := filepath.Join(t.TempDir(), "debug_department_01.csv")
-	err := os.WriteFile(cacheFile, []byte("Brevet\tcode\tnom\taltitude\nFR-01\n"), 0644)
+	err := os.WriteFile(cacheFile, []byte("Brevet\tcode\tnom\taltitude\nFR-01\n"), 0o644)
 	require.NoError(t, err)
 
 	mountainPasses, found, err := loadCachedDepartment(cacheFile)

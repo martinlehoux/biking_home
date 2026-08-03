@@ -16,6 +16,7 @@ type Climb struct {
 	rideStart int
 	rideEnd   int
 	points    []Point
+	Name      string
 }
 
 func (climb Climb) Duration() time.Duration {
@@ -34,11 +35,27 @@ func (climb Climb) End() Point {
 	return climb.points[len(climb.points)-1]
 }
 
+// Top returns the highest point inside the climb, used as the crest anchor
+// when naming the climb after a pass.
+func (climb Climb) Top() Point {
+	top := climb.points[0]
+	for _, point := range climb.points {
+		if point.ElevationM > top.ElevationM {
+			top = point
+		}
+	}
+	return top
+}
+
 func (climb Climb) String() string {
 	start := climb.points[0]
 	end := climb.points[len(climb.points)-1]
 	score := Score(climb.points, 0, len(climb.points)-1)
-	return fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", start.DistanceM/1000, end.DistanceM/1000, (end.DistanceM-start.DistanceM)/1000, Slope(start, end)*100, int(score), Category(score))
+	body := fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", start.DistanceM/1000, end.DistanceM/1000, (end.DistanceM-start.DistanceM)/1000, Slope(start, end)*100, int(score), Category(score))
+	if climb.Name == "" {
+		return body
+	}
+	return climb.Name + ": " + body
 }
 
 func (climb Climb) Score() float64 {

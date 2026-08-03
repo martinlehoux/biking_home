@@ -31,6 +31,10 @@ func (r *Ride) check() {
 	kcore.Assert(len(r.points) > 0, "no points in ride")
 }
 
+func (r *Ride) Points() []Point {
+	return r.points
+}
+
 type RideParser interface {
 	Parse(reader io.Reader) (Ride, error)
 }

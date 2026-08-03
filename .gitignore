@@ -2,3 +2,5 @@
 *.db
 *.png
 debug_department_*.csv
+france-latest.osm.pbf
+biking_home

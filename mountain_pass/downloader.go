@@ -1,4 +1,4 @@
-package mountainpass
+package mountain_pass
 
 import (
 	"bytes"
@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/schollz/progressbar/v3"
 )
@@ -24,6 +25,7 @@ type MountainPass struct {
 	CountryCode    string
 	DepartmentCode string
 	Elevation      int
+	Coord          *geodist.Coord
 }
 
 func parseMountainPasses(reader io.Reader) ([]MountainPass, error) {
@@ -146,12 +148,12 @@ func downloadDepartment(departmentCode string, resume bool) ([]MountainPass, err
 		}
 		mountainPasses, err := parseMountainPasses(bytes.NewReader(data))
 		if err != nil {
-			if writeErr := os.WriteFile(filename, data, 0644); writeErr != nil {
+			if writeErr := os.WriteFile(filename, data, 0o644); writeErr != nil {
 				return nil, kcore.Wrap(writeErr, "Failed to write dump file")
 			}
 			return nil, err
 		}
-		if writeErr := os.WriteFile(filename, data, 0644); writeErr != nil {
+		if writeErr := os.WriteFile(filename, data, 0o644); writeErr != nil {
 			return nil, kcore.Wrap(writeErr, "Failed to write dump file")
 		}
 		return mountainPasses, nil
@@ -159,22 +161,7 @@ func downloadDepartment(departmentCode string, resume bool) ([]MountainPass, err
 	return nil, lastErr
 }
 
-func DownloadMountainPasses(db *sql.DB, delay time.Duration, resume bool) error {
-	mountainPasses := make([]MountainPass, 0)
-	bar := progressbar.Default(90)
-	ticker := time.NewTicker(delay)
-	for i := 1; i <= 90; i++ {
-		<-ticker.C
-		bar.Add(1)
-		departmentCode := fmt.Sprintf("%02d", i)
-		bar.Describe(fmt.Sprintf("Downloading mountain passes for department_code=%s", departmentCode))
-		departmentMountainPasses, err := downloadDepartment(departmentCode, resume)
-		if err != nil {
-			return kcore.Wrap(err, "Failed to download mountain passes for department "+departmentCode)
-		}
-		mountainPasses = append(mountainPasses, departmentMountainPasses...)
-	}
-
+func upsertMountainPasses(db *sql.DB, mountainPasses []MountainPass) error {
 	tx, err := db.Begin()
 	kcore.Expect(err, "Failed to begin transaction")
 	defer tx.Rollback()
@@ -196,4 +183,40 @@ func DownloadMountainPasses(db *sql.DB, delay time.Duration, resume bool) error 
 	}
 
 	return tx.Commit()
+}
+
+func DownloadMountainPasses(db *sql.DB, delay time.Duration, resume bool) error {
+	mountainPasses := make([]MountainPass, 0)
+	bar := progressbar.Default(90)
+	ticker := time.NewTicker(delay)
+	for i := 1; i <= 90; i++ {
+		<-ticker.C
+		bar.Add(1)
+		departmentCode := fmt.Sprintf("%02d", i)
+		bar.Describe(fmt.Sprintf("Downloading mountain passes for department_code=%s", departmentCode))
+		departmentMountainPasses, err := downloadDepartment(departmentCode, resume)
+		if err != nil {
+			return kcore.Wrap(err, "Failed to download mountain passes for department "+departmentCode)
+		}
+		mountainPasses = append(mountainPasses, departmentMountainPasses...)
+	}
+
+	return upsertMountainPasses(db, mountainPasses)
+}
+
+func ImportCachedDepartments(db *sql.DB, departmentCodes []string) (int, error) {
+	mountainPasses := make([]MountainPass, 0)
+	for _, departmentCode := range departmentCodes {
+		departmentMountainPasses, found, err := loadCachedDepartment(departmentCacheFile(departmentCode))
+		if err != nil {
+			return 0, err
+		}
+		if !found {
+			slog.Warn("No cached department file", "department", departmentCode)
+			continue
+		}
+		slog.Info("Loaded cached department", "department", departmentCode, "passes", len(departmentMountainPasses))
+		mountainPasses = append(mountainPasses, departmentMountainPasses...)
+	}
+	return len(mountainPasses), upsertMountainPasses(db, mountainPasses)
 }

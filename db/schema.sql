@@ -6,7 +6,16 @@ CREATE TABLE mountain_passes (
     country_code text not null,
     department_code text not null,
     elevation integer not null
+, latitude real, longitude real);
+CREATE TABLE osm_passes (
+    id integer primary key,
+    osm_id integer unique not null,
+    name text,
+    elevation integer,
+    latitude real not null,
+    longitude real not null
 );
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
-  ('20250802140659');
+  ('20250802140659'),
+  ('20260802090000');
