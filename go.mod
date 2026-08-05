@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
+	github.com/a-h/templ v0.2.747
 	github.com/bradleyjkemp/cupaloy v1.3.0
 	github.com/jftuga/geodist v1.0.0
 	github.com/martinlehoux/kagamigo v0.4.1
@@ -25,7 +26,6 @@ require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.5.4 // indirect
 	github.com/DataDog/czlib v0.0.0-20240814115052-86a9592b3985 // indirect
-	github.com/a-h/templ v0.2.747 // indirect
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
 	github.com/amacneil/dbmate v1.16.2 // indirect
 	github.com/campoy/embedmd v1.0.0 // indirect

@@ -30,12 +30,19 @@ type Token struct {
 }
 
 func AuthorizeURL(clientID, redirectURI string) string {
+	return AuthorizeURLWithState(clientID, redirectURI, "")
+}
+
+func AuthorizeURLWithState(clientID, redirectURI, state string) string {
 	q := url.Values{}
 	q.Set("client_id", clientID)
 	q.Set("response_type", "code")
 	q.Set("redirect_uri", redirectURI)
 	q.Set("approval_prompt", "auto")
 	q.Set("scope", "activity:read_all")
+	if state != "" {
+		q.Set("state", state)
+	}
 	return AuthURL + "?" + q.Encode()
 }
 

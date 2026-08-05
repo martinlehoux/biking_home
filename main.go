@@ -3,22 +3,18 @@ package main
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"flag"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime/pprof"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/osmpass"
 	"github.com/martinlehoux/biking_home/ride"
-	"github.com/martinlehoux/biking_home/strava"
+	"github.com/martinlehoux/biking_home/web"
 	"github.com/martinlehoux/kagamigo/kcore"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -32,9 +28,6 @@ var (
 	enrich      = flag.Bool("enrich", false, "backfill mountain pass coordinates from OSM data")
 	demo        = flag.Bool("demo", false, "run the climb similarity demo")
 	chartFile   = flag.String("chart", "", "render a climb/pass chart for a GPX file")
-	stravaLogin = flag.Bool("strava-login", false, "authorize the Strava API and store tokens in .env")
-	stravaSync  = flag.Bool("strava-sync", false, "download Strava rides as GPX files into rides/")
-	stravaSince = flag.Int("strava-since", 30, "days of history to fetch on the first sync (before any .strava-last-sync)")
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
 	parser      = ride.GPXRideParser{}
 )
@@ -62,159 +55,17 @@ func main() {
 		kcore.Expect(err, "failed to enrich mountain passes")
 	case *demo:
 		runDemo(db)
-	case *stravaLogin:
-		runStravaLogin()
-	case *stravaSync:
-		runStravaSync()
 	case *chartFile != "":
 		runChart(db, *chartFile)
+	default:
+		runServer(db)
 	}
 }
 
-func runStravaLogin() {
-	clientID, clientSecret, _ := stravaCredentials(loadEnv())
-	if clientID == "" || clientSecret == "" {
-		kcore.Expect(errors.New("missing STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET"), "set both in .env")
-	}
-	redirectURI := fmt.Sprintf("http://localhost:%d/callback", strava.LoginPort)
-	codeCh := make(chan string, 1)
-	serverErrCh := make(chan error, 1)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		code := r.URL.Query().Get("code")
-		if code == "" {
-			serverErrCh <- fmt.Errorf("no code in callback: %s", r.URL.RawQuery)
-			http.Error(w, "Authorization failed", http.StatusBadRequest)
-			return
-		}
-		codeCh <- code
-		fmt.Fprint(w, "Authorization successful — you can close this tab.")
-	})
-	server := &http.Server{Addr: fmt.Sprintf(":%d", strava.LoginPort), Handler: mux}
-	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			serverErrCh <- err
-		}
-	}()
-	defer server.Close()
-
-	slog.Info("Open the authorization URL in your browser", "url", strava.AuthorizeURL(clientID, redirectURI))
-	var token strava.Token
-	select {
-	case code := <-codeCh:
-		var err error
-		token, err = strava.ExchangeCode(clientID, clientSecret, code, redirectURI)
-		kcore.Expect(err, "failed to exchange authorization code")
-		slog.Info("Login successful, tokens stored in .env")
-	case err := <-serverErrCh:
-		kcore.Expect(err, "authorization server failed")
-	case <-time.After(5 * time.Minute):
-		kcore.Expect(errors.New("timeout"), "no authorization code received")
-	}
-
-	validateStrava(clientID, clientSecret, token)
-}
-
-func stravaCredentials(env map[string]string) (clientID, clientSecret string, token strava.Token) {
-	expiresAt, _ := strconv.ParseInt(env["STRAVA_EXPIRES_AT"], 10, 64)
-	return env["STRAVA_CLIENT_ID"], env["STRAVA_CLIENT_SECRET"], strava.Token{
-		AccessToken:  env["STRAVA_ACCESS_TOKEN"],
-		RefreshToken: env["STRAVA_REFRESH_TOKEN"],
-		ExpiresAt:    time.Unix(expiresAt, 0),
-	}
-}
-
-func validateStrava(clientID, clientSecret string, token strava.Token) {
-	client := strava.NewClient(clientID, clientSecret, token)
-	if refreshed, err := client.RefreshIfNeeded(); err != nil {
-		kcore.Expect(err, "failed to refresh access token")
-	} else if refreshed {
-		slog.Info("Access token refreshed")
-	}
-	storeStravaTokens(client.Tokens())
-	var athlete struct {
-		Firstname string `json:"firstname"`
-		Lastname  string `json:"lastname"`
-	}
-	err := client.GetJSON("/athlete", &athlete)
-	kcore.Expect(err, "failed to validate token against /athlete")
-	slog.Info("Authenticated as", "athlete", athlete.Firstname+" "+athlete.Lastname)
-}
-
-func runStravaSync() {
-	clientID, clientSecret, token := stravaCredentials(loadEnv())
-	if token.AccessToken == "" || token.RefreshToken == "" {
-		kcore.Expect(errors.New("missing STRAVA tokens"), "run -strava-login first")
-	}
-	client := strava.NewClient(clientID, clientSecret, token)
-	if refreshed, err := client.RefreshIfNeeded(); err != nil {
-		kcore.Expect(err, "failed to refresh access token")
-	} else if refreshed {
-		storeStravaTokens(client.Tokens())
-		slog.Info("Access token refreshed")
-	}
-
-	after := lastStravaSync()
-	if after.IsZero() {
-		after = time.Now().AddDate(0, 0, -*stravaSince)
-	}
-	slog.Info("Syncing Strava rides", "since", after.Format("2006-01-02"))
-	activities, err := client.ListActivities(after, "Ride")
-	kcore.Expect(err, "failed to list Strava activities")
-	slog.Info("Rides found", "count", len(activities))
-
-	kcore.Expect(os.MkdirAll("rides", 0o755), "failed to create rides/ directory")
-	downloaded := 0
-	for _, activity := range activities {
-		file := filepath.Join("rides", fmt.Sprintf("activity_%d.gpx", activity.ID))
-		if _, err := os.Stat(file); err == nil {
-			continue
-		}
-		latlng, altitude, seconds, err := client.ActivityStreams(activity.ID)
-		if err != nil {
-			slog.Warn("Failed to fetch streams, skipping", "activity", activity.ID, "error", err)
-			continue
-		}
-		if len(latlng) == 0 || len(altitude) == 0 {
-			slog.Warn("Missing latlng or altitude stream, skipping", "activity", activity.ID, "name", activity.Name)
-			continue
-		}
-		err = strava.WriteActivityGPX(file, activity, latlng, altitude, seconds)
-		if err != nil {
-			slog.Warn("Failed to write GPX, skipping", "activity", activity.ID, "error", err)
-			continue
-		}
-		downloaded++
-		slog.Info("Downloaded", "activity", activity.ID, "name", activity.Name, "points", len(latlng))
-	}
-	updateLastStravaSync(time.Now())
-	slog.Info("Sync complete", "downloaded", downloaded, "seen", len(activities))
-}
-
-const lastSyncFile = ".strava-last-sync"
-
-func lastStravaSync() time.Time {
-	data, err := os.ReadFile(lastSyncFile)
-	if err != nil {
-		return time.Time{}
-	}
-	unix, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
-	if err != nil {
-		return time.Time{}
-	}
-	return time.Unix(unix, 0)
-}
-
-func updateLastStravaSync(t time.Time) {
-	kcore.Expect(os.WriteFile(lastSyncFile, []byte(fmt.Sprintf("%d\n", t.Unix())), 0o644), "failed to write last sync marker")
-}
-
-func storeStravaTokens(token strava.Token) {
-	updateEnv(map[string]string{
-		"STRAVA_ACCESS_TOKEN":  token.AccessToken,
-		"STRAVA_REFRESH_TOKEN": token.RefreshToken,
-		"STRAVA_EXPIRES_AT":    fmt.Sprintf("%d", token.ExpiresAt.Unix()),
-	})
+func runServer(db *sql.DB) {
+	server := web.NewServer(db, ".env", "rides", "http://localhost:8080")
+	slog.Info("Starting web server", "address", "http://localhost:8080")
+	kcore.Expect(server.ListenAndServe(":8080"), "web server stopped")
 }
 
 func runChart(db *sql.DB, filename string) {

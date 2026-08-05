@@ -2,7 +2,7 @@
 .strava-last-sync
 *.db
 *.png
-rides/
+rides/*.gpx
 debug_department_*.csv
 france-latest.osm.pbf
 biking_home

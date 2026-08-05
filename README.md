@@ -11,6 +11,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Mountain pass download** — imports French mountain passes from centcols.org into a SQLite database
 - **Pass crossing detection** — enriches passes with OSM coordinates, flags which passes a ride crosses, and names each climb after the pass it tops (e.g. "Col de Castellaras")
 - **Plots** — renders elevation and score-profile charts as PNG
+- **Web ride library** — starts a local web server by default, imports Strava rides over a date range, stores metadata in SQLite, and keeps their GPX files on disk
 
 ## Getting started
 
@@ -21,6 +22,9 @@ go build -o biking_home .
 ## Usage
 
 ```bash
+# Start the web server on http://localhost:8080
+./biking_home
+
 # Download French mountain passes into biking_home.db (SQLite)
 ./biking_home -download
 
@@ -59,13 +63,53 @@ go build -o biking_home .
 | `-demo` | Run the climb-similarity demo | `false` |
 | `-cpuprofile` | Write a CPU profile to file | `""` |
 
+## Strava API
+
+The Strava v3 API (OAuth2) is the platform's public access point; scopes gate each resource (`read`, `activity:read_all`, `activity:write`, `push:subscriptions`). It offers:
+
+- **Activities** — list and fetch ride detail, plus data streams (lat/lng, altitude, time, distance, heart rate, cadence, power) to rebuild GPX or compute metrics
+- **Segments** — explore segments, match segment efforts, pull personal records
+- **Uploads** — create activities by pushing FIT, GPX or TCX files
+- **Webhooks** — push subscriptions notify a callback URL on activity create/delete, enabling real-time sync
+- **Extras** — clubs, routes, gear, photos, kudos
+
+Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
+
 ## Architecture
 
 - Go 1.23; SQLite via `mattn/go-sqlite3`; charts via `gonum.org/v1/plot`
 - `ride` — GPX parsing, climb detection, difficulty scores (KOM + Cotacol), similarity index
 - `mountain_pass` — centcols.org department CSV download into SQLite, with disk caching and retries
 - `osmpass` — OSM PBF extraction (`mountain_pass=yes` nodes) and pass coordinate enrichment
+- `strava` — OAuth2 client returning activity metadata and GPX data
+- `rides` — SQLite persistence for imported ride metadata
+- `config` — `.env` configuration persistence
+- `web` — HTTP server, OAuth callback, sync orchestration, and templ pages
 - **Notable choices** — the difficulty score follows the Cotacol method: the ride is split into fixed 100 m segments and each scores `distance_km × slope²`, so steep sections weigh exponentially more than long flat ones
+
+```mermaid
+flowchart TB
+    %% Arrow X --> Y means: X depends on Y
+
+    main["main (CLI + server: main.go, chart.go)"]
+
+    ride["ride (GPX parsing, climbs, Cotacol)"]
+    mpass["mountain_pass (centcols, crossings)"]
+    osmpass["osmpass (OSM PBF, enrichment)"]
+    strava["strava (OAuth, List, Get)"]
+    rides["rides (SQLite persistence)"]
+    config["config (.env)"]
+    web["web (HTTP + templ)"]
+
+    main --> ride
+    main --> mpass
+    main --> osmpass
+    main --> web
+    mpass --> ride
+    web --> strava
+    web --> rides
+    web --> config
+```
 
 ## Development
 
@@ -77,12 +121,10 @@ go test ./...
 ## TODO
 
 - Compute estimated power
-- Export data from Strava / Garmin (GPX, TCX, FIT)
 - Plot speed and slope per segment, colored by heart rate
 - Persist the chosen climb variant across activities
 - Handle historical data
 - Blog with pictures and markdown
-- Store GPX files
 
 ## Resources
 

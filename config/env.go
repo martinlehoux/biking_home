@@ -1,18 +1,17 @@
-package main
+package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
-
-	"github.com/martinlehoux/kagamigo/kcore"
 )
 
-func loadEnv() map[string]string {
-	values := map[string]string{}
-	data, err := os.ReadFile(".env")
+func LoadEnv(filename string) (map[string]string, error) {
+	data, err := os.ReadFile(filename)
 	if err != nil {
-		return values
+		return nil, err
 	}
+	values := map[string]string{}
 	for _, line := range strings.Split(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -23,15 +22,16 @@ func loadEnv() map[string]string {
 			values[strings.TrimSpace(key)] = strings.Trim(strings.TrimSpace(value), `"`)
 		}
 	}
-	return values
+	return values, nil
 }
 
-func updateEnv(updates map[string]string) {
-	data, err := os.ReadFile(".env")
-	kcore.Expect(err, "failed to read .env")
+func UpdateEnv(filename string, updates map[string]string) error {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
 	lines := strings.Split(string(data), "\n")
 	for key, value := range updates {
-		key = strings.TrimSpace(key)
 		found := false
 		for i, line := range lines {
 			existingKey, _, cut := strings.Cut(strings.TrimSpace(line), "=")
@@ -45,6 +45,8 @@ func updateEnv(updates map[string]string) {
 			lines = append(lines, key+"="+value)
 		}
 	}
-	err = os.WriteFile(".env", []byte(strings.Join(lines, "\n")+"\n"), 0o600)
-	kcore.Expect(err, "failed to write .env")
+	if err := os.WriteFile(filename, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
+		return fmt.Errorf("write env file: %w", err)
+	}
+	return nil
 }

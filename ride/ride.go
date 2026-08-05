@@ -55,20 +55,34 @@ func (p GPXRideParser) Parse(reader io.Reader) (Ride, error) {
 	if err != nil {
 		return Ride{}, err
 	}
+	if len(content.Tracks) == 0 || len(content.Tracks[0].Segments) == 0 {
+		return Ride{}, errors.New("ride has no track segment")
+	}
 	segment := content.Tracks[0].Segments[0]
-	points := make([]Point, len(segment.Points))
+	if len(segment.Points) == 0 {
+		return Ride{}, errors.New("ride has no track points")
+	}
+	points := make([]Point, 0, len(segment.Points))
 	distance := 0.0
-	for i, p := range segment.Points {
-		if i != 0 {
-			distance += p.Distance2D(&segment.Points[i-1])
-		}
-		if i != 0 && distance == 0 {
-			return Ride{}, errors.New("zero distance")
+	previous := segment.Points[0]
+	if previous.Elevation.Null() {
+		return Ride{}, errors.New("points without elevation")
+	}
+	points = append(points, Point{DistanceM: 0, ElevationM: previous.Elevation.Value(), Coord: geodist.Coord{Lat: previous.Latitude, Lon: previous.Longitude}, Timestamp: previous.Timestamp})
+	for i := 1; i < len(segment.Points); i++ {
+		p := segment.Points[i]
+		distance += p.Distance2D(&previous)
+		previous = p
+		if distance == 0 {
+			continue
 		}
 		if p.Elevation.Null() {
 			return Ride{}, errors.New("points without elevation")
 		}
-		points[i] = Point{DistanceM: distance, ElevationM: p.Elevation.Value(), Coord: geodist.Coord{Lat: p.Latitude, Lon: p.Longitude}, Timestamp: p.Timestamp}
+		points = append(points, Point{DistanceM: distance, ElevationM: p.Elevation.Value(), Coord: geodist.Coord{Lat: p.Latitude, Lon: p.Longitude}, Timestamp: p.Timestamp})
+	}
+	if len(points) < 2 {
+		return Ride{}, errors.New("zero distance")
 	}
 	ride := Ride{points}
 	ride.check()

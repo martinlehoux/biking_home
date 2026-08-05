@@ -1,0 +1,106 @@
+package web
+
+templ Layout(title string, content templ.Component) {
+	<!doctype html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title } · biking_home</title>
+			<style>
+				:root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f3ee; color: #1d2a22; }
+				* { box-sizing: border-box; }
+				body { margin: 0; }
+				a { color: #18794e; }
+				.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem max(1rem, calc((100vw - 70rem) / 2)); background: #173b2a; color: #fff; }
+				.site-header a { color: #fff; text-decoration: none; }
+				.brand { font-weight: 750; letter-spacing: .02em; }
+				.nav { display: flex; gap: 1rem; font-size: .95rem; }
+				.container { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }
+				.eyebrow { margin: 0 0 .4rem; color: #18794e; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+				h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; }
+				.lead { max-width: 42rem; color: #5b675f; }
+				.panel { margin-top: 2rem; padding: 1.25rem; border: 1px solid #d9ded8; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 2.5rem #173b2a0d; }
+				.toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+				.button { display: inline-block; border: 0; border-radius: .65rem; padding: .7rem 1rem; background: #d96932; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+				.button.secondary { background: #e8eee9; color: #173b2a; }
+				label { display: grid; gap: .35rem; color: #5b675f; font-size: .85rem; font-weight: 650; }
+				input { border: 1px solid #c8d0c9; border-radius: .55rem; padding: .65rem .7rem; font: inherit; color: inherit; background: #fff; }
+				.form-row { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }
+				.notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #e5f3e9; color: #17633f; }
+				.error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #fbe8df; color: #8c3517; }
+				table { width: 100%; border-collapse: collapse; }
+				th, td { padding: .85rem .5rem; border-bottom: 1px solid #e5e9e5; text-align: left; }
+				th { color: #68746c; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+				.numeric { text-align: right; white-space: nowrap; }
+				.empty { padding: 2.5rem 1rem; text-align: center; color: #68746c; }
+				@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }
+			</style>
+		</head>
+		<body>
+			<header class="site-header">
+				<a class="brand" href="/">biking_home</a>
+				<nav class="nav"><a href="/">Rides</a><a href="/sync">Sync Strava</a></nav>
+			</header>
+			<main class="container">
+				@content
+			</main>
+		</body>
+	</html>
+}
+
+templ RidesPage(items []RideView) {
+	@Layout("Rides", RidesContent(items))
+}
+
+templ RidesContent(items []RideView) {
+	<p class="eyebrow">Ride library</p>
+	<div class="toolbar">
+		<div><h1>All rides</h1><p class="lead">Your imported rides, ready for climb analysis.</p></div>
+		<a class="button" href="/sync">Sync Strava</a>
+	</div>
+	<section class="panel">
+		if len(items) == 0 {
+			<div class="empty">No rides stored yet. <a href="/sync">Import your first Strava rides.</a></div>
+		} else {
+			<table>
+				<thead><tr><th>Ride</th><th>Started</th><th class="numeric">Distance</th><th class="numeric">Moving time</th><th class="numeric">Elevation</th><th class="numeric">Cotacol</th><th class="numeric">Cotacol / 100 km</th></tr></thead>
+				<tbody>
+					for _, item := range items {
+						<tr><td><strong>{ item.Name }</strong><br/><small>{ item.Type }</small></td><td>{ formatRideDate(item.StartDate) }</td><td class="numeric">{ formatDistance(item.DistanceM) }</td><td class="numeric">{ formatDuration(item.MovingTimeS) }</td><td class="numeric">{ formatElevation(item.TotalElevationGainM) }</td><td class="numeric">{ item.Cotacol }</td><td class="numeric">{ item.CotacolPer100Km }</td></tr>
+					}
+				</tbody>
+			</table>
+		}
+	</section>
+}
+
+templ SyncPage(data SyncPageData) {
+	@Layout("Sync Strava", SyncContent(data))
+}
+
+templ SyncContent(data SyncPageData) {
+	<p class="eyebrow">Data import</p>
+	<h1>Sync Strava rides</h1>
+	<p class="lead">Choose a date range. New rides are downloaded as GPX files and recorded in the local library.</p>
+	if data.Notice != "" {
+		<div class="notice">{ data.Notice }</div>
+	}
+	if data.Error != "" {
+		<div class="error">{ data.Error }</div>
+	}
+	<section class="panel">
+		if !data.HasAuth {
+			<p>Strava authorization is required before the first sync.</p>
+			<a class="button secondary" href={ templ.URL("/strava/login?return_to=/sync") }>Authorize Strava</a>
+		} else {
+			<form method="post" action="/sync">
+				<div class="form-row">
+					<label>From<input type="date" name="from" value={ data.From } required/></label>
+					<label>To<input type="date" name="to" value={ data.To } required/></label>
+					<button class="button" type="submit">Sync rides</button>
+				</div>
+			</form>
+		}
+	</section>
+}

@@ -12,14 +12,23 @@ import (
 )
 
 type Activity struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
-	SportType string    `json:"sport_type"`
-	StartDate time.Time `json:"start_date"`
+	ID                  int64     `json:"id"`
+	Name                string    `json:"name"`
+	Type                string    `json:"type"`
+	SportType           string    `json:"sport_type"`
+	StartDate           time.Time `json:"start_date"`
+	DistanceM           float64   `json:"distance"`
+	MovingTimeS         int64     `json:"moving_time"`
+	ElapsedTimeS        int64     `json:"elapsed_time"`
+	TotalElevationGainM float64   `json:"total_elevation_gain"`
+	AverageSpeedMps     float64   `json:"average_speed"`
 }
 
-func (c *Client) ListActivities(after time.Time, types ...string) ([]Activity, error) {
+func (c *Client) List(from, to time.Time) ([]Activity, error) {
+	return c.list(from, to, "Ride")
+}
+
+func (c *Client) list(from, to time.Time, types ...string) ([]Activity, error) {
 	allowed := map[string]bool{}
 	for _, t := range types {
 		allowed[t] = true
@@ -29,7 +38,12 @@ func (c *Client) ListActivities(after time.Time, types ...string) ([]Activity, e
 		q := url.Values{}
 		q.Set("per_page", "200")
 		q.Set("page", strconv.Itoa(page))
-		q.Set("after", strconv.FormatInt(after.Unix(), 10))
+		if !from.IsZero() {
+			q.Set("after", strconv.FormatInt(from.Unix(), 10))
+		}
+		if !to.IsZero() {
+			q.Set("before", strconv.FormatInt(to.Unix(), 10))
+		}
 		var batch []Activity
 		err := c.GetJSON("/athlete/activities?"+q.Encode(), &batch)
 		if err != nil {
@@ -48,6 +62,26 @@ func (c *Client) ListActivities(after time.Time, types ...string) ([]Activity, e
 		}
 	}
 	return all, nil
+}
+
+func (c *Client) ListActivities(after time.Time, types ...string) ([]Activity, error) {
+	return c.list(after, time.Time{}, types...)
+}
+
+func (c *Client) Get(id int64) (Activity, []byte, error) {
+	var activity Activity
+	if err := c.GetJSON(fmt.Sprintf("/activities/%d", id), &activity); err != nil {
+		return Activity{}, nil, kcore.Wrap(err, "failed to get Strava activity")
+	}
+	latlng, altitude, seconds, err := c.ActivityStreams(id)
+	if err != nil {
+		return Activity{}, nil, err
+	}
+	gpxData, err := ActivityGPX(activity, latlng, altitude, seconds)
+	if err != nil {
+		return Activity{}, nil, err
+	}
+	return activity, gpxData, nil
 }
 
 func (c *Client) ActivityStreams(id int64) (latlng [][2]float64, altitude []float64, seconds []float64, err error) {
@@ -79,7 +113,7 @@ func (c *Client) ActivityStreams(id int64) (latlng [][2]float64, altitude []floa
 	return latlng, altitude, seconds, nil
 }
 
-func WriteActivityGPX(file string, activity Activity, latlng [][2]float64, altitude, seconds []float64) error {
+func ActivityGPX(activity Activity, latlng [][2]float64, altitude, seconds []float64) ([]byte, error) {
 	points := make([]gpx.GPXPoint, len(latlng))
 	for i := range latlng {
 		point := gpx.GPXPoint{}
@@ -104,7 +138,15 @@ func WriteActivityGPX(file string, activity Activity, latlng [][2]float64, altit
 	}
 	xmlData, err := doc.ToXml(gpx.ToXmlParams{})
 	if err != nil {
-		return kcore.Wrap(err, "failed to build GPX XML")
+		return nil, kcore.Wrap(err, "failed to build GPX XML")
+	}
+	return xmlData, nil
+}
+
+func WriteActivityGPX(file string, activity Activity, latlng [][2]float64, altitude, seconds []float64) error {
+	xmlData, err := ActivityGPX(activity, latlng, altitude, seconds)
+	if err != nil {
+		return err
 	}
 	return os.WriteFile(file, xmlData, 0o644)
 }
