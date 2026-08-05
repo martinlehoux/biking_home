@@ -1,0 +1,27 @@
+[tools]
+go = "1.25.12"
+
+[tasks.generate]
+description = "Generate templ Go files"
+run = "go run github.com/a-h/templ/cmd/templ@v0.2.747 generate"
+
+[tasks.format]
+description = "Format Go sources"
+run = "go fmt ./..."
+
+[tasks.check]
+description = "Run generation, vet, and tests"
+depends = ["generate", "format"]
+run = "go vet ./... && go test ./..."
+
+[tasks.build]
+description = "Build the application"
+run = "go build -o biking_home ."
+
+[tasks.migrate]
+description = "Apply SQLite migrations"
+run = "DATABASE_URL=sqlite:biking_home.db go run github.com/amacneil/dbmate up"
+
+[tasks.dev]
+description = "Run the web server"
+run = "go run ."

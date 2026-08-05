@@ -12,10 +12,9 @@ import (
 )
 
 const (
-	AuthURL   = "https://www.strava.com/oauth/authorize"
-	TokenURL  = "https://www.strava.com/oauth/token"
-	APIURL    = "https://www.strava.com/api/v3"
-	LoginPort = 8787
+	AuthURL  = "https://www.strava.com/oauth/authorize"
+	TokenURL = "https://www.strava.com/oauth/token"
+	APIURL   = "https://www.strava.com/api/v3"
 )
 
 var (
@@ -27,10 +26,6 @@ type Token struct {
 	AccessToken  string
 	RefreshToken string
 	ExpiresAt    time.Time
-}
-
-func AuthorizeURL(clientID, redirectURI string) string {
-	return AuthorizeURLWithState(clientID, redirectURI, "")
 }
 
 func AuthorizeURLWithState(clientID, redirectURI, state string) string {

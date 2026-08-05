@@ -116,8 +116,8 @@ flowchart TB
 ## Development
 
 ```bash
-go vet ./...
-go test ./...
+mise run check
+mise run build
 ```
 
 ## TODO

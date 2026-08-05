@@ -3,27 +3,12 @@ package strava
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestAuthorizeURL(t *testing.T) {
-	u := AuthorizeURL("12345", "http://localhost:8787/callback")
-	parsed, err := url.Parse(u)
-	require.NoError(t, err)
-	assert.Equal(t, "https", parsed.Scheme)
-	assert.Equal(t, "www.strava.com", parsed.Host)
-	assert.Equal(t, "/oauth/authorize", parsed.Path)
-	q := parsed.Query()
-	assert.Equal(t, "12345", q.Get("client_id"))
-	assert.Equal(t, "http://localhost:8787/callback", q.Get("redirect_uri"))
-	assert.Equal(t, "code", q.Get("response_type"))
-	assert.Equal(t, "activity:read_all", q.Get("scope"))
-}
 
 func TestExchangeCode(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

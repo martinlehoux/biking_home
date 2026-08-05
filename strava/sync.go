@@ -3,7 +3,6 @@ package strava
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
@@ -64,27 +63,23 @@ func (c *Client) list(from, to time.Time, types ...string) ([]Activity, error) {
 	return all, nil
 }
 
-func (c *Client) ListActivities(after time.Time, types ...string) ([]Activity, error) {
-	return c.list(after, time.Time{}, types...)
-}
-
 func (c *Client) Get(id int64) (Activity, []byte, error) {
 	var activity Activity
 	if err := c.GetJSON(fmt.Sprintf("/activities/%d", id), &activity); err != nil {
 		return Activity{}, nil, kcore.Wrap(err, "failed to get Strava activity")
 	}
-	latlng, altitude, seconds, err := c.ActivityStreams(id)
+	latlng, altitude, seconds, err := c.activityStreams(id)
 	if err != nil {
 		return Activity{}, nil, err
 	}
-	gpxData, err := ActivityGPX(activity, latlng, altitude, seconds)
+	gpxData, err := activityGPX(activity, latlng, altitude, seconds)
 	if err != nil {
 		return Activity{}, nil, err
 	}
 	return activity, gpxData, nil
 }
 
-func (c *Client) ActivityStreams(id int64) (latlng [][2]float64, altitude []float64, seconds []float64, err error) {
+func (c *Client) activityStreams(id int64) (latlng [][2]float64, altitude []float64, seconds []float64, err error) {
 	path := fmt.Sprintf("/activities/%d/streams?keys=latlng,altitude,time&key_by_type=true", id)
 	var streams struct {
 		LatLng *struct {
@@ -113,7 +108,7 @@ func (c *Client) ActivityStreams(id int64) (latlng [][2]float64, altitude []floa
 	return latlng, altitude, seconds, nil
 }
 
-func ActivityGPX(activity Activity, latlng [][2]float64, altitude, seconds []float64) ([]byte, error) {
+func activityGPX(activity Activity, latlng [][2]float64, altitude, seconds []float64) ([]byte, error) {
 	points := make([]gpx.GPXPoint, len(latlng))
 	for i := range latlng {
 		point := gpx.GPXPoint{}
@@ -141,12 +136,4 @@ func ActivityGPX(activity Activity, latlng [][2]float64, altitude, seconds []flo
 		return nil, kcore.Wrap(err, "failed to build GPX XML")
 	}
 	return xmlData, nil
-}
-
-func WriteActivityGPX(file string, activity Activity, latlng [][2]float64, altitude, seconds []float64) error {
-	xmlData, err := ActivityGPX(activity, latlng, altitude, seconds)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(file, xmlData, 0o644)
 }
