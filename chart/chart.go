@@ -1,4 +1,4 @@
-package main
+package chart
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-func renderChart(r ride.Ride, climbs []ride.Climb, crossings []mountain_pass.Crossing, output string) {
+func Render(r ride.Ride, climbs []ride.Climb, crossings []mountain_pass.Crossing, output string) {
 	p := plot.New()
 	p.Title.Text = "Ride profile"
 	p.X.Label.Text = "Distance (km)"

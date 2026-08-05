@@ -87,13 +87,15 @@ Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
 - `rides` — SQLite persistence for imported ride metadata
 - `config` — typed YAML configuration and atomic persistence
 - `web` — HTTP server, OAuth callback, sync orchestration, and templ pages
+- `cli` — legacy mountain-pass, OSM, demo, and chart command handlers
+- `chart` — elevation chart rendering
 - **Notable choices** — the difficulty score follows the Cotacol method: the ride is split into fixed 100 m segments and each scores `distance_km × slope²`, so steep sections weigh exponentially more than long flat ones
 
 ```mermaid
 flowchart TB
     %% Arrow X --> Y means: X depends on Y
 
-    main["main (CLI + server: main.go, chart.go)"]
+    main["main (bootstrap: main.go)"]
 
     ride["ride (GPX parsing, climbs, Cotacol)"]
     mpass["mountain_pass (centcols, crossings)"]
@@ -102,11 +104,15 @@ flowchart TB
     rides["rides (SQLite persistence)"]
     config["config (YAML)"]
     web["web (HTTP + templ)"]
+    cli["cli (legacy commands)"]
+    chart["chart (renderer)"]
 
-    main --> ride
-    main --> mpass
-    main --> osmpass
-    main --> web
+    main --> cli
+    cli --> ride
+    cli --> mpass
+    cli --> osmpass
+    cli --> web
+    cli --> chart
     mpass --> ride
     web --> strava
     web --> rides
