@@ -63,6 +63,8 @@ go build -o biking_home .
 | `-demo` | Run the climb-similarity demo | `false` |
 | `-cpuprofile` | Write a CPU profile to file | `""` |
 
+Configuration is stored in `config.yaml`. Start from `config.example.yaml` and set the Strava credentials before launching the server.
+
 ## Strava API
 
 The Strava v3 API (OAuth2) is the platform's public access point; scopes gate each resource (`read`, `activity:read_all`, `activity:write`, `push:subscriptions`). It offers:
@@ -83,7 +85,7 @@ Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
 - `osmpass` — OSM PBF extraction (`mountain_pass=yes` nodes) and pass coordinate enrichment
 - `strava` — OAuth2 client returning activity metadata and GPX data
 - `rides` — SQLite persistence for imported ride metadata
-- `config` — `.env` configuration persistence
+- `config` — typed YAML configuration and atomic persistence
 - `web` — HTTP server, OAuth callback, sync orchestration, and templ pages
 - **Notable choices** — the difficulty score follows the Cotacol method: the ride is split into fixed 100 m segments and each scores `distance_km × slope²`, so steep sections weigh exponentially more than long flat ones
 
@@ -98,7 +100,7 @@ flowchart TB
     osmpass["osmpass (OSM PBF, enrichment)"]
     strava["strava (OAuth, List, Get)"]
     rides["rides (SQLite persistence)"]
-    config["config (.env)"]
+    config["config (YAML)"]
     web["web (HTTP + templ)"]
 
     main --> ride

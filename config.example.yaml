@@ -1,0 +1,16 @@
+database:
+  path: biking_home.db
+
+server:
+  address: 127.0.0.1:8080
+  public_url: http://localhost:8080
+
+storage:
+  gpx_dir: rides
+
+strava:
+  client_id: ""
+  client_secret: ""
+  access_token: ""
+  refresh_token: ""
+  expires_at: 0

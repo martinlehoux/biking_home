@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/martinlehoux/biking_home/config"
 	"github.com/martinlehoux/biking_home/rides"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -40,9 +40,12 @@ func newWebTestServer(t *testing.T) (*Server, *sql.DB) {
 		)
 	`)
 	require.NoError(t, err)
-	envPath := filepath.Join(t.TempDir(), ".env")
-	require.NoError(t, os.WriteFile(envPath, []byte("STRAVA_CLIENT_ID=123\nSTRAVA_CLIENT_SECRET=secret\n"), 0o600))
-	return NewServer(db, envPath, t.TempDir(), "http://localhost:8080"), db
+	configPath := filepath.Join(t.TempDir(), "config.yaml")
+	appConfig := config.Default()
+	appConfig.Strava.ClientID = "123"
+	appConfig.Strava.ClientSecret = "secret"
+	require.NoError(t, config.Save(configPath, appConfig))
+	return NewServer(db, configPath), db
 }
 
 func TestHandlerRendersRidesPage(t *testing.T) {

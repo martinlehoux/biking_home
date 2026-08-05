@@ -26,18 +26,16 @@ import (
 const dateFormat = "2006-01-02"
 
 type Server struct {
-	db      *sql.DB
-	envPath string
-	gpxDir  string
-	baseURL string
+	db         *sql.DB
+	configPath string
 
 	oauthMu     sync.Mutex
 	oauthState  string
 	returnToURL string
 }
 
-func NewServer(db *sql.DB, envPath, gpxDir, baseURL string) *Server {
-	return &Server{db: db, envPath: envPath, gpxDir: gpxDir, baseURL: strings.TrimRight(baseURL, "/")}
+func NewServer(db *sql.DB, configPath string) *Server {
+	return &Server{db: db, configPath: configPath}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -109,7 +107,12 @@ func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 		s.renderSyncError(w, r, r.FormValue("from"), r.FormValue("to"), err)
 		return
 	}
-	client, authorized, err := s.stravaClient()
+	appConfig, err := s.loadConfig()
+	if err != nil {
+		s.renderSyncError(w, r, r.FormValue("from"), r.FormValue("to"), err)
+		return
+	}
+	client, authorized, err := newStravaClient(appConfig)
 	if err != nil {
 		s.renderSyncError(w, r, r.FormValue("from"), r.FormValue("to"), err)
 		return
@@ -130,7 +133,7 @@ func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	imported, skipped, err := s.syncRides(client, from, to)
+	imported, skipped, err := s.syncRides(client, appConfig.Storage.GPXDir, from, to)
 	if err != nil {
 		s.renderSyncError(w, r, r.FormValue("from"), r.FormValue("to"), err)
 		return
@@ -144,13 +147,13 @@ func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleStravaLogin(w http.ResponseWriter, r *http.Request) {
-	env, err := config.LoadEnv(s.envPath)
+	appConfig, err := s.loadConfig()
 	if err != nil {
 		http.Error(w, "failed to load configuration", http.StatusInternalServerError)
 		return
 	}
-	clientID := env["STRAVA_CLIENT_ID"]
-	clientSecret := env["STRAVA_CLIENT_SECRET"]
+	clientID := appConfig.Strava.ClientID
+	clientSecret := appConfig.Strava.ClientSecret
 	if clientID == "" || clientSecret == "" {
 		http.Error(w, "STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET are required", http.StatusInternalServerError)
 		return
@@ -165,7 +168,7 @@ func (s *Server) handleStravaLogin(w http.ResponseWriter, r *http.Request) {
 	s.oauthState = state
 	s.returnToURL = returnTo
 	s.oauthMu.Unlock()
-	redirectURI := s.baseURL + "/strava/callback"
+	redirectURI := appConfig.Server.PublicURL + "/strava/callback"
 	http.Redirect(w, r, strava.AuthorizeURLWithState(clientID, redirectURI, state), http.StatusFound)
 }
 
@@ -184,22 +187,21 @@ func (s *Server) handleStravaCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing authorization code", http.StatusBadRequest)
 		return
 	}
-	env, err := config.LoadEnv(s.envPath)
+	appConfig, err := s.loadConfig()
 	if err != nil {
 		http.Error(w, "failed to load configuration", http.StatusInternalServerError)
 		return
 	}
-	redirectURI := s.baseURL + "/strava/callback"
-	token, err := strava.ExchangeCode(env["STRAVA_CLIENT_ID"], env["STRAVA_CLIENT_SECRET"], code, redirectURI)
+	redirectURI := appConfig.Server.PublicURL + "/strava/callback"
+	token, err := strava.ExchangeCode(appConfig.Strava.ClientID, appConfig.Strava.ClientSecret, code, redirectURI)
 	if err != nil {
 		http.Error(w, "failed to exchange Strava authorization code", http.StatusBadGateway)
 		return
 	}
-	if err := config.UpdateEnv(s.envPath, map[string]string{
-		"STRAVA_ACCESS_TOKEN":  token.AccessToken,
-		"STRAVA_REFRESH_TOKEN": token.RefreshToken,
-		"STRAVA_EXPIRES_AT":    strconv.FormatInt(token.ExpiresAt.Unix(), 10),
-	}); err != nil {
+	appConfig.Strava.AccessToken = token.AccessToken
+	appConfig.Strava.RefreshToken = token.RefreshToken
+	appConfig.Strava.ExpiresAt = token.ExpiresAt.Unix()
+	if err := config.Save(s.configPath, appConfig); err != nil {
 		http.Error(w, "failed to store Strava token", http.StatusInternalServerError)
 		return
 	}
@@ -207,12 +209,12 @@ func (s *Server) handleStravaCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, returnTo, http.StatusSeeOther)
 }
 
-func (s *Server) syncRides(client *strava.Client, from, to time.Time) (imported, skipped int, err error) {
+func (s *Server) syncRides(client *strava.Client, gpxDir string, from, to time.Time) (imported, skipped int, err error) {
 	activities, err := client.List(from, to)
 	if err != nil {
 		return 0, 0, err
 	}
-	if err := os.MkdirAll(s.gpxDir, 0o755); err != nil {
+	if err := os.MkdirAll(gpxDir, 0o755); err != nil {
 		return 0, 0, fmt.Errorf("create GPX directory: %w", err)
 	}
 	for _, summary := range activities {
@@ -229,7 +231,7 @@ func (s *Server) syncRides(client *strava.Client, from, to time.Time) (imported,
 		if err != nil {
 			return imported, skipped, err
 		}
-		gpxPath := filepath.Join(s.gpxDir, fmt.Sprintf("activity_%d.gpx", activity.ID))
+		gpxPath := filepath.Join(gpxDir, fmt.Sprintf("activity_%d.gpx", activity.ID))
 		if err := os.WriteFile(gpxPath, gpxData, 0o644); err != nil {
 			return imported, skipped, fmt.Errorf("write GPX for activity %d: %w", activity.ID, err)
 		}
@@ -258,34 +260,45 @@ func (s *Server) syncRides(client *strava.Client, from, to time.Time) (imported,
 }
 
 func (s *Server) stravaClient() (*strava.Client, bool, error) {
-	env, err := config.LoadEnv(s.envPath)
+	appConfig, err := s.loadConfig()
 	if err != nil {
 		return nil, false, fmt.Errorf("load configuration: %w", err)
 	}
-	if env["STRAVA_CLIENT_ID"] == "" || env["STRAVA_CLIENT_SECRET"] == "" {
+	return newStravaClient(appConfig)
+}
+
+func (s *Server) loadConfig() (config.Config, error) {
+	return config.Load(s.configPath)
+}
+
+func newStravaClient(appConfig config.Config) (*strava.Client, bool, error) {
+	if appConfig.Strava.ClientID == "" || appConfig.Strava.ClientSecret == "" {
 		return nil, false, errors.New("STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET are required")
 	}
-	if env["STRAVA_ACCESS_TOKEN"] == "" || env["STRAVA_REFRESH_TOKEN"] == "" {
+	if appConfig.Strava.AccessToken == "" || appConfig.Strava.RefreshToken == "" {
 		return nil, false, nil
 	}
 	var expiresAt time.Time
-	if unix, err := strconv.ParseInt(env["STRAVA_EXPIRES_AT"], 10, 64); err == nil && unix != 0 {
-		expiresAt = time.Unix(unix, 0)
+	if appConfig.Strava.ExpiresAt != 0 {
+		expiresAt = time.Unix(appConfig.Strava.ExpiresAt, 0)
 	}
-	return strava.NewClient(env["STRAVA_CLIENT_ID"], env["STRAVA_CLIENT_SECRET"], strava.Token{
-		AccessToken:  env["STRAVA_ACCESS_TOKEN"],
-		RefreshToken: env["STRAVA_REFRESH_TOKEN"],
+	return strava.NewClient(appConfig.Strava.ClientID, appConfig.Strava.ClientSecret, strava.Token{
+		AccessToken:  appConfig.Strava.AccessToken,
+		RefreshToken: appConfig.Strava.RefreshToken,
 		ExpiresAt:    expiresAt,
 	}), true, nil
 }
 
 func (s *Server) saveStravaToken(client *strava.Client) error {
+	appConfig, err := s.loadConfig()
+	if err != nil {
+		return err
+	}
 	token := client.Tokens()
-	return config.UpdateEnv(s.envPath, map[string]string{
-		"STRAVA_ACCESS_TOKEN":  token.AccessToken,
-		"STRAVA_REFRESH_TOKEN": token.RefreshToken,
-		"STRAVA_EXPIRES_AT":    strconv.FormatInt(token.ExpiresAt.Unix(), 10),
-	})
+	appConfig.Strava.AccessToken = token.AccessToken
+	appConfig.Strava.RefreshToken = token.RefreshToken
+	appConfig.Strava.ExpiresAt = token.ExpiresAt.Unix()
+	return config.Save(s.configPath, appConfig)
 }
 
 func (s *Server) hasStravaToken() bool {

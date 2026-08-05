@@ -1,4 +1,4 @@
-.env
+config.yaml
 .strava-last-sync
 *.db
 *.png

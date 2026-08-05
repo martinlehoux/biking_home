@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/martinlehoux/biking_home/config"
 	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/osmpass"
 	"github.com/martinlehoux/biking_home/ride"
@@ -29,12 +30,15 @@ var (
 	demo        = flag.Bool("demo", false, "run the climb similarity demo")
 	chartFile   = flag.String("chart", "", "render a climb/pass chart for a GPX file")
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
+	configFile  = flag.String("config", "config.yaml", "path to the YAML configuration file")
 	parser      = ride.GPXRideParser{}
 )
 
 func main() {
 	flag.Parse()
-	db, err := sql.Open("sqlite3", "biking_home.db")
+	appConfig, err := config.Load(*configFile)
+	kcore.Expect(err, "failed to load configuration")
+	db, err := sql.Open("sqlite3", appConfig.Database.Path)
 	kcore.Expect(err, "failed to open database")
 	defer db.Close()
 	switch {
@@ -58,14 +62,14 @@ func main() {
 	case *chartFile != "":
 		runChart(db, *chartFile)
 	default:
-		runServer(db)
+		runServer(db, *configFile, appConfig)
 	}
 }
 
-func runServer(db *sql.DB) {
-	server := web.NewServer(db, ".env", "rides", "http://localhost:8080")
-	slog.Info("Starting web server", "address", "http://localhost:8080")
-	kcore.Expect(server.ListenAndServe(":8080"), "web server stopped")
+func runServer(db *sql.DB, configPath string, appConfig config.Config) {
+	server := web.NewServer(db, configPath)
+	slog.Info("Starting web server", "address", appConfig.Server.PublicURL)
+	kcore.Expect(server.ListenAndServe(appConfig.Server.Address), "web server stopped")
 }
 
 func runChart(db *sql.DB, filename string) {
