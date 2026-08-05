@@ -31,9 +31,6 @@ go build -o biking_home .
 # Resume an interrupted download, reusing departments already cached on disk
 ./biking_home -download -resume
 
-# Run the climb-similarity and difficulty-score demo on the example rides
-./biking_home -demo
-
 # Import cached department CSVs (debug_department_06.csv, 13.csv) into the DB
 ./biking_home -import-cached
 
@@ -46,8 +43,6 @@ go build -o biking_home .
 # Render an elevation chart with climb highlights and pass markers
 ./biking_home -chart examples/2023-06-17.AlpesVerdonTour.gpx
 
-# Profile the demo with Go's CPU profiler
-./biking_home -demo -cpuprofile /tmp/cpu.prof
 ```
 
 ## Options / Configuration
@@ -60,8 +55,6 @@ go build -o biking_home .
 | `-extract-osm` | Extract mountain passes from a France OSM PBF | `""` |
 | `-enrich` | Backfill OSM coordinates onto passes | `false` |
 | `-chart` | Render an elevation chart (climbs + passes) for a GPX file | `""` |
-| `-demo` | Run the climb-similarity demo | `false` |
-| `-cpuprofile` | Write a CPU profile to file | `""` |
 
 Configuration is stored in `config.yaml`. Start from `config.example.yaml` and set the Strava credentials before launching the server.
 
@@ -87,7 +80,7 @@ Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
 - `rides` — SQLite persistence for imported ride metadata
 - `config` — typed YAML configuration and atomic persistence
 - `web` — HTTP server, OAuth callback, sync orchestration, and templ pages
-- `cli` — legacy mountain-pass, OSM, demo, and chart command handlers
+- `cli` — legacy mountain-pass, OSM, and chart command handlers
 - `chart` — elevation chart rendering
 - **Notable choices** — the difficulty score follows the Cotacol method: the ride is split into fixed 100 m segments and each scores `distance_km × slope²`, so steep sections weigh exponentially more than long flat ones
 
