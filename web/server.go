@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,12 +54,25 @@ func (s *Server) ListenAndServe(addr string) error {
 }
 
 func (s *Server) handleRides(w http.ResponseWriter, r *http.Request) {
-	items, err := rides.List(s.db)
+	rideSort := parseRideSort(r.URL.Query())
+	items, err := s.listRides(rideSort)
 	if err != nil {
 		http.Error(w, "failed to load rides", http.StatusInternalServerError)
 		return
 	}
-	kcore.RenderPage(r.Context(), RidesPage(buildRideViews(items)), w)
+	views := buildRideViews(items)
+	if _, databaseColumn := rideSort.databaseColumn(); !databaseColumn {
+		sortRideViews(views, rideSort)
+	}
+	kcore.RenderPage(r.Context(), RidesPage(views, rideSortHeaders(rideSort)), w)
+}
+
+func (s *Server) listRides(rideSort RideSort) ([]rides.Ride, error) {
+	column, found := rideSort.databaseColumn()
+	if !found {
+		return rides.List(s.db)
+	}
+	return rides.ListSorted(s.db, column, rideSort.Descending)
 }
 
 const minimumDisplayedDistanceM = 10_000
@@ -78,10 +92,38 @@ func buildRideViews(items []rides.Ride) []RideView {
 			score := parsed.DifficultyScore()
 			view.Cotacol = formatCotacol(score)
 			view.CotacolPer100Km = formatCotacolPer100Km(score, item.DistanceM)
+			view.cotacolScore = score
+			view.cotacolPer100Km = score * 100 / (item.DistanceM / 1000)
+			view.cotacolReady = true
 		}
 		views = append(views, view)
 	}
 	return views
+}
+
+func sortRideViews(items []RideView, rideSort RideSort) {
+	sort.SliceStable(items, func(i, j int) bool {
+		left, right := items[i], items[j]
+		if !left.cotacolReady || !right.cotacolReady {
+			if left.cotacolReady != right.cotacolReady {
+				return left.cotacolReady
+			}
+			return false
+		}
+		var leftValue, rightValue float64
+		switch rideSort.Column {
+		case rideSortCotacol:
+			leftValue, rightValue = left.cotacolScore, right.cotacolScore
+		case rideSortCotacolKm:
+			leftValue, rightValue = left.cotacolPer100Km, right.cotacolPer100Km
+		default:
+			return false
+		}
+		if rideSort.Descending {
+			return leftValue > rightValue
+		}
+		return leftValue < rightValue
+	})
 }
 
 func (s *Server) handleSyncForm(w http.ResponseWriter, r *http.Request) {

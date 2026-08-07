@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/martinlehoux/biking_home/rides"
@@ -11,6 +12,115 @@ type RideView struct {
 	rides.Ride
 	Cotacol         string
 	CotacolPer100Km string
+	cotacolScore    float64
+	cotacolPer100Km float64
+	cotacolReady    bool
+}
+
+type RideSort struct {
+	Column     string
+	Descending bool
+}
+
+type RideSortHeader struct {
+	Label     string
+	Class     string
+	URL       string
+	AriaSort  string
+	Indicator string
+}
+
+const (
+	rideSortName       = "name"
+	rideSortStarted    = "started"
+	rideSortDistance   = "distance"
+	rideSortMovingTime = "moving_time"
+	rideSortElevation  = "elevation"
+	rideSortCotacol    = "cotacol"
+	rideSortCotacolKm  = "cotacol_100km"
+)
+
+var rideSortColumns = map[string]bool{
+	rideSortName:       true,
+	rideSortStarted:    true,
+	rideSortDistance:   true,
+	rideSortMovingTime: true,
+	rideSortElevation:  true,
+	rideSortCotacol:    true,
+	rideSortCotacolKm:  true,
+}
+
+func parseRideSort(query url.Values) RideSort {
+	column := query.Get("sort")
+	if !rideSortColumns[column] {
+		column = rideSortStarted
+	}
+	direction := query.Get("dir")
+	return RideSort{Column: column, Descending: direction != "asc"}
+}
+
+func (s RideSort) databaseColumn() (rides.SortColumn, bool) {
+	columns := map[string]rides.SortColumn{
+		rideSortName:       rides.SortName,
+		rideSortStarted:    rides.SortStartDate,
+		rideSortDistance:   rides.SortDistance,
+		rideSortMovingTime: rides.SortMovingTime,
+		rideSortElevation:  rides.SortElevation,
+	}
+	column, found := columns[s.Column]
+	return column, found
+}
+
+func rideSortHeaders(current RideSort) []RideSortHeader {
+	columns := []struct {
+		key   string
+		label string
+		class string
+	}{
+		{key: rideSortName, label: "Ride"},
+		{key: rideSortStarted, label: "Started"},
+		{key: rideSortDistance, label: "Distance", class: "numeric"},
+		{key: rideSortMovingTime, label: "Moving time", class: "numeric"},
+		{key: rideSortElevation, label: "Elevation", class: "numeric"},
+		{key: rideSortCotacol, label: "Cotacol", class: "numeric"},
+		{key: rideSortCotacolKm, label: "Cotacol / 100 km", class: "numeric"},
+	}
+	headers := make([]RideSortHeader, 0, len(columns))
+	for _, column := range columns {
+		descending := false
+		active := current.Column == column.key
+		if active {
+			descending = !current.Descending
+		}
+		query := url.Values{}
+		query.Set("sort", column.key)
+		if descending {
+			query.Set("dir", "desc")
+		} else {
+			query.Set("dir", "asc")
+		}
+		headerClass := column.class
+		ariaSort := "none"
+		indicator := ""
+		if active {
+			headerClass += " active"
+			if current.Descending {
+				ariaSort = "descending"
+				indicator = "↓"
+			} else {
+				ariaSort = "ascending"
+				indicator = "↑"
+			}
+		}
+		headers = append(headers, RideSortHeader{
+			Label:     column.label,
+			Class:     headerClass,
+			URL:       "/?" + query.Encode(),
+			AriaSort:  ariaSort,
+			Indicator: indicator,
+		})
+	}
+	return headers
 }
 
 type SyncPageData struct {

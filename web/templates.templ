@@ -32,6 +32,9 @@ templ Layout(title string, content templ.Component) {
 				table { width: 100%; border-collapse: collapse; }
 				th, td { padding: .85rem .5rem; border-bottom: 1px solid #e5e9e5; text-align: left; }
 				th { color: #68746c; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+				.sort-link { color: inherit; text-decoration: none; }
+				.sort-link:hover, .sort-link:focus-visible, th.active .sort-link { color: #d96932; }
+				.sort-indicator { display: inline-block; margin-left: .2rem; }
 				.numeric { text-align: right; white-space: nowrap; }
 				.empty { padding: 2.5rem 1rem; text-align: center; color: #68746c; }
 				@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }
@@ -49,11 +52,11 @@ templ Layout(title string, content templ.Component) {
 	</html>
 }
 
-templ RidesPage(items []RideView) {
-	@Layout("Rides", RidesContent(items))
+templ RidesPage(items []RideView, headers []RideSortHeader) {
+	@Layout("Rides", RidesContent(items, headers))
 }
 
-templ RidesContent(items []RideView) {
+templ RidesContent(items []RideView, headers []RideSortHeader) {
 	<p class="eyebrow">Ride library</p>
 	<div class="toolbar">
 		<div><h1>All rides</h1><p class="lead">Your imported rides, ready for climb analysis.</p></div>
@@ -64,7 +67,11 @@ templ RidesContent(items []RideView) {
 			<div class="empty">No rides stored yet. <a href="/sync">Import your first Strava rides.</a></div>
 		} else {
 			<table>
-				<thead><tr><th>Ride</th><th>Started</th><th class="numeric">Distance</th><th class="numeric">Moving time</th><th class="numeric">Elevation</th><th class="numeric">Cotacol</th><th class="numeric">Cotacol / 100 km</th></tr></thead>
+				<thead><tr>
+					for _, header := range headers {
+						<th class={ header.Class } scope="col" aria-sort={ header.AriaSort }><a class="sort-link" href={ templ.URL(header.URL) }>{ header.Label }<span class="sort-indicator" aria-hidden="true">{ header.Indicator }</span></a></th>
+					}
+				</tr></thead>
 				<tbody>
 					for _, item := range items {
 						<tr><td><strong>{ item.Name }</strong><br/><small>{ item.Type }</small></td><td>{ formatRideDate(item.StartDate) }</td><td class="numeric">{ formatDistance(item.DistanceM) }</td><td class="numeric">{ formatDuration(item.MovingTimeS) }</td><td class="numeric">{ formatElevation(item.TotalElevationGainM) }</td><td class="numeric">{ item.Cotacol }</td><td class="numeric">{ item.CotacolPer100Km }</td></tr>

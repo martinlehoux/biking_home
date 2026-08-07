@@ -134,3 +134,85 @@ func TestFormatCotacolPer100Km(t *testing.T) {
 	assert.Equal(t, "20.0", formatCotacolPer100Km(2, 10_000))
 	assert.Equal(t, "-", formatCotacolPer100Km(2, 0))
 }
+
+func TestParseRideSort(t *testing.T) {
+	tests := []struct {
+		name       string
+		query      string
+		column     string
+		descending bool
+	}{
+		{name: "default", query: "", column: rideSortStarted, descending: true},
+		{name: "ascending distance", query: "sort=distance&dir=asc", column: rideSortDistance, descending: false},
+		{name: "invalid values", query: "sort=unknown&dir=sideways", column: rideSortStarted, descending: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query, err := url.ParseQuery(tt.query)
+			require.NoError(t, err)
+			got := parseRideSort(query)
+			assert.Equal(t, tt.column, got.Column)
+			assert.Equal(t, tt.descending, got.Descending)
+		})
+	}
+}
+
+func TestRideSortHeadersToggleDirection(t *testing.T) {
+	headers := rideSortHeaders(RideSort{Column: rideSortDistance, Descending: true})
+	require.Len(t, headers, 7)
+	assert.Equal(t, "/?dir=asc&sort=distance", headers[2].URL)
+	assert.Equal(t, "descending", headers[2].AriaSort)
+	assert.Contains(t, headers[2].Class, "active")
+	assert.Equal(t, "/?dir=asc&sort=name", headers[0].URL)
+
+	headers = rideSortHeaders(RideSort{Column: rideSortDistance, Descending: false})
+	assert.Equal(t, "/?dir=desc&sort=distance", headers[2].URL)
+	assert.Equal(t, "ascending", headers[2].AriaSort)
+}
+
+func TestSortRideViewsByCotacolKeepsMissingLast(t *testing.T) {
+	items := []RideView{
+		{cotacolScore: 4, cotacolReady: true},
+		{cotacolScore: 1, cotacolReady: true},
+		{cotacolReady: false},
+	}
+
+	sortRideViews(items, RideSort{Column: rideSortCotacol})
+	assert.Equal(t, 1.0, items[0].cotacolScore)
+	assert.Equal(t, 4.0, items[1].cotacolScore)
+	assert.False(t, items[2].cotacolReady)
+
+	sortRideViews(items, RideSort{Column: rideSortCotacol, Descending: true})
+	assert.Equal(t, 4.0, items[0].cotacolScore)
+	assert.Equal(t, 1.0, items[1].cotacolScore)
+	assert.False(t, items[2].cotacolReady)
+}
+
+func TestHandlerSortsRidesByDistance(t *testing.T) {
+	server, db := newWebTestServer(t)
+	require.NoError(t, rides.Save(db, rides.Ride{
+		ExternalID: "strava:550e8400-e29b-41d4-a716-446655440000",
+		GPXPath:    "near.gpx",
+		Name:       "Near Ride",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
+		DistanceM:  20_000,
+	}))
+	require.NoError(t, rides.Save(db, rides.Ride{
+		ExternalID: "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8",
+		GPXPath:    "far.gpx",
+		Name:       "Far Ride",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 2, 7, 0, 0, 0, time.UTC),
+		DistanceM:  40_000,
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/?sort=distance&dir=asc", nil)
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, req)
+
+	body := response.Body.String()
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Less(t, strings.Index(body, "Near Ride"), strings.Index(body, "Far Ride"))
+	assert.Contains(t, body, "dir=desc&amp;sort=distance")
+}
