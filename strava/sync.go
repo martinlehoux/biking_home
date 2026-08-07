@@ -10,6 +10,8 @@ import (
 	"github.com/tkrajina/gpxgo/gpx"
 )
 
+const garminTrackPointExtensionNamespace = "http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
+
 type Activity struct {
 	ID                  int64     `json:"id"`
 	Name                string    `json:"name"`
@@ -68,19 +70,32 @@ func (c *Client) Get(id int64) (Activity, []byte, error) {
 	if err := c.GetJSON(fmt.Sprintf("/activities/%d", id), &activity); err != nil {
 		return Activity{}, nil, kcore.Wrap(err, "failed to get Strava activity")
 	}
-	latlng, altitude, seconds, err := c.activityStreams(id)
+	streams, err := c.activityStreams(id)
 	if err != nil {
 		return Activity{}, nil, err
 	}
-	gpxData, err := activityGPX(activity, latlng, altitude, seconds)
+	gpxData, err := activityGPX(activity, streams)
 	if err != nil {
 		return Activity{}, nil, err
 	}
 	return activity, gpxData, nil
 }
 
-func (c *Client) activityStreams(id int64) (latlng [][2]float64, altitude []float64, seconds []float64, err error) {
-	path := fmt.Sprintf("/activities/%d/streams?keys=latlng,altitude,time&key_by_type=true", id)
+type activityStreams struct {
+	LatLng    [][2]float64
+	Altitude  []float64
+	Seconds   []float64
+	HeartRate []*float64
+	Cadence   []*float64
+	Power     []*float64
+}
+
+type nullableFloatStream struct {
+	Data []*float64 `json:"data"`
+}
+
+func (c *Client) activityStreams(id int64) (activityStreams, error) {
+	path := fmt.Sprintf("/activities/%d/streams?keys=latlng,altitude,time,heartrate,cadence,watts&key_by_type=true", id)
 	var streams struct {
 		LatLng *struct {
 			Data [][2]float64 `json:"data"`
@@ -91,35 +106,51 @@ func (c *Client) activityStreams(id int64) (latlng [][2]float64, altitude []floa
 		Time *struct {
 			Data []float64 `json:"data"`
 		} `json:"time"`
+		HeartRate *nullableFloatStream `json:"heartrate"`
+		Cadence   *nullableFloatStream `json:"cadence"`
+		Power     *nullableFloatStream `json:"watts"`
 	}
-	err = c.GetJSON(path, &streams)
+	err := c.GetJSON(path, &streams)
 	if err != nil {
-		return nil, nil, nil, kcore.Wrap(err, "failed to fetch Strava streams")
+		return activityStreams{}, kcore.Wrap(err, "failed to fetch Strava streams")
 	}
+	result := activityStreams{}
 	if streams.LatLng != nil {
-		latlng = streams.LatLng.Data
+		result.LatLng = streams.LatLng.Data
 	}
 	if streams.Altitude != nil {
-		altitude = streams.Altitude.Data
+		result.Altitude = streams.Altitude.Data
 	}
 	if streams.Time != nil {
-		seconds = streams.Time.Data
+		result.Seconds = streams.Time.Data
 	}
-	return latlng, altitude, seconds, nil
+	if streams.HeartRate != nil {
+		result.HeartRate = streams.HeartRate.Data
+	}
+	if streams.Cadence != nil {
+		result.Cadence = streams.Cadence.Data
+	}
+	if streams.Power != nil {
+		result.Power = streams.Power.Data
+	}
+	return result, nil
 }
 
-func activityGPX(activity Activity, latlng [][2]float64, altitude, seconds []float64) ([]byte, error) {
-	points := make([]gpx.GPXPoint, len(latlng))
-	for i := range latlng {
+func activityGPX(activity Activity, streams activityStreams) ([]byte, error) {
+	points := make([]gpx.GPXPoint, len(streams.LatLng))
+	for i := range streams.LatLng {
 		point := gpx.GPXPoint{}
-		point.Latitude = latlng[i][0]
-		point.Longitude = latlng[i][1]
-		if i < len(altitude) {
-			point.Elevation = *gpx.NewNullableFloat64(altitude[i])
+		point.Latitude = streams.LatLng[i][0]
+		point.Longitude = streams.LatLng[i][1]
+		if i < len(streams.Altitude) {
+			point.Elevation = *gpx.NewNullableFloat64(streams.Altitude[i])
 		}
-		if i < len(seconds) {
-			point.Timestamp = activity.StartDate.Add(time.Duration(seconds[i]) * time.Second)
+		if i < len(streams.Seconds) {
+			point.Timestamp = activity.StartDate.Add(time.Duration(streams.Seconds[i]) * time.Second)
 		}
+		addTrackPointMetric(&point, "hr", streamValue(streams.HeartRate, i))
+		addTrackPointMetric(&point, "cad", streamValue(streams.Cadence, i))
+		addTrackPointMetric(&point, "watts", streamValue(streams.Power, i))
 		points[i] = point
 	}
 	doc := gpx.GPX{
@@ -131,9 +162,25 @@ func activityGPX(activity Activity, latlng [][2]float64, altitude, seconds []flo
 			Segments: []gpx.GPXTrackSegment{{Points: points}},
 		}},
 	}
+	doc.RegisterNamespace("gpxtpx", garminTrackPointExtensionNamespace)
 	xmlData, err := doc.ToXml(gpx.ToXmlParams{})
 	if err != nil {
 		return nil, kcore.Wrap(err, "failed to build GPX XML")
 	}
 	return xmlData, nil
+}
+
+func streamValue(stream []*float64, i int) *float64 {
+	if i >= len(stream) {
+		return nil
+	}
+	return stream[i]
+}
+
+func addTrackPointMetric(point *gpx.GPXPoint, name string, value *float64) {
+	if value == nil {
+		return
+	}
+	extension := point.Extensions.GetOrCreateNode(gpx.NamespaceURL(garminTrackPointExtensionNamespace), "TrackPointExtension")
+	extension.GetOrCreateNode(name).Data = strconv.FormatFloat(*value, 'f', -1, 64)
 }
