@@ -60,7 +60,8 @@ func DetectCrossings(ride ride.Ride, passes []MountainPass, radiusM, elevationTo
 // climb's highest point and whose elevation is within elevationToleranceM of
 // that point's elevation, nearest first. Found is false when no pass matches.
 func MatchClimb(climb ride.Climb, passes []MountainPass, radiusM, elevationToleranceM float64) (MountainPass, bool) {
-	top := climb.Top()
+	topCoord := climb.TopCoord()
+	topElevation := climb.TopElevationM()
 	var best MountainPass
 	bestDistanceM := radiusM
 	found := false
@@ -68,12 +69,12 @@ func MatchClimb(climb ride.Climb, passes []MountainPass, radiusM, elevationToler
 		if mountainPass.Coord == nil {
 			continue
 		}
-		distanceKm, _ := geodist.HaversineDistance(top.Coord, *mountainPass.Coord)
+		distanceKm, _ := geodist.HaversineDistance(topCoord, *mountainPass.Coord)
 		distanceM := distanceKm * 1000
 		if distanceM > bestDistanceM {
 			continue
 		}
-		elevationDiff := absFloat64(top.ElevationM - float64(mountainPass.Elevation))
+		elevationDiff := absFloat64(topElevation - float64(mountainPass.Elevation))
 		if elevationDiff > elevationToleranceM {
 			continue
 		}
@@ -86,14 +87,14 @@ func MatchClimb(climb ride.Climb, passes []MountainPass, radiusM, elevationToler
 
 func nearestCrossing(ride ride.Ride, mountainPass MountainPass) (Crossing, bool) {
 	best := Crossing{Pass: mountainPass, DistanceToM: 1e18}
-	for _, point := range ride.Points() {
-		distanceKm, _ := geodist.HaversineDistance(point.Coord, *mountainPass.Coord)
+	for i := 0; i < ride.Len(); i++ {
+		distanceKm, _ := geodist.HaversineDistance(ride.Coord(i), *mountainPass.Coord)
 		distanceM := distanceKm * 1000
 		if distanceM < best.DistanceToM {
 			best.DistanceToM = distanceM
-			best.RideDistanceM = point.DistanceM
-			best.RideElevation = point.ElevationM
-			best.ElevationDiff = absFloat64(point.ElevationM - float64(mountainPass.Elevation))
+			best.RideDistanceM = ride.DistanceM(i)
+			best.RideElevation = ride.ElevationM(i)
+			best.ElevationDiff = absFloat64(ride.ElevationM(i) - float64(mountainPass.Elevation))
 		}
 	}
 	if best.DistanceToM > 1e17 {

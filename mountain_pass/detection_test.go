@@ -2,6 +2,7 @@ package mountain_pass_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/mountain_pass"
@@ -48,19 +49,20 @@ func TestDetectCrossingsRequiresElevationAgreement(t *testing.T) {
 
 func rideFromPoint(t *testing.T, latitude, longitude, elevation float64) ride.Ride {
 	t.Helper()
-	points := []ride.Point{
-		{DistanceM: 0, ElevationM: 100, Coord: geodist.Coord{Lat: latitude - 0.01, Lon: longitude - 0.01}},
-		{DistanceM: 1000, ElevationM: elevation, Coord: geodist.Coord{Lat: latitude, Lon: longitude}},
-	}
-	return ride.FromPoints(points)
+	return ride.FromColumns(
+		[]float64{0, 1000},
+		[]float64{100, elevation},
+		[]geodist.Coord{{Lat: latitude - 0.01, Lon: longitude - 0.01}, {Lat: latitude, Lon: longitude}},
+		make([]time.Time, 2),
+	)
 }
 
 func TestMatchClimbFindsPassAtTop(t *testing.T) {
-	climb := climbFromPoints([]ride.Point{
-		{DistanceM: 0, ElevationM: 300, Coord: geodist.Coord{Lat: 43.61, Lon: 5.42}},
-		{DistanceM: 1000, ElevationM: 447, Coord: geodist.Coord{Lat: 43.62, Lon: 5.43}},
-		{DistanceM: 2000, ElevationM: 380, Coord: geodist.Coord{Lat: 43.63, Lon: 5.44}},
-	})
+	climb := climbFromColumns(
+		[]float64{0, 1000, 2000},
+		[]float64{300, 447, 380},
+		[]geodist.Coord{{Lat: 43.61, Lon: 5.42}, {Lat: 43.62, Lon: 5.43}, {Lat: 43.63, Lon: 5.44}},
+	)
 	pass := mountain_pass.MountainPass{
 		Name: "Pas de Magnan", Elevation: 440,
 		Coord: &geodist.Coord{Lat: 43.62, Lon: 5.43},
@@ -71,11 +73,11 @@ func TestMatchClimbFindsPassAtTop(t *testing.T) {
 }
 
 func TestMatchClimbRequiresElevationAgreement(t *testing.T) {
-	climb := climbFromPoints([]ride.Point{
-		{DistanceM: 0, ElevationM: 300, Coord: geodist.Coord{Lat: 43.61, Lon: 5.42}},
-		{DistanceM: 1000, ElevationM: 447, Coord: geodist.Coord{Lat: 43.62, Lon: 5.43}},
-		{DistanceM: 2000, ElevationM: 380, Coord: geodist.Coord{Lat: 43.63, Lon: 5.44}},
-	})
+	climb := climbFromColumns(
+		[]float64{0, 1000, 2000},
+		[]float64{300, 447, 380},
+		[]geodist.Coord{{Lat: 43.61, Lon: 5.42}, {Lat: 43.62, Lon: 5.43}, {Lat: 43.63, Lon: 5.44}},
+	)
 	pass := mountain_pass.MountainPass{
 		Name: "Pas de Magnan", Elevation: 900,
 		Coord: &geodist.Coord{Lat: 43.62, Lon: 5.43},
@@ -85,11 +87,11 @@ func TestMatchClimbRequiresElevationAgreement(t *testing.T) {
 }
 
 func TestMatchClimbNearestOfTwo(t *testing.T) {
-	climb := climbFromPoints([]ride.Point{
-		{DistanceM: 0, ElevationM: 300, Coord: geodist.Coord{Lat: 43.61, Lon: 5.42}},
-		{DistanceM: 1000, ElevationM: 447, Coord: geodist.Coord{Lat: 43.62, Lon: 5.43}},
-		{DistanceM: 2000, ElevationM: 380, Coord: geodist.Coord{Lat: 43.63, Lon: 5.44}},
-	})
+	climb := climbFromColumns(
+		[]float64{0, 1000, 2000},
+		[]float64{300, 447, 380},
+		[]geodist.Coord{{Lat: 43.61, Lon: 5.42}, {Lat: 43.62, Lon: 5.43}, {Lat: 43.63, Lon: 5.44}},
+	)
 	near := mountain_pass.MountainPass{
 		Name: "Pas de Magnan", Elevation: 440,
 		Coord: &geodist.Coord{Lat: 43.62, Lon: 5.43},
@@ -103,7 +105,7 @@ func TestMatchClimbNearestOfTwo(t *testing.T) {
 	assert.Equal(t, "Pas de Magnan", matched.Name)
 }
 
-func climbFromPoints(points []ride.Point) ride.Climb {
-	ride := ride.FromPoints(points)
+func climbFromColumns(distances, elevations []float64, coords []geodist.Coord) ride.Climb {
+	ride := ride.FromColumns(distances, elevations, coords, make([]time.Time, len(distances)))
 	return ride.ClimbFromDist(0, 2000)
 }

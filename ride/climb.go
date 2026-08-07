@@ -7,51 +7,67 @@ import (
 	"slices"
 	"time"
 
+	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 )
 
 const ClimbDistanceMinimum = 500
 
 type Climb struct {
+	ride      Ride
 	rideStart int
 	rideEnd   int
-	points    []Point
 	Name      string
 }
 
 func (climb Climb) Duration() time.Duration {
-	return climb.points[len(climb.points)-1].Timestamp.Sub(climb.points[0].Timestamp)
+	return climb.ride.Timestamp(climb.rideEnd).Sub(climb.ride.Timestamp(climb.rideStart))
 }
 
 func (climb Climb) Speed() float64 {
-	return (climb.End().DistanceM - climb.Start().DistanceM) / climb.Duration().Seconds()
+	return (climb.EndDistanceM() - climb.StartDistanceM()) / climb.Duration().Seconds()
 }
 
-func (climb Climb) Start() Point {
-	return climb.points[0]
+func (climb Climb) StartIndex() int { return climb.rideStart }
+
+func (climb Climb) EndIndex() int { return climb.rideEnd }
+
+func (climb Climb) StartDistanceM() float64 {
+	return climb.ride.DistanceM(climb.rideStart)
 }
 
-func (climb Climb) End() Point {
-	return climb.points[len(climb.points)-1]
+func (climb Climb) EndDistanceM() float64 {
+	return climb.ride.DistanceM(climb.rideEnd)
 }
 
-// Top returns the highest point inside the climb, used as the crest anchor
-// when naming the climb after a pass.
-func (climb Climb) Top() Point {
-	top := climb.points[0]
-	for _, point := range climb.points {
-		if point.ElevationM > top.ElevationM {
-			top = point
+// TopIndex returns the highest point inside the climb, used as the crest anchor.
+func (climb Climb) TopIndex() int {
+	top := climb.rideStart
+	for i := climb.rideStart; i <= climb.rideEnd; i++ {
+		if climb.ride.ElevationM(i) > climb.ride.ElevationM(top) {
+			top = i
 		}
 	}
 	return top
 }
 
+func (climb Climb) TopDistanceM() float64 {
+	return climb.ride.DistanceM(climb.TopIndex())
+}
+
+func (climb Climb) TopElevationM() float64 {
+	return climb.ride.ElevationM(climb.TopIndex())
+}
+
+func (climb Climb) TopCoord() geodist.Coord {
+	return climb.ride.Coord(climb.TopIndex())
+}
+
 func (climb Climb) String() string {
-	start := climb.points[0]
-	end := climb.points[len(climb.points)-1]
-	score := Score(climb.points, 0, len(climb.points)-1)
-	body := fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", start.DistanceM/1000, end.DistanceM/1000, (end.DistanceM-start.DistanceM)/1000, Slope(start, end)*100, int(score), Category(score))
+	startDistance := climb.StartDistanceM()
+	endDistance := climb.EndDistanceM()
+	score := climb.Score()
+	body := fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", startDistance/1000, endDistance/1000, (endDistance-startDistance)/1000, Slope(climb.ride, climb.rideStart, climb.rideEnd)*100, int(score), Category(score))
 	if climb.Name == "" {
 		return body
 	}
@@ -59,24 +75,24 @@ func (climb Climb) String() string {
 }
 
 func (climb Climb) Score() float64 {
-	return Score(climb.points, 0, len(climb.points)-1)
+	return Score(climb.ride, climb.rideStart, climb.rideEnd)
 }
 
 func (climb Climb) DifficultyScore() float64 {
-	return difficultyScore(climb.points)
+	return difficultyScore(climb.ride, climb.rideStart, climb.rideEnd)
 }
 
-func Slope(start, end Point) float64 {
-	return (end.ElevationM - start.ElevationM) / (end.DistanceM - start.DistanceM)
+func Slope(r Ride, start, end int) float64 {
+	return (r.ElevationM(end) - r.ElevationM(start)) / (r.DistanceM(end) - r.DistanceM(start))
 }
 
-func Score(points []Point, start int, end int) float64 {
+func Score(r Ride, start, end int) float64 {
 	kcore.Assert(end > start, "no points for score")
-	distance := points[end].DistanceM - points[start].DistanceM
+	distance := r.DistanceM(end) - r.DistanceM(start)
 	if distance == 0 {
 		return 0
 	}
-	dElevation := points[end].ElevationM - points[start].ElevationM
+	dElevation := r.ElevationM(end) - r.ElevationM(start)
 
 	return math.Abs(dElevation) * dElevation / distance * 100.0 * 100.0 / 1000.0
 }
@@ -98,13 +114,13 @@ func Category(score float64) string {
 	}
 }
 
-func bestClimbBetween(points []Point, start int, end int) Climb {
+func bestClimbBetween(r Ride, start, end int) Climb {
 	kcore.Assert(end > start, "empty points")
 
-	bestScore := Score(points, start, end)
+	bestScore := Score(r, start, end)
 	bestStart := start
 	for i := start; i < end; i++ {
-		score := Score(points, i, end)
+		score := Score(r, i, end)
 		if score > bestScore {
 			bestStart = i
 			bestScore = score
@@ -112,54 +128,52 @@ func bestClimbBetween(points []Point, start int, end int) Climb {
 	}
 	bestEnd := end
 	for i := end; i > bestStart; i-- {
-		score := Score(points, bestStart, i)
+		score := Score(r, bestStart, i)
 		if score > bestScore {
 			bestEnd = i
 			bestScore = score
 		}
 	}
 	for i := bestStart; i < bestEnd; i++ {
-		score := Score(points, i, bestEnd)
+		score := Score(r, i, bestEnd)
 		if score > bestScore {
 			bestStart = i
 			bestScore = score
 		}
 	}
 	kcore.Assert(bestStart < bestEnd, "empty climb")
-	climb := Climb{rideStart: bestStart, rideEnd: bestEnd, points: points[bestStart : bestEnd+1]}
-
-	return climb
+	return Climb{ride: r, rideStart: bestStart, rideEnd: bestEnd}
 }
 
-func climbsBetween(points []Point, start int, end int) []Climb {
+func climbsBetween(r Ride, start, end int) []Climb {
 	climbs := []Climb{}
-	if points[end].DistanceM-points[start].DistanceM < ClimbDistanceMinimum {
+	if r.DistanceM(end)-r.DistanceM(start) < ClimbDistanceMinimum {
 		return climbs
 	}
-	slog.Debug("Searching climbs between", slog.Int("start", int(points[start].DistanceM)), slog.Int("end", int(points[end].DistanceM)))
+	slog.Debug("Searching climbs between", slog.Int("start", int(r.DistanceM(start))), slog.Int("end", int(r.DistanceM(end))))
 	highest := start
 	for i := start; i <= end; i++ {
-		if points[i].ElevationM > points[highest].ElevationM {
+		if r.ElevationM(i) > r.ElevationM(highest) {
 			highest = i
 		}
 	}
 	// TODO: Use descent to reduce recursion
-	if points[highest].DistanceM-points[start].DistanceM < ClimbDistanceMinimum {
-		return climbsBetween(points, start+1, end)
+	if r.DistanceM(highest)-r.DistanceM(start) < ClimbDistanceMinimum {
+		return climbsBetween(r, start+1, end)
 	}
-	climb := bestClimbBetween(points, start, highest)
-	if climb.Score() >= 35 && climb.End().DistanceM-climb.Start().DistanceM >= ClimbDistanceMinimum {
-		slog.Debug("Found climb between", slog.Int("start", int(climb.Start().DistanceM)), slog.Int("end", int(climb.End().DistanceM)))
+	climb := bestClimbBetween(r, start, highest)
+	if climb.Score() >= 35 && climb.EndDistanceM()-climb.StartDistanceM() >= ClimbDistanceMinimum {
+		slog.Debug("Found climb between", slog.Int("start", int(climb.StartDistanceM())), slog.Int("end", int(climb.EndDistanceM())))
 		climbs = append(climbs, climb)
 	}
-	climbs = append(climbs, climbsBetween(points, start, climb.rideStart)...)
-	climbs = append(climbs, climbsBetween(points, climb.rideEnd, end)...)
+	climbs = append(climbs, climbsBetween(r, start, climb.rideStart)...)
+	climbs = append(climbs, climbsBetween(r, climb.rideEnd, end)...)
 
 	return climbs
 }
 
 func (ride *Ride) AllClimbs() []Climb {
-	climbs := climbsBetween(ride.points, 0, len(ride.points)-1)
+	climbs := climbsBetween(*ride, 0, ride.Len()-1)
 	slices.SortFunc(climbs, climbCmpStart)
 	return climbs
 }

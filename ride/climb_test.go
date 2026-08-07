@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/stretchr/testify/assert"
@@ -40,7 +41,10 @@ func (b RideBuilder) WithSection(input string) RideBuilder {
 }
 
 func (b RideBuilder) Build() ride.Ride {
-	points := []ride.Point{{}}
+	distances := []float64{0}
+	elevations := []float64{0}
+	coords := []geodist.Coord{{}}
+	timestamps := []time.Time{{}}
 	distance := 0.0
 	elevation := 0.0
 	for _, section := range b.sections {
@@ -48,15 +52,14 @@ func (b RideBuilder) Build() ride.Ride {
 		for curSecDist < section.distance {
 			curSecDist += b.precision
 			elevation += b.precision * section.slope
-			points = append(points, ride.Point{
-				DistanceM:  distance + curSecDist,
-				ElevationM: elevation,
-				Timestamp:  points[len(points)-1].Timestamp.Add(time.Second),
-			})
+			distances = append(distances, distance+curSecDist)
+			elevations = append(elevations, elevation)
+			coords = append(coords, geodist.Coord{})
+			timestamps = append(timestamps, timestamps[len(timestamps)-1].Add(time.Second))
 		}
 		distance += curSecDist
 	}
-	return ride.FromPoints(points)
+	return ride.FromColumns(distances, elevations, coords, timestamps)
 }
 
 var parser = ride.GPXRideParser{}

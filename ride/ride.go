@@ -16,24 +16,31 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-type Point struct {
-	DistanceM  float64
-	ElevationM float64
-	Coord      geodist.Coord
-	Timestamp  time.Time
-}
-
 type Ride struct {
-	points []Point
+	distances  []float64
+	elevations []float64
+	coords     []geodist.Coord
+	timestamps []time.Time
 }
 
 func (r *Ride) check() {
-	kcore.Assert(len(r.points) > 0, "no points in ride")
+	kcore.Assert(r.Len() > 0, "no points in ride")
+	kcore.Assert(len(r.distances) == len(r.elevations), "ride columns have different lengths")
+	kcore.Assert(len(r.distances) == len(r.coords), "ride columns have different lengths")
+	kcore.Assert(len(r.distances) == len(r.timestamps), "ride columns have different lengths")
 }
 
-func (r *Ride) Points() []Point {
-	return r.points
+func (r Ride) Len() int {
+	return len(r.distances)
 }
+
+func (r Ride) DistanceM(i int) float64 { return r.distances[i] }
+
+func (r Ride) ElevationM(i int) float64 { return r.elevations[i] }
+
+func (r Ride) Coord(i int) geodist.Coord { return r.coords[i] }
+
+func (r Ride) Timestamp(i int) time.Time { return r.timestamps[i] }
 
 type RideParser interface {
 	Parse(reader io.Reader) (Ride, error)
@@ -62,13 +69,19 @@ func (p GPXRideParser) Parse(reader io.Reader) (Ride, error) {
 	if len(segment.Points) == 0 {
 		return Ride{}, errors.New("ride has no track points")
 	}
-	points := make([]Point, 0, len(segment.Points))
+	distances := make([]float64, 0, len(segment.Points))
+	elevations := make([]float64, 0, len(segment.Points))
+	coords := make([]geodist.Coord, 0, len(segment.Points))
+	timestamps := make([]time.Time, 0, len(segment.Points))
 	distance := 0.0
 	previous := segment.Points[0]
 	if previous.Elevation.Null() {
 		return Ride{}, errors.New("points without elevation")
 	}
-	points = append(points, Point{DistanceM: 0, ElevationM: previous.Elevation.Value(), Coord: geodist.Coord{Lat: previous.Latitude, Lon: previous.Longitude}, Timestamp: previous.Timestamp})
+	distances = append(distances, 0)
+	elevations = append(elevations, previous.Elevation.Value())
+	coords = append(coords, geodist.Coord{Lat: previous.Latitude, Lon: previous.Longitude})
+	timestamps = append(timestamps, previous.Timestamp)
 	for i := 1; i < len(segment.Points); i++ {
 		p := segment.Points[i]
 		distance += p.Distance2D(&previous)
@@ -79,18 +92,21 @@ func (p GPXRideParser) Parse(reader io.Reader) (Ride, error) {
 		if p.Elevation.Null() {
 			return Ride{}, errors.New("points without elevation")
 		}
-		points = append(points, Point{DistanceM: distance, ElevationM: p.Elevation.Value(), Coord: geodist.Coord{Lat: p.Latitude, Lon: p.Longitude}, Timestamp: p.Timestamp})
+		distances = append(distances, distance)
+		elevations = append(elevations, p.Elevation.Value())
+		coords = append(coords, geodist.Coord{Lat: p.Latitude, Lon: p.Longitude})
+		timestamps = append(timestamps, p.Timestamp)
 	}
-	if len(points) < 2 {
+	if len(distances) < 2 {
 		return Ride{}, errors.New("zero distance")
 	}
-	ride := Ride{points}
+	ride := Ride{distances: distances, elevations: elevations, coords: coords, timestamps: timestamps}
 	ride.check()
 	return ride, nil
 }
 
-func FromPoints(points []Point) Ride {
-	ride := Ride{points}
+func FromColumns(distances []float64, elevations []float64, coords []geodist.Coord, timestamps []time.Time) Ride {
+	ride := Ride{distances: distances, elevations: elevations, coords: coords, timestamps: timestamps}
 	ride.check()
 	return ride
 }
@@ -98,42 +114,43 @@ func FromPoints(points []Point) Ride {
 func (r *Ride) ScoreFromKm(start, end float64) float64 {
 	i := 0
 	j := 0
-	for k, p := range r.points {
-		if i == 0 && p.DistanceM >= start*1000 {
+	for k, distance := range r.distances {
+		if i == 0 && distance >= start*1000 {
 			i = k
 		}
-		if j == 0 && p.DistanceM >= end*1000 {
+		if j == 0 && distance >= end*1000 {
 			j = k
 			break
 		}
 	}
-	return Score(r.points, i, j)
+	return Score(*r, i, j)
 }
 
 func (r *Ride) DifficultyScore() float64 {
-	return difficultyScore(r.points)
+	return difficultyScore(*r, 0, r.Len()-1)
 }
 
-func difficultyScore(points []Point) float64 {
-	if len(points) < 2 {
+func difficultyScore(r Ride, startIndex, endIndex int) float64 {
+	if endIndex-startIndex < 1 {
 		return 0
 	}
-	last := points[len(points)-1]
-	if last.DistanceM <= 0 {
+	startDistance := r.DistanceM(startIndex)
+	lastDistance := r.DistanceM(endIndex)
+	if lastDistance <= startDistance {
 		return 0
 	}
 	score := 0.0
-	i := 0
-	for start := points[0].DistanceM; start < last.DistanceM; start += 100 {
-		end := math.Min(start+100, last.DistanceM)
-		for i < len(points)-1 && points[i+1].DistanceM <= start {
+	i := startIndex
+	for start := startDistance; start < lastDistance; start += 100 {
+		end := math.Min(start+100, lastDistance)
+		for i < endIndex && r.DistanceM(i+1) <= start {
 			i++
 		}
-		startElevation := interpolateElevation(points, i, start)
-		for i < len(points)-1 && points[i+1].DistanceM < end {
+		startElevation := interpolateElevation(r, i, start)
+		for i < endIndex && r.DistanceM(i+1) < end {
 			i++
 		}
-		endElevation := interpolateElevation(points, i, end)
+		endElevation := interpolateElevation(r, i, end)
 		slope := (endElevation - startElevation) / (end - start)
 		if slope > 0 {
 			score += (end - start) / 1000 * (slope * 100) * (slope * 100)
@@ -142,37 +159,37 @@ func difficultyScore(points []Point) float64 {
 	return score
 }
 
-func interpolateElevation(points []Point, i int, distance float64) float64 {
-	if i+1 >= len(points) {
-		return points[i].ElevationM
+func interpolateElevation(r Ride, i int, distance float64) float64 {
+	if i+1 >= r.Len() {
+		return r.ElevationM(i)
 	}
-	start := points[i]
-	end := points[i+1]
-	t := (distance - start.DistanceM) / (end.DistanceM - start.DistanceM)
-	return start.ElevationM + t*(end.ElevationM-start.ElevationM)
+	startDistance := r.DistanceM(i)
+	endDistance := r.DistanceM(i + 1)
+	t := (distance - startDistance) / (endDistance - startDistance)
+	return r.ElevationM(i) + t*(r.ElevationM(i+1)-r.ElevationM(i))
 }
 
 func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {
 	start, end := 0, 0
-	for i, p := range r.points {
-		if start == 0 && p.DistanceM >= startDist {
+	for i, distance := range r.distances {
+		if start == 0 && distance >= startDist {
 			start = i
 		}
-		if end == 0 && p.DistanceM >= endDist {
+		if end == 0 && distance >= endDist {
 			end = i
 			break
 		}
 	}
-	return Climb{rideStart: start, rideEnd: end, points: r.points[start : end+1]}
+	return Climb{ride: *r, rideStart: start, rideEnd: end}
 }
 
 func Plot(r *Ride, outputFile string) {
 	r.check()
 
-	pts := make(plotter.XYs, len(r.points))
-	for i, p := range r.points {
-		pts[i].X = p.DistanceM / 1000 // Convert distance to kilometers
-		pts[i].Y = p.ElevationM
+	pts := make(plotter.XYs, r.Len())
+	for i := 0; i < r.Len(); i++ {
+		pts[i].X = r.DistanceM(i) / 1000 // Convert distance to kilometers
+		pts[i].Y = r.ElevationM(i)
 	}
 
 	p := plot.New()
@@ -192,8 +209,8 @@ func PlotScore(r *Ride, startKm, endKm float64, outputFile string) {
 	r.check()
 
 	startIndex := 0
-	for i, p := range r.points {
-		if p.DistanceM >= startKm*1000 {
+	for i := 0; i < r.Len(); i++ {
+		if r.DistanceM(i) >= startKm*1000 {
 			startIndex = i
 			break
 		}
@@ -201,22 +218,22 @@ func PlotScore(r *Ride, startKm, endKm float64, outputFile string) {
 
 	pts1 := make(plotter.XYs, 0)
 	endIndex := 0
-	for i := startIndex + 1; i < len(r.points); i++ {
-		if r.points[i].DistanceM > endKm*1000 {
+	for i := startIndex + 1; i < r.Len(); i++ {
+		if r.DistanceM(i) > endKm*1000 {
 			endIndex = i
 			break
 		}
-		score1 := Score(r.points, startIndex, i)
+		score1 := Score(*r, startIndex, i)
 		pts1 = append(pts1, plotter.XY{
-			X: r.points[i].DistanceM / 1000, // Convert distance to kilometers
+			X: r.DistanceM(i) / 1000, // Convert distance to kilometers
 			Y: score1,
 		})
 	}
 	pts2 := make(plotter.XYs, 0)
 	for i := startIndex; i < endIndex; i++ {
-		score2 := Score(r.points, i, endIndex)
+		score2 := Score(*r, i, endIndex)
 		pts2 = append(pts2, plotter.XY{
-			X: r.points[i].DistanceM / 1000, // Convert distance to kilometers
+			X: r.DistanceM(i) / 1000, // Convert distance to kilometers
 			Y: score2,
 		})
 	}

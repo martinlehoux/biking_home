@@ -22,8 +22,8 @@ func TestGPXRideParserSkipsStationaryPoints(t *testing.T) {
 
 	parsed, err := (ride.GPXRideParser{}).Parse(strings.NewReader(data))
 	require.NoError(t, err)
-	assert.Len(t, parsed.Points(), 2)
-	assert.Greater(t, parsed.Points()[1].DistanceM, 0.0)
+	assert.Equal(t, 2, parsed.Len())
+	assert.Greater(t, parsed.DistanceM(1), 0.0)
 }
 
 func TestGPXRideParserRejectsStationaryRide(t *testing.T) {

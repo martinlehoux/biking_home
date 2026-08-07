@@ -19,18 +19,18 @@ func Render(r ride.Ride, climbs []ride.Climb, crossings []mountain_pass.Crossing
 	p.Y.Label.Text = "Elevation (m)"
 
 	maxElev := 0.0
-	elevation := make(plotter.XYs, len(r.Points()))
-	for i, point := range r.Points() {
-		elevation[i].X = point.DistanceM / 1000
-		elevation[i].Y = point.ElevationM
-		if point.ElevationM > maxElev {
-			maxElev = point.ElevationM
+	elevation := make(plotter.XYs, r.Len())
+	for i := 0; i < r.Len(); i++ {
+		elevation[i].X = r.DistanceM(i) / 1000
+		elevation[i].Y = r.ElevationM(i)
+		if r.ElevationM(i) > maxElev {
+			maxElev = r.ElevationM(i)
 		}
 	}
 
 	for _, climb := range climbs {
-		x0 := climb.Start().DistanceM / 1000
-		x1 := climb.End().DistanceM / 1000
+		x0 := climb.StartDistanceM() / 1000
+		x1 := climb.EndDistanceM() / 1000
 		fill, err := plotter.NewPolygon(plotter.XYs{
 			{X: x0, Y: 0},
 			{X: x1, Y: 0},
@@ -41,7 +41,7 @@ func Render(r ride.Ride, climbs []ride.Climb, crossings []mountain_pass.Crossing
 		fill.Color = color.RGBA{R: 230, G: 160, B: 0, A: 70}
 		fill.LineStyle.Width = 0
 		p.Add(fill)
-		p.Add(plotLabels(plotter.XY{X: (x0 + x1) / 2, Y: climb.Top().ElevationM * 1.01}, climbLabel(climb)))
+		p.Add(plotLabels(plotter.XY{X: (x0 + x1) / 2, Y: climb.TopElevationM() * 1.01}, climbLabel(climb)))
 	}
 
 	for _, crossing := range crossings {

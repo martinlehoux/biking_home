@@ -26,8 +26,8 @@ func (index *FlatRideClimbsIndex) Insert(ride Ride) {
 func (index *FlatRideClimbsIndex) Similar(ride Ride, climb Climb) []Climb {
 	results := make([]Climb, 0)
 	for _, c := range index.climbs {
-		_, startDistance := geodist.HaversineDistance(c.Start().Coord, climb.Start().Coord)
-		_, endDistance := geodist.HaversineDistance(c.End().Coord, climb.End().Coord)
+		_, startDistance := geodist.HaversineDistance(c.ride.Coord(c.StartIndex()), climb.ride.Coord(climb.StartIndex()))
+		_, endDistance := geodist.HaversineDistance(c.ride.Coord(c.EndIndex()), climb.ride.Coord(climb.EndIndex()))
 		if startDistance <= index.sensitivity/1000 && endDistance <= index.sensitivity/1000 {
 			results = append(results, c)
 		}

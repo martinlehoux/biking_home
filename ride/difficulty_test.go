@@ -54,6 +54,6 @@ func TestDifficultyScoreHautacamClimbfinderReference(t *testing.T) {
 	climbs := r.AllClimbs()
 	assert.Len(t, climbs, 6)
 	hautacam := climbs[5]
-	assert.InDelta(t, 128.6, hautacam.Start().DistanceM/1000, 0.1)
+	assert.InDelta(t, 128.6, hautacam.StartDistanceM()/1000, 0.1)
 	assert.InDelta(t, 930.0, hautacam.DifficultyScore(), 10)
 }
