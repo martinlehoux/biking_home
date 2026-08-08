@@ -1,5 +1,6 @@
 [tools]
 go = "1.25.12"
+watchexec = "latest"
 
 [tasks.generate]
 description = "Generate templ Go files"
@@ -25,3 +26,7 @@ run = "DATABASE_URL=sqlite:biking_home.db go run github.com/amacneil/dbmate up"
 [tasks.dev]
 description = "Run the web server"
 run = "go run ."
+
+[tasks.dev-watch]
+description = "Regenerate templates and run the web server"
+run = ["mise run generate", "go run ."]

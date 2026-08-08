@@ -12,6 +12,9 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Pass crossing detection** — enriches passes with OSM coordinates, flags which passes a ride crosses, and names each climb after the pass it tops (e.g. "Col de Castellaras")
 - **Plots** — renders elevation and score-profile charts as PNG
 - **Web ride library** — starts a local web server by default, imports Strava rides over a date range, stores metadata in SQLite, and keeps their GPX files on disk
+- **Materialized ride values** — computes Cotacol on import, stores its algorithm version in SQLite, and refreshes all computed values with `-backfill`
+- **Strava stream metrics** — preserves heart rate, cadence, and power in Garmin-compatible GPX files and in-memory ride columns
+- **Ride table sorting** — sorts every ride-library column through clickable server-side headers and query parameters
 
 ## Getting started
 
@@ -23,7 +26,10 @@ go build -o biking_home .
 
 ```bash
 # Start the web server on http://localhost:8080
-./biking_home
+mise watch dev-watch --restart --exts go,templ --ignore '*_templ.go'
+
+# Recompute and persist all ride computed values
+./biking_home -backfill
 
 # Download French mountain passes into biking_home.db (SQLite)
 ./biking_home -download
@@ -54,6 +60,7 @@ go build -o biking_home .
 | `-import-cached` | Import cached department CSVs into the database | `false` |
 | `-extract-osm` | Extract mountain passes from a France OSM PBF | `""` |
 | `-enrich` | Backfill OSM coordinates onto passes | `false` |
+| `-backfill` | Recompute and persist all ride computed values | `false` |
 | `-chart` | Render an elevation chart (climbs + passes) for a GPX file | `""` |
 
 Configuration is stored in `config.yaml`. Start from `config.example.yaml` and set the Strava credentials before launching the server.
@@ -77,7 +84,7 @@ Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
 - `mountain_pass` — centcols.org department CSV download into SQLite, with disk caching and retries
 - `osmpass` — OSM PBF extraction (`mountain_pass=yes` nodes) and pass coordinate enrichment
 - `strava` — OAuth2 client returning activity metadata and GPX data
-- `rides` — SQLite persistence for imported ride metadata
+- `rides` — SQLite persistence for imported ride metadata and versioned computed values
 - `config` — typed YAML configuration and atomic persistence
 - `web` — HTTP server, OAuth callback, sync orchestration, and templ pages
 - `cli` — legacy mountain-pass, OSM, and chart command handlers
@@ -123,9 +130,13 @@ mise run build
 
 - Compute estimated power
 - Plot speed and slope per segment, colored by heart rate
+- Plot speed vs ctc/100km
 - Persist the chosen climb variant across activities
 - Handle historical data
 - Blog with pictures and markdown
+- Cotacol with a different step size
+- Cotacol with a variable step size (constant slope is the best?)
+- Road quality (Arbois = 2/5, Roquefavour = 4/5)
 
 ## Resources
 
