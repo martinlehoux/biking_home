@@ -14,6 +14,7 @@ import (
 	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/osmpass"
 	"github.com/martinlehoux/biking_home/ride"
+	"github.com/martinlehoux/biking_home/rides"
 	"github.com/martinlehoux/biking_home/web"
 	"github.com/martinlehoux/kagamigo/kcore"
 )
@@ -25,6 +26,7 @@ var (
 	fetchOSM    = flag.Bool("fetch-osm", false, "download the France OSM PBF (resumable) into france-latest.osm.pbf")
 	extractOSM  = flag.String("extract-osm", "", "extract mountain passes from an OSM PBF file into the database")
 	enrich      = flag.Bool("enrich", false, "backfill mountain pass coordinates from OSM data")
+	backfill    = flag.Bool("backfill", false, "recompute all stored ride values")
 	chartFile   = flag.String("chart", "", "render a climb/pass chart for a GPX file")
 	parser      = ride.GPXRideParser{}
 )
@@ -46,6 +48,10 @@ func Run(db *sql.DB, configPath string, appConfig config.Config) {
 	case *enrich:
 		_, err := osmpass.EnrichMountainPasses(db)
 		kcore.Expect(err, "failed to enrich mountain passes")
+	case *backfill:
+		count, err := rides.Backfill(db)
+		kcore.Expect(err, "failed to backfill ride values")
+		slog.Info("Backfilled ride values", "rides", count)
 	case *chartFile != "":
 		runChart(db, *chartFile)
 	default:

@@ -89,7 +89,7 @@ func buildRideViews(items []rides.Ride) []RideView {
 		if err != nil {
 			slog.Warn("Failed to compute Cotacol", "ride", item.ExternalID, "file", item.GPXPath, "error", err)
 		} else {
-			score := parsed.DifficultyScore()
+			score := ride.Cotacol(parsed)
 			view.Cotacol = formatCotacol(score)
 			view.CotacolPer100Km = formatCotacolPer100Km(score, item.DistanceM)
 			view.cotacolScore = score

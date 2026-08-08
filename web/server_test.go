@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -35,6 +36,8 @@ func newWebTestServer(t *testing.T) (*Server, *sql.DB) {
 			elapsed_time_s integer not null,
 			total_elevation_gain_m real not null,
 			average_speed_mps real not null,
+			cotacol_score real,
+			cotacol_algo_version text,
 			created_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 			updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 		)
@@ -48,11 +51,18 @@ func newWebTestServer(t *testing.T) (*Server, *sql.DB) {
 	return NewServer(db, configPath), db
 }
 
+func testGPXPath(t *testing.T, name string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), name)
+	require.NoError(t, os.WriteFile(path, []byte(`<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg><trkpt lat="43.0" lon="5.0"><ele>100</ele></trkpt><trkpt lat="43.001" lon="5.001"><ele>200</ele></trkpt></trkseg></trk></gpx>`), 0o600))
+	return path
+}
+
 func TestHandlerRendersRidesPage(t *testing.T) {
 	server, db := newWebTestServer(t)
 	require.NoError(t, rides.Save(db, rides.Ride{
 		ExternalID: "strava:1234",
-		GPXPath:    "missing.gpx",
+		GPXPath:    testGPXPath(t, "long.gpx"),
 		Name:       "Long Ride",
 		Type:       "Ride",
 		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
@@ -60,7 +70,7 @@ func TestHandlerRendersRidesPage(t *testing.T) {
 	}))
 	require.NoError(t, rides.Save(db, rides.Ride{
 		ExternalID: "strava:5678",
-		GPXPath:    "short.gpx",
+		GPXPath:    testGPXPath(t, "short.gpx"),
 		Name:       "Short Ride",
 		Type:       "Ride",
 		StartDate:  time.Date(2026, 8, 2, 7, 0, 0, 0, time.UTC),
@@ -192,7 +202,7 @@ func TestHandlerSortsRidesByDistance(t *testing.T) {
 	server, db := newWebTestServer(t)
 	require.NoError(t, rides.Save(db, rides.Ride{
 		ExternalID: "strava:550e8400-e29b-41d4-a716-446655440000",
-		GPXPath:    "near.gpx",
+		GPXPath:    testGPXPath(t, "near.gpx"),
 		Name:       "Near Ride",
 		Type:       "Ride",
 		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
@@ -200,7 +210,7 @@ func TestHandlerSortsRidesByDistance(t *testing.T) {
 	}))
 	require.NoError(t, rides.Save(db, rides.Ride{
 		ExternalID: "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8",
-		GPXPath:    "far.gpx",
+		GPXPath:    testGPXPath(t, "far.gpx"),
 		Name:       "Far Ride",
 		Type:       "Ride",
 		StartDate:  time.Date(2026, 8, 2, 7, 0, 0, 0, time.UTC),

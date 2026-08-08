@@ -245,8 +245,10 @@ func (r *Ride) ScoreFromKm(start, end float64) float64 {
 	return Score(*r, i, j)
 }
 
-func (r *Ride) DifficultyScore() float64 {
-	return difficultyScore(*r, 0, r.Len()-1)
+const CotacolAlgorithmVersion = "v1"
+
+func Cotacol(ride Ride) float64 {
+	return difficultyScore(ride, 0, ride.Len()-1)
 }
 
 func difficultyScore(r Ride, startIndex, endIndex int) float64 {
