@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -57,13 +56,11 @@ func (s *Server) handleRides(w http.ResponseWriter, r *http.Request) {
 	rideSort := parseRideSort(r.URL.Query())
 	items, err := s.listRides(rideSort)
 	if err != nil {
+		slog.Error("Failed to load rides", "sort", rideSort.Column, "descending", rideSort.Descending, "error", err)
 		http.Error(w, "failed to load rides", http.StatusInternalServerError)
 		return
 	}
 	views := buildRideViews(items)
-	if _, databaseColumn := rideSort.databaseColumn(); !databaseColumn {
-		sortRideViews(views, rideSort)
-	}
 	kcore.RenderPage(r.Context(), RidesPage(views, rideSortHeaders(rideSort)), w)
 }
 
@@ -78,52 +75,20 @@ func (s *Server) listRides(rideSort RideSort) ([]rides.Ride, error) {
 const minimumDisplayedDistanceM = 10_000
 
 func buildRideViews(items []rides.Ride) []RideView {
-	parser := ride.GPXRideParser{}
 	views := make([]RideView, 0, len(items))
 	for _, item := range items {
 		if item.DistanceM < minimumDisplayedDistanceM {
 			continue
 		}
-		view := RideView{Ride: item, Cotacol: "-"}
-		parsed, err := ride.ParseFile(parser, item.GPXPath)
-		if err != nil {
-			slog.Warn("Failed to compute Cotacol", "ride", item.ExternalID, "file", item.GPXPath, "error", err)
-		} else {
-			score := ride.Cotacol(parsed)
+		view := RideView{Ride: item, Cotacol: "-", CotacolPer100Km: "-"}
+		score, ready := item.CotacolScore()
+		if ready && item.CotacolAlgorithmVersion() == ride.CotacolAlgorithmVersion && item.DistanceM > 0 {
 			view.Cotacol = formatCotacol(score)
 			view.CotacolPer100Km = formatCotacolPer100Km(score, item.DistanceM)
-			view.cotacolScore = score
-			view.cotacolPer100Km = score * 100 / (item.DistanceM / 1000)
-			view.cotacolReady = true
 		}
 		views = append(views, view)
 	}
 	return views
-}
-
-func sortRideViews(items []RideView, rideSort RideSort) {
-	sort.SliceStable(items, func(i, j int) bool {
-		left, right := items[i], items[j]
-		if !left.cotacolReady || !right.cotacolReady {
-			if left.cotacolReady != right.cotacolReady {
-				return left.cotacolReady
-			}
-			return false
-		}
-		var leftValue, rightValue float64
-		switch rideSort.Column {
-		case rideSortCotacol:
-			leftValue, rightValue = left.cotacolScore, right.cotacolScore
-		case rideSortCotacolKm:
-			leftValue, rightValue = left.cotacolPer100Km, right.cotacolPer100Km
-		default:
-			return false
-		}
-		if rideSort.Descending {
-			return leftValue > rightValue
-		}
-		return leftValue < rightValue
-	})
 }
 
 func (s *Server) handleSyncForm(w http.ResponseWriter, r *http.Request) {

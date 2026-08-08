@@ -12,9 +12,6 @@ type RideView struct {
 	rides.Ride
 	Cotacol         string
 	CotacolPer100Km string
-	cotacolScore    float64
-	cotacolPer100Km float64
-	cotacolReady    bool
 }
 
 type RideSort struct {
@@ -66,6 +63,8 @@ func (s RideSort) databaseColumn() (rides.SortColumn, bool) {
 		rideSortDistance:   rides.SortDistance,
 		rideSortMovingTime: rides.SortMovingTime,
 		rideSortElevation:  rides.SortElevation,
+		rideSortCotacol:    rides.SortCotacol,
+		rideSortCotacolKm:  rides.SortCotacolKm,
 	}
 	column, found := columns[s.Column]
 	return column, found

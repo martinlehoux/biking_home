@@ -3,6 +3,7 @@ package rides
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/martinlehoux/biking_home/ride"
@@ -35,6 +36,8 @@ const (
 	SortDistance   SortColumn = "distance"
 	SortMovingTime SortColumn = "moving_time"
 	SortElevation  SortColumn = "elevation"
+	SortCotacol    SortColumn = "cotacol"
+	SortCotacolKm  SortColumn = "cotacol_100km"
 )
 
 const columns = "id, external_id, gpx_path, name, type, start_date, distance_m, moving_time_s, elapsed_time_s, total_elevation_gain_m, average_speed_mps, cotacol_score, cotacol_algo_version, created_at, updated_at"
@@ -86,12 +89,15 @@ func Backfill(db *sql.DB) (int, error) {
 	if err := rows.Close(); err != nil {
 		return 0, err
 	}
-	for i, item := range pending {
+	backfilled := 0
+	for _, item := range pending {
 		if err := Save(db, item); err != nil {
-			return i, fmt.Errorf("backfill ride %q: %w", item.ExternalID, err)
+			slog.Warn("Failed to backfill ride values", "ride", item.ExternalID, "file", item.GPXPath, "error", err)
+			continue
 		}
+		backfilled++
 	}
-	return len(pending), nil
+	return backfilled, nil
 }
 
 func List(db *sql.DB) ([]Ride, error) {
@@ -107,7 +113,14 @@ func ListSorted(db *sql.DB, column SortColumn, descending bool) ([]Ride, error) 
 	if descending {
 		direction = "DESC"
 	}
-	rows, err := db.Query("SELECT " + columns + " FROM rides ORDER BY " + expression + " " + direction + ", id DESC")
+	query := "SELECT " + columns + " FROM rides ORDER BY "
+	args := []any{}
+	if isComputedSort(column) {
+		query += "(cotacol_score IS NULL OR cotacol_algo_version IS NULL OR cotacol_algo_version <> ? OR distance_m <= 0) ASC, "
+		args = append(args, ride.CotacolAlgorithmVersion)
+	}
+	query += expression + " " + direction + ", id DESC"
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,6 +142,12 @@ var sortExpressions = map[SortColumn]string{
 	SortDistance:   "distance_m",
 	SortMovingTime: "moving_time_s",
 	SortElevation:  "total_elevation_gain_m",
+	SortCotacol:    "cotacol_score",
+	SortCotacolKm:  "cotacol_score * 100000.0 / NULLIF(distance_m, 0)",
+}
+
+func isComputedSort(column SortColumn) bool {
+	return column == SortCotacol || column == SortCotacolKm
 }
 
 func GetByExternalID(db *sql.DB, externalID string) (Ride, bool, error) {

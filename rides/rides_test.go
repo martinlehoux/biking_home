@@ -117,6 +117,25 @@ func TestBackfill(t *testing.T) {
 	assert.Equal(t, 1, count)
 }
 
+func TestBackfillSkipsInvalidRide(t *testing.T) {
+	db := newTestDB(t)
+	_, err := db.Exec(`
+		INSERT INTO rides (external_id, gpx_path, name, type, start_date, distance_m, moving_time_s, elapsed_time_s, total_elevation_gain_m, average_speed_mps)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, "strava:550e8400-e29b-41d4-a716-446655440000", "missing.gpx", "Broken Ride", "Ride", "2026-08-01T07:00:00Z", 20_000, 0, 0, 0, 0)
+	require.NoError(t, err)
+
+	count, err := Backfill(db)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+
+	got, ok, err := GetByExternalID(db, "strava:550e8400-e29b-41d4-a716-446655440000")
+	require.NoError(t, err)
+	require.True(t, ok)
+	_, found := got.CotacolScore()
+	assert.False(t, found)
+}
+
 func TestUpsertUpdatesExisting(t *testing.T) {
 	db := newTestDB(t)
 	ride := sampleRide(t)
@@ -148,4 +167,57 @@ func TestList(t *testing.T) {
 	assert.Equal(t, "strava:5678", rides[0].ExternalID)
 	assert.Equal(t, "strava:1234", rides[1].ExternalID)
 	kcore.Assert(len(rides) == 2, "two rides")
+}
+
+func TestListSortedByCotacolKeepsStaleLast(t *testing.T) {
+	db := newTestDB(t)
+	first := sampleRide(t)
+	first.ExternalID = "strava:550e8400-e29b-41d4-a716-446655440000"
+	first.DistanceM = 20_000
+	second := sampleRide(t)
+	second.ExternalID = "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8"
+	second.DistanceM = 40_000
+	require.NoError(t, Save(db, first))
+	require.NoError(t, Save(db, second))
+	_, err := db.Exec(`
+		UPDATE rides
+		SET cotacol_score = CASE external_id WHEN ? THEN 4 ELSE 6 END,
+			cotacol_algo_version = ?
+	`, first.ExternalID, ride.CotacolAlgorithmVersion)
+	require.NoError(t, err)
+
+	items, err := ListSorted(db, SortCotacol, false)
+	require.NoError(t, err)
+	assert.Equal(t, first.ExternalID, items[0].ExternalID)
+	assert.Equal(t, second.ExternalID, items[1].ExternalID)
+
+	_, err = db.Exec("UPDATE rides SET cotacol_algo_version = ? WHERE external_id = ?", "old", first.ExternalID)
+	require.NoError(t, err)
+	items, err = ListSorted(db, SortCotacol, false)
+	require.NoError(t, err)
+	assert.Equal(t, second.ExternalID, items[0].ExternalID)
+	assert.Equal(t, first.ExternalID, items[1].ExternalID)
+}
+
+func TestListSortedByCotacolPer100Km(t *testing.T) {
+	db := newTestDB(t)
+	first := sampleRide(t)
+	first.ExternalID = "strava:550e8400-e29b-41d4-a716-446655440000"
+	first.DistanceM = 20_000
+	second := sampleRide(t)
+	second.ExternalID = "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8"
+	second.DistanceM = 40_000
+	require.NoError(t, Save(db, first))
+	require.NoError(t, Save(db, second))
+	_, err := db.Exec(`
+		UPDATE rides
+		SET cotacol_score = CASE external_id WHEN ? THEN 4 ELSE 6 END,
+			cotacol_algo_version = ?
+	`, first.ExternalID, ride.CotacolAlgorithmVersion)
+	require.NoError(t, err)
+
+	items, err := ListSorted(db, SortCotacolKm, false)
+	require.NoError(t, err)
+	assert.Equal(t, second.ExternalID, items[0].ExternalID)
+	assert.Equal(t, first.ExternalID, items[1].ExternalID)
 }

@@ -180,22 +180,25 @@ func TestRideSortHeadersToggleDirection(t *testing.T) {
 	assert.Equal(t, "ascending", headers[2].AriaSort)
 }
 
-func TestSortRideViewsByCotacolKeepsMissingLast(t *testing.T) {
-	items := []RideView{
-		{cotacolScore: 4, cotacolReady: true},
-		{cotacolScore: 1, cotacolReady: true},
-		{cotacolReady: false},
+func TestBuildRideViewsUsesStoredCotacol(t *testing.T) {
+	_, db := newWebTestServer(t)
+	ride := rides.Ride{
+		ExternalID: "strava:550e8400-e29b-41d4-a716-446655440000",
+		GPXPath:    testGPXPath(t, "stored.gpx"),
+		Name:       "Stored Ride",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
+		DistanceM:  20_000,
 	}
+	require.NoError(t, rides.Save(db, ride))
+	_, err := db.Exec("UPDATE rides SET gpx_path = ? WHERE external_id = ?", "missing.gpx", ride.ExternalID)
+	require.NoError(t, err)
+	items, err := rides.List(db)
+	require.NoError(t, err)
 
-	sortRideViews(items, RideSort{Column: rideSortCotacol})
-	assert.Equal(t, 1.0, items[0].cotacolScore)
-	assert.Equal(t, 4.0, items[1].cotacolScore)
-	assert.False(t, items[2].cotacolReady)
-
-	sortRideViews(items, RideSort{Column: rideSortCotacol, Descending: true})
-	assert.Equal(t, 4.0, items[0].cotacolScore)
-	assert.Equal(t, 1.0, items[1].cotacolScore)
-	assert.False(t, items[2].cotacolReady)
+	views := buildRideViews(items)
+	require.Len(t, views, 1)
+	assert.NotEqual(t, "-", views[0].Cotacol)
 }
 
 func TestHandlerSortsRidesByDistance(t *testing.T) {
@@ -225,4 +228,39 @@ func TestHandlerSortsRidesByDistance(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Less(t, strings.Index(body, "Near Ride"), strings.Index(body, "Far Ride"))
 	assert.Contains(t, body, "dir=desc&amp;sort=distance")
+}
+
+func TestHandlerSortsRidesByCotacol(t *testing.T) {
+	server, db := newWebTestServer(t)
+	first := rides.Ride{
+		ExternalID: "strava:550e8400-e29b-41d4-a716-446655440000",
+		GPXPath:    testGPXPath(t, "first.gpx"),
+		Name:       "Low Cotacol",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
+		DistanceM:  20_000,
+	}
+	second := rides.Ride{
+		ExternalID: "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8",
+		GPXPath:    testGPXPath(t, "second.gpx"),
+		Name:       "High Cotacol",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 2, 7, 0, 0, 0, time.UTC),
+		DistanceM:  40_000,
+	}
+	require.NoError(t, rides.Save(db, first))
+	require.NoError(t, rides.Save(db, second))
+	_, err := db.Exec(`
+		UPDATE rides
+		SET cotacol_score = CASE external_id WHEN ? THEN 1 ELSE 4 END
+	`, first.ExternalID)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/?sort=cotacol&dir=asc", nil)
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, req)
+
+	body := response.Body.String()
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Less(t, strings.Index(body, "Low Cotacol"), strings.Index(body, "High Cotacol"))
 }
