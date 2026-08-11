@@ -21,7 +21,7 @@ run = "go build -o biking_home ."
 
 [tasks.migrate]
 description = "Apply SQLite migrations"
-run = "DATABASE_URL=sqlite:biking_home.db go run github.com/amacneil/dbmate up"
+run = "DATABASE_URL=sqlite:biking_home.db go tool dbmate up"
 
 [tasks.dev]
 description = "Run the web server"
