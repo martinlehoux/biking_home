@@ -5,15 +5,11 @@ import (
 	"database/sql"
 	"flag"
 	"log/slog"
-	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com/martinlehoux/biking_home/chart"
 	"github.com/martinlehoux/biking_home/config"
 	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/osmpass"
-	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 	"github.com/martinlehoux/biking_home/web"
 	"github.com/martinlehoux/kagamigo/kcore"
@@ -27,8 +23,6 @@ var (
 	extractOSM  = flag.String("extract-osm", "", "extract mountain passes from an OSM PBF file into the database")
 	enrich      = flag.Bool("enrich", false, "backfill mountain pass coordinates from OSM data")
 	backfill    = flag.Bool("backfill", false, "recompute all stored ride values")
-	chartFile   = flag.String("chart", "", "render a climb/pass chart for a GPX file")
-	parser      = ride.GPXRideParser{}
 )
 
 func Run(db *sql.DB, configPath string, appConfig config.Config) {
@@ -52,8 +46,6 @@ func Run(db *sql.DB, configPath string, appConfig config.Config) {
 		count, err := rides.Backfill(db)
 		kcore.Expect(err, "failed to backfill ride values")
 		slog.Info("Backfilled ride values", "rides", count)
-	case *chartFile != "":
-		runChart(db, *chartFile)
 	default:
 		runServer(db, configPath, appConfig)
 	}
@@ -63,23 +55,4 @@ func runServer(db *sql.DB, configPath string, appConfig config.Config) {
 	server := web.NewServer(db, configPath)
 	slog.Info("Starting web server", "address", appConfig.Server.PublicURL)
 	kcore.Expect(server.ListenAndServe(appConfig.Server.Address), "web server stopped")
-}
-
-func runChart(db *sql.DB, filename string) {
-	r, err := ride.ParseFile(parser, filename)
-	kcore.Expect(err, "failed to parse ride")
-	passes, err := mountain_pass.LoadMountainPasses(db)
-	kcore.Expect(err, "failed to load mountain passes")
-
-	climbs := r.AllClimbs()
-	for i := range climbs {
-		if matched, ok := mountain_pass.MatchClimb(climbs[i], passes, 300, 50); ok {
-			climbs[i].Name = matched.Name
-		}
-	}
-	crossings := mountain_pass.DetectCrossings(r, passes, 100, 25)
-
-	output := strings.TrimSuffix(filename, filepath.Ext(filename)) + "-chart.png"
-	chart.Render(r, climbs, crossings, output)
-	slog.Info("Chart written", "file", output)
 }

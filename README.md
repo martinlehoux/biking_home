@@ -10,7 +10,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Similar-climb matching** — finds the same climb across rides by matching start/end coordinates, so times can be compared
 - **Mountain pass download** — imports French mountain passes from centcols.org into a SQLite database
 - **Pass crossing detection** — enriches passes with OSM coordinates, flags which passes a ride crosses, and names each climb after the pass it tops (e.g. "Col de Castellaras")
-- **Plots** — renders elevation and score-profile charts as PNG
+- **Interactive ride profiles** — explores elevation, climbs, and mountain-pass crossings in the web ride detail view
 - **Web ride library** — starts a local web server by default, imports Strava rides over a date range, stores metadata in SQLite, and keeps their GPX files on disk
 - **Materialized ride values** — computes Cotacol on import, stores its algorithm version in SQLite, and refreshes all computed values with `-backfill`
 - **Strava stream metrics** — preserves heart rate, cadence, and power in Garmin-compatible GPX files and in-memory ride columns
@@ -49,9 +49,6 @@ mise watch dev-watch --restart --exts go,templ --ignore '*_templ.go'
 # Backfill OSM coordinates onto passes (needs -extract-osm run first)
 ./biking_home -enrich
 
-# Render an elevation chart with climb highlights and pass markers
-./biking_home -chart examples/2023-06-17.AlpesVerdonTour.gpx
-
 ```
 
 ## Options / Configuration
@@ -64,7 +61,6 @@ mise watch dev-watch --restart --exts go,templ --ignore '*_templ.go'
 | `-extract-osm` | Extract mountain passes from a France OSM PBF | `""` |
 | `-enrich` | Backfill OSM coordinates onto passes | `false` |
 | `-backfill` | Recompute and persist all ride computed values | `false` |
-| `-chart` | Render an elevation chart (climbs + passes) for a GPX file | `""` |
 
 Configuration is stored in `config.yaml`. Start from `config.example.yaml` and set the Strava credentials before launching the server.
 
@@ -82,7 +78,7 @@ Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
 
 ## Architecture
 
-- Go 1.23; SQLite via `mattn/go-sqlite3`; charts via `gonum.org/v1/plot`
+- Go 1.23; SQLite via `mattn/go-sqlite3`
 - `ride` — GPX parsing, climb detection, difficulty scores (KOM + Cotacol), similarity index
 - `mountain_pass` — centcols.org department CSV download into SQLite, with disk caching and retries
 - `osmpass` — OSM PBF extraction (`mountain_pass=yes` nodes) and pass coordinate enrichment
@@ -90,8 +86,7 @@ Standard apps are rate-limited to 100 calls per 15 minutes and 1,000 per day.
 - `rides` — SQLite persistence for imported ride metadata and versioned computed values
 - `config` — typed YAML configuration and atomic persistence
 - `web` — HTTP server, OAuth callback, sync orchestration, and templ pages
-- `cli` — legacy mountain-pass, OSM, and chart command handlers
-- `chart` — elevation chart rendering
+- `cli` — legacy mountain-pass and OSM command handlers
 - **Notable choices** — the difficulty score follows the Cotacol method: the ride is split into fixed 100 m segments and each scores `distance_km × slope²`, so steep sections weigh exponentially more than long flat ones
 
 ```mermaid
@@ -108,14 +103,12 @@ flowchart TB
     config["config (YAML)"]
     web["web (HTTP + templ)"]
     cli["cli (legacy commands)"]
-    chart["chart (renderer)"]
 
     main --> cli
     cli --> ride
     cli --> mpass
     cli --> osmpass
     cli --> web
-    cli --> chart
     mpass --> ride
     web --> strava
     web --> rides

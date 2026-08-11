@@ -13,10 +13,6 @@ import (
 	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/kagamigo/kcore"
 	"github.com/tkrajina/gpxgo/gpx"
-	"gonum.org/v1/plot"
-	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/plotutil"
-	"gonum.org/v1/plot/vg"
 )
 
 const garminTrackPointExtensionNamespace = "http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
@@ -302,89 +298,4 @@ func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {
 		}
 	}
 	return Climb{ride: *r, rideStart: start, rideEnd: end}
-}
-
-func Plot(r *Ride, outputFile string) {
-	r.check()
-
-	pts := make(plotter.XYs, r.Len())
-	for i := 0; i < r.Len(); i++ {
-		pts[i].X = r.DistanceM(i) / 1000 // Convert distance to kilometers
-		pts[i].Y = r.ElevationM(i)
-	}
-
-	p := plot.New()
-	p.Title.Text = "Ride Elevation Profile"
-	p.X.Label.Text = "Distance (km)"
-	p.Y.Label.Text = "Elevation (m)"
-
-	line, err := plotter.NewLine(pts)
-	kcore.Expect(err, "failed to create line plot")
-	p.Add(line)
-
-	err = p.Save(10*vg.Inch, 4*vg.Inch, outputFile)
-	kcore.Expect(err, "failed to save plot")
-}
-
-func PlotScore(r *Ride, startKm, endKm float64, outputFile string) {
-	r.check()
-
-	startIndex := 0
-	for i := 0; i < r.Len(); i++ {
-		if r.DistanceM(i) >= startKm*1000 {
-			startIndex = i
-			break
-		}
-	}
-
-	pts1 := make(plotter.XYs, 0)
-	endIndex := 0
-	for i := startIndex + 1; i < r.Len(); i++ {
-		if r.DistanceM(i) > endKm*1000 {
-			endIndex = i
-			break
-		}
-		score1 := Score(*r, startIndex, i)
-		pts1 = append(pts1, plotter.XY{
-			X: r.DistanceM(i) / 1000, // Convert distance to kilometers
-			Y: score1,
-		})
-	}
-	pts2 := make(plotter.XYs, 0)
-	for i := startIndex; i < endIndex; i++ {
-		score2 := Score(*r, i, endIndex)
-		pts2 = append(pts2, plotter.XY{
-			X: r.DistanceM(i) / 1000, // Convert distance to kilometers
-			Y: score2,
-		})
-	}
-
-	p := plot.New()
-	p.Title.Text = "Ride Score Profile"
-	p.X.Label.Text = "Distance (km)"
-	p.Y.Label.Text = "Score"
-
-	line1, err := plotter.NewLine(pts1)
-	kcore.Expect(err, "failed to create line plot for score1")
-	line1.Color = plotutil.Color(0) // First line color
-	maxIndex := 0
-	maxValue := pts1[0].Y
-	for i, pt := range pts1 {
-		if pt.Y > maxValue {
-			maxValue = pt.Y
-			maxIndex = i
-		}
-	}
-	println("Max value of line 1 is at distance:", pts1[maxIndex].X, "km")
-
-	line2, err := plotter.NewLine(pts2)
-	kcore.Expect(err, "failed to create line plot for score2")
-	line2.Color = plotutil.Color(1) // Second line color
-
-	p.Add(line1, line2)
-	p.Legend.Add("Score (start to i)", line1)
-	p.Legend.Add("Score (i to end)", line2)
-
-	err = p.Save(10*vg.Inch, 4*vg.Inch, outputFile)
-	kcore.Expect(err, "failed to save plot")
 }
