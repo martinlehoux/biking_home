@@ -4,7 +4,7 @@ watchexec = "latest"
 
 [tasks.generate]
 description = "Generate templ Go files"
-run = "go run github.com/a-h/templ/cmd/templ@v0.2.747 generate"
+run = "go tool templ generate"
 
 [tasks.format]
 description = "Format Go sources"
