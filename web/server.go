@@ -49,6 +49,7 @@ func NewServer(db *sql.DB, configPath string) *Server {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("GET /static/", http.FileServer(http.FS(staticFiles)))
 	mux.HandleFunc("GET /", s.handleRides)
 	mux.HandleFunc("GET /rides/{id}", s.handleRide)
 	mux.HandleFunc("GET /sync", s.handleSyncForm)
