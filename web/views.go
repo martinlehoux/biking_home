@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 )
@@ -19,7 +20,40 @@ type RideDetailView struct {
 	RideView
 	Route      GeoJSONFeatureCollection
 	HasRoute   bool
+	Profile    RideProfile
 	RouteError string
+}
+
+type RideProfile struct {
+	Points    []RideProfilePoint    `json:"points"`
+	Climbs    []RideProfileClimb    `json:"climbs"`
+	Crossings []RideProfileCrossing `json:"crossings"`
+}
+
+type RideProfilePoint struct {
+	DistanceKm float64 `json:"distanceKm"`
+	ElevationM float64 `json:"elevationM"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
+}
+
+type RideProfileClimb struct {
+	StartKm       float64 `json:"startKm"`
+	EndKm         float64 `json:"endKm"`
+	TopKm         float64 `json:"topKm"`
+	TopElevationM float64 `json:"topElevationM"`
+	Name          string  `json:"name"`
+	Score         float64 `json:"score"`
+	Category      string  `json:"category"`
+}
+
+type RideProfileCrossing struct {
+	DistanceKm    float64 `json:"distanceKm"`
+	PassElevation float64 `json:"passElevationM"`
+	RideElevation float64 `json:"rideElevationM"`
+	DistanceToM   float64 `json:"distanceToM"`
+	ElevationDiff float64 `json:"elevationDiffM"`
+	Name          string  `json:"name"`
 }
 
 type GeoJSONFeatureCollection struct {
@@ -150,12 +184,13 @@ func rideDetailURL(id int64) string {
 	return fmt.Sprintf("/rides/%d", id)
 }
 
-func buildRideDetailView(item rides.Ride, parsed ride.Ride) RideDetailView {
+func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pass.MountainPass) RideDetailView {
 	coordinates := make([][]float64, parsed.Len())
 	for i := 0; i < parsed.Len(); i++ {
 		coordinate := parsed.Coord(i)
 		coordinates[i] = []float64{coordinate.Lon, coordinate.Lat}
 	}
+	profile := buildRideProfile(parsed, passes)
 	return RideDetailView{
 		RideView: buildRideView(item),
 		Route: GeoJSONFeatureCollection{
@@ -169,7 +204,51 @@ func buildRideDetailView(item rides.Ride, parsed ride.Ride) RideDetailView {
 			}},
 		},
 		HasRoute: true,
+		Profile:  profile,
 	}
+}
+
+func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass) RideProfile {
+	profile := RideProfile{
+		Points:    make([]RideProfilePoint, parsed.Len()),
+		Climbs:    make([]RideProfileClimb, 0),
+		Crossings: make([]RideProfileCrossing, 0),
+	}
+	for i := 0; i < parsed.Len(); i++ {
+		coordinate := parsed.Coord(i)
+		profile.Points[i] = RideProfilePoint{
+			DistanceKm: parsed.DistanceM(i) / 1000,
+			ElevationM: parsed.ElevationM(i),
+			Latitude:   coordinate.Lat,
+			Longitude:  coordinate.Lon,
+		}
+	}
+	climbs := parsed.AllClimbs()
+	for i := range climbs {
+		if matched, ok := mountain_pass.MatchClimb(climbs[i], passes, 300, 50); ok {
+			climbs[i].Name = matched.Name
+		}
+		profile.Climbs = append(profile.Climbs, RideProfileClimb{
+			StartKm:       climbs[i].StartDistanceM() / 1000,
+			EndKm:         climbs[i].EndDistanceM() / 1000,
+			TopKm:         climbs[i].TopDistanceM() / 1000,
+			TopElevationM: climbs[i].TopElevationM(),
+			Name:          climbs[i].Name,
+			Score:         climbs[i].Score(),
+			Category:      ride.Category(climbs[i].Score()),
+		})
+	}
+	for _, crossing := range mountain_pass.DetectCrossings(parsed, passes, 100, 25) {
+		profile.Crossings = append(profile.Crossings, RideProfileCrossing{
+			DistanceKm:    crossing.RideDistanceM / 1000,
+			PassElevation: float64(crossing.Pass.Elevation),
+			RideElevation: crossing.RideElevation,
+			DistanceToM:   crossing.DistanceToM,
+			ElevationDiff: crossing.ElevationDiff,
+			Name:          crossing.Pass.Name,
+		})
+	}
+	return profile
 }
 
 type SyncPageData struct {

@@ -42,7 +42,7 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" · biking_home</title><link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\"><style>\n\t\t\t\t:root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f3ee; color: #1d2a22; }\n\t\t\t\t* { box-sizing: border-box; }\n\t\t\t\tbody { margin: 0; }\n\t\t\t\ta { color: #18794e; }\n\t\t\t\t.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem max(1rem, calc((100vw - 70rem) / 2)); background: #173b2a; color: #fff; }\n\t\t\t\t.site-header a { color: #fff; text-decoration: none; }\n\t\t\t\t.brand { font-weight: 750; letter-spacing: .02em; }\n\t\t\t\t.nav { display: flex; gap: 1rem; font-size: .95rem; }\n\t\t\t\t.container { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }\n\t\t\t\t.eyebrow { margin: 0 0 .4rem; color: #18794e; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }\n\t\t\t\th1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; }\n\t\t\t\t.lead { max-width: 42rem; color: #5b675f; }\n\t\t\t\t.panel { margin-top: 2rem; padding: 1.25rem; border: 1px solid #d9ded8; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 2.5rem #173b2a0d; }\n\t\t\t\t.toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }\n\t\t\t\t.button { display: inline-block; border: 0; border-radius: .65rem; padding: .7rem 1rem; background: #d96932; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }\n\t\t\t\t.button.secondary { background: #e8eee9; color: #173b2a; }\n\t\t\t\tlabel { display: grid; gap: .35rem; color: #5b675f; font-size: .85rem; font-weight: 650; }\n\t\t\t\tinput { border: 1px solid #c8d0c9; border-radius: .55rem; padding: .65rem .7rem; font: inherit; color: inherit; background: #fff; }\n\t\t\t\t.form-row { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }\n\t\t\t\t.sync-progress { display: grid; gap: .7rem; margin-top: 1.25rem; }\n\t\t\t\t.progress-heading { display: flex; justify-content: space-between; gap: 1rem; }\n\t\t\t\tprogress { width: 100%; height: .8rem; accent-color: #d96932; }\n\t\t\t\t.notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #e5f3e9; color: #17633f; }\n\t\t\t\t.error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #fbe8df; color: #8c3517; }\n\t\t\t\ttable { width: 100%; border-collapse: collapse; }\n\t\t\t\tth, td { padding: .85rem .5rem; border-bottom: 1px solid #e5e9e5; text-align: left; }\n\t\t\t\tth { color: #68746c; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\t.sort-link { color: inherit; text-decoration: none; }\n\t\t\t\t.sort-link:hover, .sort-link:focus-visible, th.active .sort-link { color: #d96932; }\n\t\t\t\t.sort-indicator { display: inline-block; margin-left: .2rem; }\n\t\t\t\t.numeric { text-align: right; white-space: nowrap; }\n\t\t\t\t.empty { padding: 2.5rem 1rem; text-align: center; color: #68746c; }\n\t\t\t\t.map-panel { padding: 0; overflow: hidden; }\n\t\t\t\t.ride-map { min-height: 24rem; height: min(65vh, 40rem); }\n\t\t\t\tdl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 0; }\n\t\t\t\tdt { color: #68746c; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\tdd { margin: .25rem 0 0; font-size: 1.2rem; font-weight: 700; }\n\t\t\t\t@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }\n\t\t\t\t@media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } }\n\t\t\t</style></head><body><header class=\"site-header\"><a class=\"brand\" href=\"/\">biking_home</a><nav class=\"nav\"><a href=\"/\">Rides</a><a href=\"/sync\">Sync Strava</a></nav></header><main class=\"container\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" · biking_home</title><link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\"><style>\n\t\t\t\t:root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f3ee; color: #1d2a22; }\n\t\t\t\t* { box-sizing: border-box; }\n\t\t\t\tbody { margin: 0; }\n\t\t\t\ta { color: #18794e; }\n\t\t\t\t.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem max(1rem, calc((100vw - 70rem) / 2)); background: #173b2a; color: #fff; }\n\t\t\t\t.site-header a { color: #fff; text-decoration: none; }\n\t\t\t\t.brand { font-weight: 750; letter-spacing: .02em; }\n\t\t\t\t.nav { display: flex; gap: 1rem; font-size: .95rem; }\n\t\t\t\t.container { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }\n\t\t\t\t.eyebrow { margin: 0 0 .4rem; color: #18794e; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }\n\t\t\t\th1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; }\n\t\t\t\t.lead { max-width: 42rem; color: #5b675f; }\n\t\t\t\t.panel { margin-top: 2rem; padding: 1.25rem; border: 1px solid #d9ded8; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 2.5rem #173b2a0d; }\n\t\t\t\t.toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }\n\t\t\t\t.button { display: inline-block; border: 0; border-radius: .65rem; padding: .7rem 1rem; background: #d96932; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }\n\t\t\t\t.button.secondary { background: #e8eee9; color: #173b2a; }\n\t\t\t\tlabel { display: grid; gap: .35rem; color: #5b675f; font-size: .85rem; font-weight: 650; }\n\t\t\t\tinput { border: 1px solid #c8d0c9; border-radius: .55rem; padding: .65rem .7rem; font: inherit; color: inherit; background: #fff; }\n\t\t\t\t.form-row { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }\n\t\t\t\t.sync-progress { display: grid; gap: .7rem; margin-top: 1.25rem; }\n\t\t\t\t.progress-heading { display: flex; justify-content: space-between; gap: 1rem; }\n\t\t\t\tprogress { width: 100%; height: .8rem; accent-color: #d96932; }\n\t\t\t\t.notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #e5f3e9; color: #17633f; }\n\t\t\t\t.error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #fbe8df; color: #8c3517; }\n\t\t\t\ttable { width: 100%; border-collapse: collapse; }\n\t\t\t\tth, td { padding: .85rem .5rem; border-bottom: 1px solid #e5e9e5; text-align: left; }\n\t\t\t\tth { color: #68746c; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\t.sort-link { color: inherit; text-decoration: none; }\n\t\t\t\t.sort-link:hover, .sort-link:focus-visible, th.active .sort-link { color: #d96932; }\n\t\t\t\t.sort-indicator { display: inline-block; margin-left: .2rem; }\n\t\t\t\t.numeric { text-align: right; white-space: nowrap; }\n\t\t\t\t.empty { padding: 2.5rem 1rem; text-align: center; color: #68746c; }\n\t\t\t\t.map-panel { padding: 0; overflow: hidden; }\n\t\t\t\t.ride-map { min-height: 24rem; height: min(65vh, 40rem); }\n\t\t\t\t.profile-panel { padding-bottom: 1rem; }\n\t\t\t\t.profile-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }\n\t\t\t\t.profile-heading h2 { margin: 0; font-size: 1.2rem; }\n\t\t\t\t.profile-heading p { margin: 0; color: #68746c; font-size: .9rem; }\n\t\t\t\t.profile-chart { margin-top: 1rem; }\n\t\t\t\t.profile-chart canvas { display: block; width: 100%; height: 22rem; border-radius: .65rem; background: #fbfcfa; outline: none; }\n\t\t\t\t.profile-chart canvas:focus-visible { box-shadow: 0 0 0 .2rem #18794e66; }\n\t\t\t\t.profile-hover { display: block; min-height: 1.4rem; margin: .7rem 0 0; color: #5b675f; font-size: .9rem; }\n\t\t\t\tdl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 0; }\n\t\t\t\tdt { color: #68746c; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\tdd { margin: .25rem 0 0; font-size: 1.2rem; font-weight: 700; }\n\t\t\t\t@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }\n\t\t\t\t@media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } }\n\t\t\t</style></head><body><header class=\"site-header\"><a class=\"brand\" href=\"/\">biking_home</a><nav class=\"nav\"><a href=\"/\">Rides</a><a href=\"/sync\">Sync Strava</a></nav></header><main class=\"container\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -148,7 +148,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(header.AriaSort)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 82, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 90, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -170,7 +170,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(header.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 82, Col: 141}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 90, Col: 141}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -183,7 +183,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(header.Indicator)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 82, Col: 209}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 90, Col: 209}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -215,7 +215,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(item.Type)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 117}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -241,7 +241,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(formatRideDate(item.StartDate))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 168}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 168}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -254,7 +254,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formatDistance(item.DistanceM))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 227}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 227}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -267,7 +267,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(formatDuration(item.MovingTimeS))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 288}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 288}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(formatElevation(item.TotalElevationGainM))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 358}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 358}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -293,7 +293,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.Cotacol)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 399}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 399}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -306,7 +306,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(item.CotacolPer100Km)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 87, Col: 448}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 95, Col: 448}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -387,7 +387,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ride.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 102, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 110, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -400,7 +400,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ride.Type)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 102, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 110, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -413,7 +413,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(formatRideDate(data.Ride.StartDate))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 102, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 110, Col: 109}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -426,7 +426,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatDistance(data.Ride.DistanceM))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 107, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 115, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -439,7 +439,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(formatDuration(data.Ride.MovingTimeS))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 108, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 116, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -452,7 +452,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(formatElevation(data.Ride.TotalElevationGainM))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 109, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 117, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -470,7 +470,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(data.RouteError)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 113, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 121, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -482,7 +482,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			}
 		}
 		if data.HasRoute {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section class=\"panel map-panel\"><div id=\"ride-map\" class=\"ride-map\" role=\"img\" aria-label=\"Recorded ride route map\"></div></section>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section class=\"panel profile-panel\"><div class=\"profile-heading\"><h2>Elevation profile</h2><p>Hover or focus the profile to inspect the ride at that distance.</p></div><div class=\"profile-chart\"><canvas id=\"ride-profile-chart\" tabindex=\"0\" role=\"img\" aria-describedby=\"ride-profile-hover\" aria-label=\"Interactive ride elevation profile\"></canvas></div><output id=\"ride-profile-hover\" class=\"profile-hover\" aria-live=\"polite\">Hover or focus the profile to inspect elevation.</output></section><section class=\"panel map-panel\"><div id=\"ride-map\" class=\"ride-map\" role=\"img\" aria-label=\"Recorded ride route map\"></div></section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -490,7 +490,15 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script> <script>\n\t\t\t(() => {\n\t\t\t\tconst mapElement = document.getElementById(\"ride-map\");\n\t\t\t\tconst routeElement = document.getElementById(\"ride-route\");\n\t\t\t\tconst route = JSON.parse(routeElement.textContent);\n\t\t\t\tconst map = L.map(mapElement);\n\t\t\t\tconst tiles = L.tileLayer(\"https://tile.openstreetmap.org/{z}/{x}/{y}.png\", {\n\t\t\t\t\tmaxZoom: 19,\n\t\t\t\t\tattribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors',\n\t\t\t\t});\n\t\t\t\ttiles.addTo(map);\n\t\t\t\tconst routeLayer = L.geoJSON(route, {\n\t\t\t\t\tstyle: { color: \"#d96932\", weight: 4, opacity: 0.9 },\n\t\t\t\t}).addTo(map);\n\t\t\t\tconst bounds = routeLayer.getBounds();\n\t\t\t\tif (bounds.isValid()) {\n\t\t\t\t\tmap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });\n\t\t\t\t}\n\t\t\t})();\n\t\t</script>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.JSONScript("ride-profile", data.Profile).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script> <script>\n\t\t\t(() => {\n\t\t\t\tconst mapElement = document.getElementById(\"ride-map\");\n\t\t\t\tconst routeElement = document.getElementById(\"ride-route\");\n\t\t\t\tconst profileElement = document.getElementById(\"ride-profile\");\n\t\t\t\tconst canvas = document.getElementById(\"ride-profile-chart\");\n\t\t\t\tconst hoverOutput = document.getElementById(\"ride-profile-hover\");\n\t\t\t\tif (!mapElement || !routeElement || !profileElement || !canvas || !hoverOutput) return;\n\t\t\t\tconst route = JSON.parse(routeElement.textContent);\n\t\t\t\tconst profile = JSON.parse(profileElement.textContent);\n\t\t\t\tconst map = L.map(mapElement);\n\t\t\t\tconst tiles = L.tileLayer(\"https://tile.openstreetmap.org/{z}/{x}/{y}.png\", {\n\t\t\t\t\tmaxZoom: 19,\n\t\t\t\t\tattribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors',\n\t\t\t\t});\n\t\t\t\ttiles.addTo(map);\n\t\t\t\tconst routeLayer = L.geoJSON(route, {\n\t\t\t\t\tstyle: { color: \"#d96932\", weight: 4, opacity: 0.9 },\n\t\t\t\t}).addTo(map);\n\t\t\t\tconst bounds = routeLayer.getBounds();\n\t\t\t\tif (bounds.isValid()) {\n\t\t\t\t\tmap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });\n\t\t\t\t}\n\n\t\t\t\tconst points = profile.points || [];\n\t\t\t\tif (points.length === 0) return;\n\t\t\t\tconst routeCursor = L.circleMarker([points[0].latitude, points[0].longitude], {\n\t\t\t\t\tcolor: \"#173b2a\",\n\t\t\t\t\tfillColor: \"#d96932\",\n\t\t\t\t\tfillOpacity: 0,\n\t\t\t\t\topacity: 0,\n\t\t\t\t\tradius: 7,\n\t\t\t\t\tweight: 3,\n\t\t\t\t\tinteractive: false,\n\t\t\t\t}).addTo(map);\n\n\t\t\t\tconst context = canvas.getContext(\"2d\");\n\t\t\t\tif (!context) return;\n\t\t\t\tconst state = { hoveredIndex: -1, plot: null, width: 0, height: 0 };\n\t\t\t\tconst minDistance = points[0].distanceKm;\n\t\t\t\tconst maxDistance = points[points.length - 1].distanceKm;\n\t\t\t\tlet minElevation = points[0].elevationM;\n\t\t\t\tlet maxElevation = points[0].elevationM;\n\t\t\t\tfor (const point of points) {\n\t\t\t\t\tminElevation = Math.min(minElevation, point.elevationM);\n\t\t\t\t\tmaxElevation = Math.max(maxElevation, point.elevationM);\n\t\t\t\t}\n\t\t\t\tconst elevationPadding = Math.max((maxElevation - minElevation) * 0.1, 20);\n\t\t\t\tminElevation -= elevationPadding;\n\t\t\t\tmaxElevation += elevationPadding;\n\n\t\t\t\tconst formatDistance = (distance) => `${distance.toFixed(distance < 10 ? 1 : 0)} km`;\n\t\t\t\tconst formatElevation = (elevation) => `${Math.round(elevation)} m`;\n\t\t\t\tconst clamp = (value, min, max) => Math.max(min, Math.min(max, value));\n\t\t\t\tconst xForDistance = (distance) => {\n\t\t\t\t\tconst span = Math.max(maxDistance - minDistance, 1);\n\t\t\t\t\treturn state.plot.left + (distance - minDistance) / span * (state.plot.right - state.plot.left);\n\t\t\t\t};\n\t\t\t\tconst yForElevation = (elevation) => {\n\t\t\t\t\tconst span = Math.max(maxElevation - minElevation, 1);\n\t\t\t\t\treturn state.plot.bottom - (elevation - minElevation) / span * (state.plot.bottom - state.plot.top);\n\t\t\t\t};\n\t\t\t\tconst nearestPointIndex = (distance) => {\n\t\t\t\t\tlet low = 0;\n\t\t\t\t\tlet high = points.length - 1;\n\t\t\t\t\twhile (low < high) {\n\t\t\t\t\t\tconst middle = Math.floor((low + high) / 2);\n\t\t\t\t\t\tif (points[middle].distanceKm < distance) low = middle + 1;\n\t\t\t\t\t\telse high = middle;\n\t\t\t\t\t}\n\t\t\t\t\tif (low === 0) return low;\n\t\t\t\t\tconst previous = points[low - 1];\n\t\t\t\t\treturn distance - previous.distanceKm < points[low].distanceKm - distance ? low - 1 : low;\n\t\t\t\t};\n\n\t\t\t\tconst draw = () => {\n\t\t\t\t\tconst rect = canvas.getBoundingClientRect();\n\t\t\t\t\tif (rect.width === 0 || rect.height === 0) return;\n\t\t\t\t\tconst ratio = window.devicePixelRatio || 1;\n\t\t\t\t\tcanvas.width = Math.floor(rect.width * ratio);\n\t\t\t\t\tcanvas.height = Math.floor(rect.height * ratio);\n\t\t\t\t\tcontext.setTransform(ratio, 0, 0, ratio, 0, 0);\n\t\t\t\t\tstate.width = rect.width;\n\t\t\t\t\tstate.height = rect.height;\n\t\t\t\t\tstate.plot = { left: 52, right: rect.width - 20, top: 24, bottom: rect.height - 34 };\n\t\t\t\t\tconst plot = state.plot;\n\t\t\t\t\tcontext.clearRect(0, 0, rect.width, rect.height);\n\t\t\t\t\tcontext.fillStyle = \"#fbfcfa\";\n\t\t\t\t\tcontext.fillRect(0, 0, rect.width, rect.height);\n\n\t\t\t\t\tcontext.font = \"12px system-ui, sans-serif\";\n\t\t\t\t\tcontext.textBaseline = \"middle\";\n\t\t\t\t\tfor (let step = 0; step <= 4; step++) {\n\t\t\t\t\t\tconst fraction = step / 4;\n\t\t\t\t\t\tconst y = plot.top + fraction * (plot.bottom - plot.top);\n\t\t\t\t\t\tconst elevation = maxElevation - fraction * (maxElevation - minElevation);\n\t\t\t\t\t\tcontext.strokeStyle = \"#e5e9e5\";\n\t\t\t\t\t\tcontext.lineWidth = 1;\n\t\t\t\t\t\tcontext.beginPath();\n\t\t\t\t\t\tcontext.moveTo(plot.left, y);\n\t\t\t\t\t\tcontext.lineTo(plot.right, y);\n\t\t\t\t\t\tcontext.stroke();\n\t\t\t\t\t\tcontext.fillStyle = \"#68746c\";\n\t\t\t\t\t\tcontext.textAlign = \"right\";\n\t\t\t\t\t\tcontext.fillText(formatElevation(elevation), plot.left - 8, y);\n\t\t\t\t\t}\n\n\t\t\t\t\tfor (const climb of profile.climbs || []) {\n\t\t\t\t\t\tconst startX = clamp(xForDistance(climb.startKm), plot.left, plot.right);\n\t\t\t\t\t\tconst endX = clamp(xForDistance(climb.endKm), plot.left, plot.right);\n\t\t\t\t\t\tcontext.fillStyle = \"#d9693230\";\n\t\t\t\t\t\tcontext.fillRect(startX, plot.top, Math.max(endX - startX, 1), plot.bottom - plot.top);\n\t\t\t\t\t\tconst label = climb.name || `${climb.category} ${Math.round(climb.score)}`;\n\t\t\t\t\t\tcontext.fillStyle = \"#8c421f\";\n\t\t\t\t\t\tcontext.textAlign = \"center\";\n\t\t\t\t\t\tcontext.textBaseline = \"top\";\n\t\t\t\t\t\tcontext.fillText(label, clamp((startX + endX) / 2, plot.left + 24, plot.right - 24), plot.top + 4);\n\t\t\t\t\t}\n\n\t\t\t\t\tfor (const crossing of profile.crossings || []) {\n\t\t\t\t\t\tconst x = xForDistance(crossing.distanceKm);\n\t\t\t\t\t\tcontext.strokeStyle = \"#18794e99\";\n\t\t\t\t\t\tcontext.lineWidth = 1;\n\t\t\t\t\t\tcontext.setLineDash([4, 3]);\n\t\t\t\t\t\tcontext.beginPath();\n\t\t\t\t\t\tcontext.moveTo(x, plot.top);\n\t\t\t\t\t\tcontext.lineTo(x, plot.bottom);\n\t\t\t\t\t\tcontext.stroke();\n\t\t\t\t\t\tcontext.setLineDash([]);\n\t\t\t\t\t}\n\n\t\t\t\t\tcontext.beginPath();\n\t\t\t\t\tcontext.moveTo(xForDistance(points[0].distanceKm), plot.bottom);\n\t\t\t\t\tfor (const point of points) context.lineTo(xForDistance(point.distanceKm), yForElevation(point.elevationM));\n\t\t\t\t\tcontext.lineTo(xForDistance(points[points.length - 1].distanceKm), plot.bottom);\n\t\t\t\t\tcontext.closePath();\n\t\t\t\t\tcontext.fillStyle = \"#d9693220\";\n\t\t\t\t\tcontext.fill();\n\t\t\t\t\tcontext.beginPath();\n\t\t\t\t\tfor (let i = 0; i < points.length; i++) {\n\t\t\t\t\t\tconst point = points[i];\n\t\t\t\t\t\tif (i === 0) context.moveTo(xForDistance(point.distanceKm), yForElevation(point.elevationM));\n\t\t\t\t\t\telse context.lineTo(xForDistance(point.distanceKm), yForElevation(point.elevationM));\n\t\t\t\t\t}\n\t\t\t\t\tcontext.strokeStyle = \"#d96932\";\n\t\t\t\t\tcontext.lineWidth = 2.5;\n\t\t\t\t\tcontext.stroke();\n\t\t\t\t\tfor (const crossing of profile.crossings || []) {\n\t\t\t\t\t\tconst x = xForDistance(crossing.distanceKm);\n\t\t\t\t\t\tconst label = `${crossing.name} ${Math.round(crossing.passElevationM)} m`;\n\t\t\t\t\t\tconst labelWidth = context.measureText(label).width;\n\t\t\t\t\t\tconst labelX = clamp(x, plot.left + labelWidth / 2 + 3, plot.right - labelWidth / 2 - 3);\n\t\t\t\t\t\tconst labelY = plot.top - 6;\n\t\t\t\t\t\tcontext.fillStyle = \"#fbfcfae6\";\n\t\t\t\t\t\tcontext.fillRect(labelX - labelWidth / 2 - 3, labelY - 15, labelWidth + 6, 16);\n\t\t\t\t\t\tcontext.fillStyle = \"#17633f\";\n\t\t\t\t\t\tcontext.textAlign = \"center\";\n\t\t\t\t\t\tcontext.textBaseline = \"bottom\";\n\t\t\t\t\t\tcontext.fillText(label, labelX, labelY);\n\t\t\t\t\t}\n\n\t\t\t\t\tcontext.fillStyle = \"#68746c\";\n\t\t\t\t\tcontext.textAlign = \"center\";\n\t\t\t\t\tcontext.textBaseline = \"top\";\n\t\t\t\t\tfor (let step = 0; step <= 4; step++) {\n\t\t\t\t\t\tconst distance = minDistance + step / 4 * (maxDistance - minDistance);\n\t\t\t\t\t\tcontext.fillText(formatDistance(distance), xForDistance(distance), plot.bottom + 10);\n\t\t\t\t\t}\n\n\t\t\t\t\tif (state.hoveredIndex >= 0) {\n\t\t\t\t\t\tconst point = points[state.hoveredIndex];\n\t\t\t\t\t\tconst x = xForDistance(point.distanceKm);\n\t\t\t\t\t\tconst y = yForElevation(point.elevationM);\n\t\t\t\t\t\tcontext.strokeStyle = \"#173b2a99\";\n\t\t\t\t\t\tcontext.lineWidth = 1;\n\t\t\t\t\t\tcontext.setLineDash([3, 3]);\n\t\t\t\t\t\tcontext.beginPath();\n\t\t\t\t\t\tcontext.moveTo(x, plot.top);\n\t\t\t\t\t\tcontext.lineTo(x, plot.bottom);\n\t\t\t\t\t\tcontext.stroke();\n\t\t\t\t\t\tcontext.setLineDash([]);\n\t\t\t\t\t\tcontext.fillStyle = \"#173b2a\";\n\t\t\t\t\t\tcontext.beginPath();\n\t\t\t\t\t\tcontext.arc(x, y, 5, 0, 2 * Math.PI);\n\t\t\t\t\t\tcontext.fill();\n\t\t\t\t\t}\n\t\t\t\t};\n\n\t\t\t\tconst clearHover = () => {\n\t\t\t\t\tstate.hoveredIndex = -1;\n\t\t\t\t\trouteCursor.setStyle({ opacity: 0, fillOpacity: 0 });\n\t\t\t\t\thoverOutput.textContent = \"Hover or focus the profile to inspect elevation.\";\n\t\t\t\t\tdraw();\n\t\t\t\t};\n\t\t\t\tconst showPoint = (index) => {\n\t\t\t\t\tstate.hoveredIndex = clamp(index, 0, points.length - 1);\n\t\t\t\t\tconst point = points[state.hoveredIndex];\n\t\t\t\t\trouteCursor.setLatLng([point.latitude, point.longitude]);\n\t\t\t\t\trouteCursor.setStyle({ opacity: 1, fillOpacity: 0.9 });\n\t\t\t\t\thoverOutput.textContent = `${formatDistance(point.distanceKm)} · ${formatElevation(point.elevationM)}`;\n\t\t\t\t\tdraw();\n\t\t\t\t};\n\t\t\t\tcanvas.addEventListener(\"pointermove\", (event) => {\n\t\t\t\t\tif (!state.plot) return;\n\t\t\t\t\tconst rect = canvas.getBoundingClientRect();\n\t\t\t\t\tconst x = event.clientX - rect.left;\n\t\t\t\t\tif (x < state.plot.left || x > state.plot.right) {\n\t\t\t\t\t\tclearHover();\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tconst distance = minDistance + (x - state.plot.left) / (state.plot.right - state.plot.left) * (maxDistance - minDistance);\n\t\t\t\t\tshowPoint(nearestPointIndex(distance));\n\t\t\t\t});\n\t\t\t\tcanvas.addEventListener(\"pointerleave\", clearHover);\n\t\t\t\tcanvas.addEventListener(\"pointercancel\", clearHover);\n\t\t\t\tcanvas.addEventListener(\"keydown\", (event) => {\n\t\t\t\t\tif (event.key !== \"ArrowLeft\" && event.key !== \"ArrowRight\") return;\n\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\tconst direction = event.key === \"ArrowRight\" ? 1 : -1;\n\t\t\t\t\tconst index = state.hoveredIndex < 0 ? (direction > 0 ? 0 : points.length - 1) : state.hoveredIndex + direction;\n\t\t\t\t\tshowPoint(index);\n\t\t\t\t});\n\t\t\t\twindow.addEventListener(\"resize\", draw);\n\t\t\t\tdraw();\n\t\t\t})();\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -561,7 +569,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notice)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 153, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 378, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -585,7 +593,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(data.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 158, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 383, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -627,7 +635,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 169, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 394, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
@@ -640,7 +648,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 170, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 395, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {

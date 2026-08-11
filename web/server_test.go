@@ -14,7 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/config"
+	"github.com/martinlehoux/biking_home/mountain_pass"
+	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 	"github.com/martinlehoux/biking_home/strava"
 	_ "github.com/mattn/go-sqlite3"
@@ -44,6 +47,19 @@ func newWebTestServer(t *testing.T) (*Server, *sql.DB) {
 			cotacol_algo_version text,
 			created_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 			updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+		)
+	`)
+	require.NoError(t, err)
+	_, err = db.Exec(`
+		create table mountain_passes (
+			id integer primary key,
+			external_id text unique not null,
+			name text not null,
+			country_code text not null,
+			department_code text not null,
+			elevation integer not null,
+			latitude real,
+			longitude real
 		)
 	`)
 	require.NoError(t, err)
@@ -142,12 +158,44 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Contains(t, body, "Detailed Ride")
 	assert.Contains(t, body, `id="ride-route"`)
+	assert.Contains(t, body, `id="ride-profile"`)
+	assert.Contains(t, body, `id="ride-profile-chart"`)
 	assert.Contains(t, body, `id="ride-map"`)
+	assert.Contains(t, body, "pointermove")
+	assert.Contains(t, body, "circleMarker")
+	assert.Contains(t, body, "crossing.passElevationM")
+	assert.Contains(t, body, "const labelY = plot.top - 6")
 	assert.Contains(t, body, "leaflet@1.9.4/dist/leaflet.js")
 	assert.Contains(t, body, "tile.openstreetmap.org/{z}/{x}/{y}.png")
 	assert.Contains(t, body, `"type":"FeatureCollection"`)
 	assert.Contains(t, body, `"type":"LineString"`)
 	assert.Contains(t, body, `"coordinates":[[5,43]`)
+}
+
+func TestBuildRideProfileIncludesClimbsAndCrossings(t *testing.T) {
+	parsed := ride.FromColumns(
+		[]float64{0, 1000, 2000},
+		[]float64{300, 447, 380},
+		[]geodist.Coord{{Lat: 43.61, Lon: 5.42}, {Lat: 43.62, Lon: 5.43}, {Lat: 43.63, Lon: 5.44}},
+		make([]time.Time, 3),
+	)
+	passes := []mountain_pass.MountainPass{{
+		Name:      "Pas de Magnan",
+		Elevation: 440,
+		Coord:     &geodist.Coord{Lat: 43.62, Lon: 5.43},
+	}}
+
+	profile := buildRideProfile(parsed, passes)
+
+	require.Len(t, profile.Points, 3)
+	assert.Equal(t, 1.0, profile.Points[1].DistanceKm)
+	assert.Equal(t, 447.0, profile.Points[1].ElevationM)
+	require.Len(t, profile.Climbs, 1)
+	assert.Equal(t, "Pas de Magnan", profile.Climbs[0].Name)
+	assert.Equal(t, 1.0, profile.Climbs[0].TopKm)
+	require.Len(t, profile.Crossings, 1)
+	assert.Equal(t, "Pas de Magnan", profile.Crossings[0].Name)
+	assert.Equal(t, 1.0, profile.Crossings[0].DistanceKm)
 }
 
 func TestHandlerRendersRideDetailWithoutRoute(t *testing.T) {

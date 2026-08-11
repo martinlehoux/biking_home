@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/martinlehoux/biking_home/config"
+	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 	"github.com/martinlehoux/biking_home/strava"
@@ -103,8 +104,12 @@ func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
 		}), w)
 		return
 	}
+	passes, err := mountain_pass.LoadMountainPasses(s.db)
+	if err != nil {
+		slog.Warn("Failed to load mountain passes for ride detail", "ride_id", id, "error", err)
+	}
 	slog.Info("Loaded ride detail", "ride_id", id)
-	kcore.RenderPage(r.Context(), RideDetailPage(buildRideDetailView(item, parsed)), w)
+	kcore.RenderPage(r.Context(), RideDetailPage(buildRideDetailView(item, parsed, passes)), w)
 }
 
 func (s *Server) listRides(rideSort RideSort) ([]rides.Ride, error) {
