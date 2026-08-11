@@ -33,13 +33,13 @@ func Layout(title string, content templ.Component) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 9, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 9, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" · biking_home</title><style>\n\t\t\t\t:root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f3ee; color: #1d2a22; }\n\t\t\t\t* { box-sizing: border-box; }\n\t\t\t\tbody { margin: 0; }\n\t\t\t\ta { color: #18794e; }\n\t\t\t\t.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem max(1rem, calc((100vw - 70rem) / 2)); background: #173b2a; color: #fff; }\n\t\t\t\t.site-header a { color: #fff; text-decoration: none; }\n\t\t\t\t.brand { font-weight: 750; letter-spacing: .02em; }\n\t\t\t\t.nav { display: flex; gap: 1rem; font-size: .95rem; }\n\t\t\t\t.container { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }\n\t\t\t\t.eyebrow { margin: 0 0 .4rem; color: #18794e; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }\n\t\t\t\th1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; }\n\t\t\t\t.lead { max-width: 42rem; color: #5b675f; }\n\t\t\t\t.panel { margin-top: 2rem; padding: 1.25rem; border: 1px solid #d9ded8; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 2.5rem #173b2a0d; }\n\t\t\t\t.toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }\n\t\t\t\t.button { display: inline-block; border: 0; border-radius: .65rem; padding: .7rem 1rem; background: #d96932; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }\n\t\t\t\t.button.secondary { background: #e8eee9; color: #173b2a; }\n\t\t\t\tlabel { display: grid; gap: .35rem; color: #5b675f; font-size: .85rem; font-weight: 650; }\n\t\t\t\tinput { border: 1px solid #c8d0c9; border-radius: .55rem; padding: .65rem .7rem; font: inherit; color: inherit; background: #fff; }\n\t\t\t\t.form-row { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }\n\t\t\t\t.notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #e5f3e9; color: #17633f; }\n\t\t\t\t.error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #fbe8df; color: #8c3517; }\n\t\t\t\ttable { width: 100%; border-collapse: collapse; }\n\t\t\t\tth, td { padding: .85rem .5rem; border-bottom: 1px solid #e5e9e5; text-align: left; }\n\t\t\t\tth { color: #68746c; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\t.sort-link { color: inherit; text-decoration: none; }\n\t\t\t\t.sort-link:hover, .sort-link:focus-visible, th.active .sort-link { color: #d96932; }\n\t\t\t\t.sort-indicator { display: inline-block; margin-left: .2rem; }\n\t\t\t\t.numeric { text-align: right; white-space: nowrap; }\n\t\t\t\t.empty { padding: 2.5rem 1rem; text-align: center; color: #68746c; }\n\t\t\t\t@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }\n\t\t\t</style></head><body><header class=\"site-header\"><a class=\"brand\" href=\"/\">biking_home</a><nav class=\"nav\"><a href=\"/\">Rides</a><a href=\"/sync\">Sync Strava</a></nav></header><main class=\"container\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" · biking_home</title><link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\"><style>\n\t\t\t\t:root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f3ee; color: #1d2a22; }\n\t\t\t\t* { box-sizing: border-box; }\n\t\t\t\tbody { margin: 0; }\n\t\t\t\ta { color: #18794e; }\n\t\t\t\t.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem max(1rem, calc((100vw - 70rem) / 2)); background: #173b2a; color: #fff; }\n\t\t\t\t.site-header a { color: #fff; text-decoration: none; }\n\t\t\t\t.brand { font-weight: 750; letter-spacing: .02em; }\n\t\t\t\t.nav { display: flex; gap: 1rem; font-size: .95rem; }\n\t\t\t\t.container { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }\n\t\t\t\t.eyebrow { margin: 0 0 .4rem; color: #18794e; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }\n\t\t\t\th1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; }\n\t\t\t\t.lead { max-width: 42rem; color: #5b675f; }\n\t\t\t\t.panel { margin-top: 2rem; padding: 1.25rem; border: 1px solid #d9ded8; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 2.5rem #173b2a0d; }\n\t\t\t\t.toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }\n\t\t\t\t.button { display: inline-block; border: 0; border-radius: .65rem; padding: .7rem 1rem; background: #d96932; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }\n\t\t\t\t.button.secondary { background: #e8eee9; color: #173b2a; }\n\t\t\t\tlabel { display: grid; gap: .35rem; color: #5b675f; font-size: .85rem; font-weight: 650; }\n\t\t\t\tinput { border: 1px solid #c8d0c9; border-radius: .55rem; padding: .65rem .7rem; font: inherit; color: inherit; background: #fff; }\n\t\t\t\t.form-row { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }\n\t\t\t\t.notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #e5f3e9; color: #17633f; }\n\t\t\t\t.error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #fbe8df; color: #8c3517; }\n\t\t\t\ttable { width: 100%; border-collapse: collapse; }\n\t\t\t\tth, td { padding: .85rem .5rem; border-bottom: 1px solid #e5e9e5; text-align: left; }\n\t\t\t\tth { color: #68746c; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\t.sort-link { color: inherit; text-decoration: none; }\n\t\t\t\t.sort-link:hover, .sort-link:focus-visible, th.active .sort-link { color: #d96932; }\n\t\t\t\t.sort-indicator { display: inline-block; margin-left: .2rem; }\n\t\t\t\t.numeric { text-align: right; white-space: nowrap; }\n\t\t\t\t.empty { padding: 2.5rem 1rem; text-align: center; color: #68746c; }\n\t\t\t\t.map-panel { padding: 0; overflow: hidden; }\n\t\t\t\t.ride-map { min-height: 24rem; height: min(65vh, 40rem); }\n\t\t\t\tdl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 0; }\n\t\t\t\tdt { color: #68746c; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n\t\t\t\tdd { margin: .25rem 0 0; font-size: 1.2rem; font-weight: 700; }\n\t\t\t\t@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }\n\t\t\t\t@media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } }\n\t\t\t</style></head><body><header class=\"site-header\"><a class=\"brand\" href=\"/\">biking_home</a><nav class=\"nav\"><a href=\"/\">Rides</a><a href=\"/sync\">Sync Strava</a></nav></header><main class=\"container\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -139,7 +139,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(header.AriaSort)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 72, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 79, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -161,7 +161,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(header.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 72, Col: 141}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 79, Col: 141}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -174,7 +174,7 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(header.Indicator)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 72, Col: 209}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 79, Col: 209}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -190,29 +190,38 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, item := range items {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr><td><strong>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr><td><strong><a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 33}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				var templ_7745c5c3_Var11 templ.SafeURL = templ.URL(rideDetailURL(item.ID))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var11)))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</strong><br><small>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(item.Type)
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a></strong><br><small>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var13 string
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(item.Type)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 117}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -220,23 +229,10 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(formatRideDate(item.StartDate))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 118}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"numeric\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(formatDistance(item.DistanceM))
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(formatRideDate(item.StartDate))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 177}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 168}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -247,9 +243,9 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formatDuration(item.MovingTimeS))
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formatDistance(item.DistanceM))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 238}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 227}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -260,9 +256,9 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(formatElevation(item.TotalElevationGainM))
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(formatDuration(item.MovingTimeS))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 308}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 288}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -273,9 +269,9 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var17 string
-				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(item.Cotacol)
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(formatElevation(item.TotalElevationGainM))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 349}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 358}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -286,11 +282,24 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var18 string
-				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.CotacolPer100Km)
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.Cotacol)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 77, Col: 398}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 399}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"numeric\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var19 string
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(item.CotacolPer100Km)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 84, Col: 448}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -312,6 +321,169 @@ func RidesContent(items []RideView, headers []RideSortHeader) templ.Component {
 	})
 }
 
+func RideDetailPage(data RideDetailView) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var20 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var20 == nil {
+			templ_7745c5c3_Var20 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = Layout("Ride detail", RideDetailContent(data)).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func RideDetailContent(data RideDetailView) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var21 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var21 == nil {
+			templ_7745c5c3_Var21 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<p class=\"eyebrow\">Ride detail</p><div class=\"toolbar\"><div><h1>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ride.Name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 99, Col: 27}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1><p class=\"lead\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var23 string
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(data.Ride.Type)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 99, Col: 66}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" · ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var24 string
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(formatRideDate(data.Ride.StartDate))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 99, Col: 109}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><a class=\"button secondary\" href=\"/\">Back to rides</a></div><section class=\"panel\"><dl><div><dt>Distance</dt><dd>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var25 string
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatDistance(data.Ride.DistanceM))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 104, Col: 66}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</dd></div><div><dt>Moving time</dt><dd>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var26 string
+		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(formatDuration(data.Ride.MovingTimeS))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 105, Col: 71}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</dd></div><div><dt>Elevation</dt><dd>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var27 string
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(formatElevation(data.Ride.TotalElevationGainM))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 106, Col: 78}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</dd></div></dl></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if data.RouteError != "" {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"error\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var28 string
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(data.RouteError)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 110, Col: 38}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if data.HasRoute {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section class=\"panel map-panel\"><div id=\"ride-map\" class=\"ride-map\" role=\"img\" aria-label=\"Recorded ride route map\"></div></section>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.JSONScript("ride-route", data.Route).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script> <script>\n\t\t\t(() => {\n\t\t\t\tconst mapElement = document.getElementById(\"ride-map\");\n\t\t\t\tconst routeElement = document.getElementById(\"ride-route\");\n\t\t\t\tconst route = JSON.parse(routeElement.textContent);\n\t\t\t\tconst map = L.map(mapElement);\n\t\t\t\tconst tiles = L.tileLayer(\"https://tile.openstreetmap.org/{z}/{x}/{y}.png\", {\n\t\t\t\t\tmaxZoom: 19,\n\t\t\t\t\tattribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors',\n\t\t\t\t});\n\t\t\t\ttiles.addTo(map);\n\t\t\t\tconst routeLayer = L.geoJSON(route, {\n\t\t\t\t\tstyle: { color: \"#d96932\", weight: 4, opacity: 0.9 },\n\t\t\t\t}).addTo(map);\n\t\t\t\tconst bounds = routeLayer.getBounds();\n\t\t\t\tif (bounds.isValid()) {\n\t\t\t\t\tmap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });\n\t\t\t\t}\n\t\t\t})();\n\t\t</script>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
 func SyncPage(data SyncPageData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -325,9 +497,9 @@ func SyncPage(data SyncPageData) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var19 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var19 == nil {
-			templ_7745c5c3_Var19 = templ.NopComponent
+		templ_7745c5c3_Var29 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var29 == nil {
+			templ_7745c5c3_Var29 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = Layout("Sync Strava", SyncContent(data)).Render(ctx, templ_7745c5c3_Buffer)
@@ -351,9 +523,9 @@ func SyncContent(data SyncPageData) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var20 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var20 == nil {
-			templ_7745c5c3_Var20 = templ.NopComponent
+		templ_7745c5c3_Var30 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var30 == nil {
+			templ_7745c5c3_Var30 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<p class=\"eyebrow\">Data import</p><h1>Sync Strava rides</h1><p class=\"lead\">Choose a date range. New rides are downloaded as GPX files and recorded in the local library.</p>")
@@ -365,12 +537,12 @@ func SyncContent(data SyncPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notice)
+			var templ_7745c5c3_Var31 string
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notice)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 94, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 150, Col: 35}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -384,12 +556,12 @@ func SyncContent(data SyncPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var22 string
-			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(data.Error)
+			var templ_7745c5c3_Var32 string
+			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(data.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 97, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 153, Col: 33}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -407,8 +579,8 @@ func SyncContent(data SyncPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var23 templ.SafeURL = templ.URL("/strava/login?return_to=/sync")
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var23)))
+			var templ_7745c5c3_Var33 templ.SafeURL = templ.URL("/strava/login?return_to=/sync")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var33)))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -421,12 +593,12 @@ func SyncContent(data SyncPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var24 string
-			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
+			var templ_7745c5c3_Var34 string
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 106, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 162, Col: 64}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -434,12 +606,12 @@ func SyncContent(data SyncPageData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
+			var templ_7745c5c3_Var35 string
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 107, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 163, Col: 58}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

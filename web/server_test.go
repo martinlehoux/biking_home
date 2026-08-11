@@ -2,6 +2,7 @@ package web
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -87,6 +88,69 @@ func TestHandlerRendersRidesPage(t *testing.T) {
 	assert.NotContains(t, response.Body.String(), "Short Ride")
 	assert.Contains(t, response.Body.String(), "Cotacol")
 	assert.Contains(t, response.Body.String(), "Cotacol / 100 km")
+	assert.Contains(t, response.Body.String(), `href="/rides/1"`)
+}
+
+func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
+	server, db := newWebTestServer(t)
+	require.NoError(t, rides.Save(db, rides.Ride{
+		ExternalID: "strava:550e8400-e29b-41d4-a716-446655440000",
+		GPXPath:    testGPXPath(t, "detail.gpx"),
+		Name:       "Detailed Ride",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
+		DistanceM:  20_000,
+	}))
+	item, found, err := rides.GetByExternalID(db, "strava:550e8400-e29b-41d4-a716-446655440000")
+	require.NoError(t, err)
+	require.True(t, found)
+
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/rides/%d", item.ID), nil)
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, req)
+
+	body := response.Body.String()
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, body, "Detailed Ride")
+	assert.Contains(t, body, `id="ride-route"`)
+	assert.Contains(t, body, `id="ride-map"`)
+	assert.Contains(t, body, "leaflet@1.9.4/dist/leaflet.js")
+	assert.Contains(t, body, "tile.openstreetmap.org/{z}/{x}/{y}.png")
+	assert.Contains(t, body, `"type":"FeatureCollection"`)
+	assert.Contains(t, body, `"type":"LineString"`)
+	assert.Contains(t, body, `"coordinates":[[5,43]`)
+}
+
+func TestHandlerReturnsNotFoundForUnknownRide(t *testing.T) {
+	server, _ := newWebTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/rides/999999", nil)
+	response := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(response, req)
+
+	assert.Equal(t, http.StatusNotFound, response.Code)
+}
+
+func TestHandlerShowsErrorForUnavailableRideRoute(t *testing.T) {
+	server, db := newWebTestServer(t)
+	_, err := db.Exec(`
+		INSERT INTO rides (external_id, gpx_path, name, type, start_date, distance_m, moving_time_s, elapsed_time_s, total_elevation_gain_m, average_speed_mps)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8", "missing.gpx", "Unavailable Route", "Ride", "2026-08-01T07:00:00Z", 20_000, 0, 0, 0, 0)
+	require.NoError(t, err)
+	item, found, err := rides.GetByExternalID(db, "strava:6ba7b810-9dad-41d1-80b4-00c04fd430c8")
+	require.NoError(t, err)
+	require.True(t, found)
+
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/rides/%d", item.ID), nil)
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, req)
+
+	body := response.Body.String()
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, body, "Unavailable Route")
+	assert.Contains(t, body, "The recorded route is unavailable.")
+	assert.NotContains(t, body, `id="ride-route"`)
 }
 
 func TestSyncPageRequestsAuthorization(t *testing.T) {

@@ -15,6 +15,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Materialized ride values** — computes Cotacol on import, stores its algorithm version in SQLite, and refreshes all computed values with `-backfill`
 - **Strava stream metrics** — preserves heart rate, cadence, and power in Garmin-compatible GPX files and in-memory ride columns
 - **Ride table sorting** — sorts every ride-library column through clickable server-side headers and query parameters
+- **Ride detail maps** — opens a stored ride with its recorded route on an interactive OpenStreetMap map
 
 ## Getting started
 
@@ -119,6 +120,10 @@ flowchart TB
     web --> config
 ```
 
+## Research
+
+MapLibre can render local vector-tile maps in the browser from OpenStreetMap PBF data after preprocessing. It supports GeoJSON overlays, dynamic styling, interactive points and lines, feature selection, and offline use with locally served tiles, styles, fonts, and sprites. This enables rich map layers without depending on external basemap tile services.
+
 ## Development
 
 ```bash
@@ -128,7 +133,7 @@ mise run build
 
 ## TODO
 
-- Compute estimated power
+- Compute estimated power?
 - Plot speed and slope per segment, colored by heart rate
 - Plot speed vs ctc/100km
 - Persist the chosen climb variant across activities
@@ -137,6 +142,13 @@ mise run build
 - Cotacol with a different step size
 - Cotacol with a variable step size (constant slope is the best?)
 - Road quality (Arbois = 2/5, Roquefavour = 4/5)
+- Display rides + passes on map
+- Strava import progress
+
+Workflow:
+- Detect climbs in ride (already exists)
+- Match them with official climbs from db if exists
+- If not, suggest to add to official climbs (with correction)
 
 ## Resources
 

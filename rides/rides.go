@@ -162,6 +162,18 @@ func GetByExternalID(db *sql.DB, externalID string) (Ride, bool, error) {
 	return ride, true, nil
 }
 
+func GetByID(db *sql.DB, id int64) (Ride, bool, error) {
+	row := db.QueryRow("SELECT "+columns+" FROM rides WHERE id = ?", id)
+	ride, err := scanRide(row)
+	if err == sql.ErrNoRows {
+		return Ride{}, false, nil
+	}
+	if err != nil {
+		return Ride{}, false, err
+	}
+	return ride, true, nil
+}
+
 type scanner interface {
 	Scan(dest ...any) error
 }

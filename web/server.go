@@ -41,6 +41,7 @@ func NewServer(db *sql.DB, configPath string) *Server {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleRides)
+	mux.HandleFunc("GET /rides/{id}", s.handleRide)
 	mux.HandleFunc("GET /sync", s.handleSyncForm)
 	mux.HandleFunc("POST /sync", s.handleSync)
 	mux.HandleFunc("GET /strava/login", s.handleStravaLogin)
@@ -64,6 +65,35 @@ func (s *Server) handleRides(w http.ResponseWriter, r *http.Request) {
 	kcore.RenderPage(r.Context(), RidesPage(views, rideSortHeaders(rideSort)), w)
 }
 
+func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+	item, found, err := rides.GetByID(s.db, id)
+	if err != nil {
+		slog.Error("Failed to load ride", "ride_id", id, "error", err)
+		http.Error(w, "failed to load ride", http.StatusInternalServerError)
+		return
+	}
+	if !found {
+		http.NotFound(w, r)
+		return
+	}
+	parsed, err := ride.ParseFile(ride.GPXRideParser{}, item.GPXPath)
+	if err != nil {
+		slog.Error("Failed to load ride route", "ride_id", id, "file", item.GPXPath, "error", err)
+		kcore.RenderPage(r.Context(), RideDetailPage(RideDetailView{
+			RideView:   buildRideView(item),
+			RouteError: "The recorded route is unavailable.",
+		}), w)
+		return
+	}
+	slog.Info("Loaded ride detail", "ride_id", id)
+	kcore.RenderPage(r.Context(), RideDetailPage(buildRideDetailView(item, parsed)), w)
+}
+
 func (s *Server) listRides(rideSort RideSort) ([]rides.Ride, error) {
 	column, found := rideSort.databaseColumn()
 	if !found {
@@ -80,15 +110,19 @@ func buildRideViews(items []rides.Ride) []RideView {
 		if item.DistanceM < minimumDisplayedDistanceM {
 			continue
 		}
-		view := RideView{Ride: item, Cotacol: "-", CotacolPer100Km: "-"}
-		score, ready := item.CotacolScore()
-		if ready && item.CotacolAlgorithmVersion() == ride.CotacolAlgorithmVersion && item.DistanceM > 0 {
-			view.Cotacol = formatCotacol(score)
-			view.CotacolPer100Km = formatCotacolPer100Km(score, item.DistanceM)
-		}
-		views = append(views, view)
+		views = append(views, buildRideView(item))
 	}
 	return views
+}
+
+func buildRideView(item rides.Ride) RideView {
+	view := RideView{Ride: item, Cotacol: "-", CotacolPer100Km: "-"}
+	score, ready := item.CotacolScore()
+	if ready && item.CotacolAlgorithmVersion() == ride.CotacolAlgorithmVersion && item.DistanceM > 0 {
+		view.Cotacol = formatCotacol(score)
+		view.CotacolPer100Km = formatCotacolPer100Km(score, item.DistanceM)
+	}
+	return view
 }
 
 func (s *Server) handleSyncForm(w http.ResponseWriter, r *http.Request) {

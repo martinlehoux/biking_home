@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 )
 
@@ -12,6 +13,29 @@ type RideView struct {
 	rides.Ride
 	Cotacol         string
 	CotacolPer100Km string
+}
+
+type RideDetailView struct {
+	RideView
+	Route      GeoJSONFeatureCollection
+	HasRoute   bool
+	RouteError string
+}
+
+type GeoJSONFeatureCollection struct {
+	Type     string           `json:"type"`
+	Features []GeoJSONFeature `json:"features"`
+}
+
+type GeoJSONFeature struct {
+	Type       string          `json:"type"`
+	Geometry   GeoJSONGeometry `json:"geometry"`
+	Properties map[string]any  `json:"properties,omitempty"`
+}
+
+type GeoJSONGeometry struct {
+	Type        string      `json:"type"`
+	Coordinates [][]float64 `json:"coordinates"`
 }
 
 type RideSort struct {
@@ -120,6 +144,32 @@ func rideSortHeaders(current RideSort) []RideSortHeader {
 		})
 	}
 	return headers
+}
+
+func rideDetailURL(id int64) string {
+	return fmt.Sprintf("/rides/%d", id)
+}
+
+func buildRideDetailView(item rides.Ride, parsed ride.Ride) RideDetailView {
+	coordinates := make([][]float64, parsed.Len())
+	for i := 0; i < parsed.Len(); i++ {
+		coordinate := parsed.Coord(i)
+		coordinates[i] = []float64{coordinate.Lon, coordinate.Lat}
+	}
+	return RideDetailView{
+		RideView: buildRideView(item),
+		Route: GeoJSONFeatureCollection{
+			Type: "FeatureCollection",
+			Features: []GeoJSONFeature{{
+				Type: "Feature",
+				Geometry: GeoJSONGeometry{
+					Type:        "LineString",
+					Coordinates: coordinates,
+				},
+			}},
+		},
+		HasRoute: true,
+	}
 }
 
 type SyncPageData struct {

@@ -85,6 +85,25 @@ func TestUpsertAndGet(t *testing.T) {
 	assert.False(t, ok)
 }
 
+func TestGetByID(t *testing.T) {
+	db := newTestDB(t)
+	sample := sampleRide(t)
+	require.NoError(t, Save(db, sample))
+	stored, found, err := GetByExternalID(db, sample.ExternalID)
+	require.NoError(t, err)
+	require.True(t, found)
+
+	got, found, err := GetByID(db, stored.ID)
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.Equal(t, sample.ExternalID, got.ExternalID)
+	assert.Equal(t, sample.Name, got.Name)
+
+	_, found, err = GetByID(db, 999999)
+	require.NoError(t, err)
+	assert.False(t, found)
+}
+
 func TestSaveComputesCotacol(t *testing.T) {
 	db := newTestDB(t)
 	require.NoError(t, Save(db, sampleRide(t)))
