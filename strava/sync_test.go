@@ -128,7 +128,8 @@ func TestGetRejectsActivityWithoutTrackPoints(t *testing.T) {
 		}
 	})
 
-	_, _, err := client.Get(14701658670)
+	activity, _, err := client.Get(14701658670)
 
+	assert.Equal(t, int64(14701658670), activity.ID)
 	require.EqualError(t, err, "activity has no track points")
 }

@@ -14,6 +14,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Web ride library** — starts a local web server by default, imports Strava rides over a date range, stores metadata in SQLite, and keeps their GPX files on disk
 - **Materialized ride values** — computes Cotacol on import, stores its algorithm version in SQLite, and refreshes all computed values with `-backfill`
 - **Strava stream metrics** — preserves heart rate, cadence, and power in Garmin-compatible GPX files and in-memory ride columns
+- **Metadata-only ride imports** — stores Strava activity statistics for rides without GPS tracks, without Cotacol or route data
 - **Ride table sorting** — sorts every ride-library column through clickable server-side headers and query parameters
 - **Ride detail maps** — opens a stored ride with its recorded route on an interactive OpenStreetMap map
 - **Strava import progress** — streams live import progress with an aggregate progress bar and prevents overlapping syncs
@@ -138,7 +139,6 @@ mise run build
 - Plot speed and slope per segment, colored by heart rate
 - Plot speed vs ctc/100km
 - Persist the chosen climb variant across activities
-- Handle historical data
 - Blog with pictures and markdown
 - Cotacol with a different step size
 - Cotacol with a variable step size (constant slope is the best?)

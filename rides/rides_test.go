@@ -117,6 +117,23 @@ func TestSaveComputesCotacol(t *testing.T) {
 	assert.Equal(t, ride.CotacolAlgorithmVersion, got.CotacolAlgorithmVersion())
 }
 
+func TestSaveAllowsRideWithoutGPX(t *testing.T) {
+	db := newTestDB(t)
+	indoor := sampleRide(t)
+	indoor.ExternalID = "strava:14701658670"
+	indoor.GPXPath = ""
+
+	require.NoError(t, Save(db, indoor))
+
+	got, found, err := GetByExternalID(db, indoor.ExternalID)
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.Empty(t, got.GPXPath)
+	_, ready := got.CotacolScore()
+	assert.False(t, ready)
+	assert.Empty(t, got.CotacolAlgorithmVersion())
+}
+
 func TestBackfill(t *testing.T) {
 	db := newTestDB(t)
 	require.NoError(t, Save(db, sampleRide(t)))

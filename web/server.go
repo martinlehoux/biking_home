@@ -89,6 +89,11 @@ func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	if item.GPXPath == "" {
+		slog.Info("Loaded ride detail without route", "ride_id", id)
+		kcore.RenderPage(r.Context(), RideDetailPage(RideDetailView{RideView: buildRideView(item)}), w)
+		return
+	}
 	parsed, err := ride.ParseFile(ride.GPXRideParser{}, item.GPXPath)
 	if err != nil {
 		slog.Error("Failed to load ride route", "ride_id", id, "file", item.GPXPath, "error", err)
@@ -297,6 +302,22 @@ func (s *Server) syncRides(client syncClient, gpxDir string, from, to time.Time,
 		}
 		activity, gpxData, err := client.Get(summary.ID)
 		if err != nil {
+			if errors.Is(err, strava.ErrNoTrackPoints) {
+				_ = os.Remove(filepath.Join(gpxDir, fmt.Sprintf("activity_%d.gpx", summary.ID)))
+				if saveErr := rides.Save(s.db, rideFromActivity(externalID, "", activity)); saveErr != nil {
+					if reportErr := skipSyncActivity(&progress, report, summary, fmt.Errorf("save metadata: %w", saveErr)); reportErr != nil {
+						return progress, reportErr
+					}
+					continue
+				}
+				progress.Imported++
+				progress.Completed++
+				if reportErr := reportSyncProgress(report, progress); reportErr != nil {
+					return progress, reportErr
+				}
+				slog.Info("Imported Strava activity without route", "activity", activity.ID, "name", activity.Name)
+				continue
+			}
 			if err := skipSyncActivity(&progress, report, summary, err); err != nil {
 				return progress, err
 			}
@@ -310,22 +331,7 @@ func (s *Server) syncRides(client syncClient, gpxDir string, from, to time.Time,
 			}
 			continue
 		}
-		activityType := activity.SportType
-		if activityType == "" {
-			activityType = activity.Type
-		}
-		if err := rides.Save(s.db, rides.Ride{
-			ExternalID:          externalID,
-			GPXPath:             gpxPath,
-			Name:                activity.Name,
-			Type:                activityType,
-			StartDate:           activity.StartDate,
-			DistanceM:           activity.DistanceM,
-			MovingTimeS:         activity.MovingTimeS,
-			ElapsedTimeS:        activity.ElapsedTimeS,
-			TotalElevationGainM: activity.TotalElevationGainM,
-			AverageSpeedMps:     activity.AverageSpeedMps,
-		}); err != nil {
+		if err := rides.Save(s.db, rideFromActivity(externalID, gpxPath, activity)); err != nil {
 			_ = os.Remove(gpxPath)
 			if reportErr := skipSyncActivity(&progress, report, summary, fmt.Errorf("save activity: %w", err)); reportErr != nil {
 				return progress, reportErr
@@ -340,6 +346,25 @@ func (s *Server) syncRides(client syncClient, gpxDir string, from, to time.Time,
 		slog.Info("Imported Strava ride", "activity", activity.ID, "name", activity.Name)
 	}
 	return progress, nil
+}
+
+func rideFromActivity(externalID, gpxPath string, activity strava.Activity) rides.Ride {
+	activityType := activity.SportType
+	if activityType == "" {
+		activityType = activity.Type
+	}
+	return rides.Ride{
+		ExternalID:          externalID,
+		GPXPath:             gpxPath,
+		Name:                activity.Name,
+		Type:                activityType,
+		StartDate:           activity.StartDate,
+		DistanceM:           activity.DistanceM,
+		MovingTimeS:         activity.MovingTimeS,
+		ElapsedTimeS:        activity.ElapsedTimeS,
+		TotalElevationGainM: activity.TotalElevationGainM,
+		AverageSpeedMps:     activity.AverageSpeedMps,
+	}
 }
 
 func skipSyncActivity(progress *SyncProgress, report func(SyncProgress) error, activity strava.Activity, err error) error {

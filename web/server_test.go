@@ -150,6 +150,31 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Contains(t, body, `"coordinates":[[5,43]`)
 }
 
+func TestHandlerRendersRideDetailWithoutRoute(t *testing.T) {
+	server, db := newWebTestServer(t)
+	item := rides.Ride{
+		ExternalID: "strava:14701658670",
+		Name:       "Indoor Ride",
+		Type:       "VirtualRide",
+		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
+		DistanceM:  20_000,
+	}
+	require.NoError(t, rides.Save(db, item))
+	stored, found, err := rides.GetByExternalID(db, item.ExternalID)
+	require.NoError(t, err)
+	require.True(t, found)
+
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/rides/%d", stored.ID), nil)
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, req)
+
+	body := response.Body.String()
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, body, "Indoor Ride")
+	assert.NotContains(t, body, "The recorded route is unavailable.")
+	assert.NotContains(t, body, `id="ride-map"`)
+}
+
 func TestHandlerReturnsNotFoundForUnknownRide(t *testing.T) {
 	server, _ := newWebTestServer(t)
 	req := httptest.NewRequest(http.MethodGet, "/rides/999999", nil)
@@ -284,6 +309,41 @@ func TestSyncRidesContinuesAfterInvalidActivity(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.NoFileExists(t, filepath.Join(gpxDir, "activity_14701658670.gpx"))
+}
+
+func TestSyncRidesSavesActivityWithoutRoute(t *testing.T) {
+	server, db := newWebTestServer(t)
+	indoorID := int64(14701658670)
+	validID := int64(14701658671)
+	startDate := time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC)
+	client := fakeSyncClient{
+		activities: []strava.Activity{
+			{ID: indoorID, Name: "Indoor activity", Type: "VirtualRide", StartDate: startDate, DistanceM: 20_000},
+			{ID: validID, Name: "Valid activity", Type: "Ride", StartDate: startDate},
+		},
+		results: map[int64]fakeSyncResult{
+			indoorID: {activity: strava.Activity{ID: indoorID, Name: "Indoor activity", Type: "VirtualRide", StartDate: startDate, DistanceM: 20_000}, err: strava.ErrNoTrackPoints},
+			validID:  {activity: strava.Activity{ID: validID, Name: "Valid activity", Type: "Ride", StartDate: startDate}, data: []byte(validTrackGPX)},
+		},
+	}
+	gpxDir := t.TempDir()
+	staleGPXPath := filepath.Join(gpxDir, "activity_14701658670.gpx")
+	require.NoError(t, os.WriteFile(staleGPXPath, []byte(emptyTrackGPX), 0o600))
+
+	progress, err := server.syncRides(client, gpxDir, startDate, startDate.AddDate(0, 0, 1), nil)
+
+	require.NoError(t, err)
+	assert.Equal(t, SyncProgress{Total: 2, Completed: 2, Imported: 2}, progress)
+	indoor, found, err := rides.GetByExternalID(db, "strava:14701658670")
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.Empty(t, indoor.GPXPath)
+	_, ready := indoor.CotacolScore()
+	assert.False(t, ready)
+	assert.NoFileExists(t, staleGPXPath)
+	_, found, err = rides.GetByExternalID(db, "strava:14701658671")
+	require.NoError(t, err)
+	assert.True(t, found)
 }
 
 func TestSyncRejectsConcurrentImport(t *testing.T) {

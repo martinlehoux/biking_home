@@ -13,6 +13,8 @@ import (
 
 const garminTrackPointExtensionNamespace = "http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
 
+var ErrNoTrackPoints = errors.New("activity has no track points")
+
 type Activity struct {
 	ID                  int64     `json:"id"`
 	Name                string    `json:"name"`
@@ -77,7 +79,7 @@ func (c *Client) Get(id int64) (Activity, []byte, error) {
 	}
 	gpxData, err := activityGPX(activity, streams)
 	if err != nil {
-		return Activity{}, nil, err
+		return activity, nil, err
 	}
 	return activity, gpxData, nil
 }
@@ -139,7 +141,7 @@ func (c *Client) activityStreams(id int64) (activityStreams, error) {
 
 func activityGPX(activity Activity, streams activityStreams) ([]byte, error) {
 	if len(streams.LatLng) == 0 {
-		return nil, errors.New("activity has no track points")
+		return nil, ErrNoTrackPoints
 	}
 	points := make([]gpx.GPXPoint, len(streams.LatLng))
 	for i := range streams.LatLng {

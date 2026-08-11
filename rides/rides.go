@@ -43,12 +43,17 @@ const (
 const columns = "id, external_id, gpx_path, name, type, start_date, distance_m, moving_time_s, elapsed_time_s, total_elevation_gain_m, average_speed_mps, cotacol_score, cotacol_algo_version, created_at, updated_at"
 
 func Save(db *sql.DB, r Ride) error {
-	parsed, err := ride.ParseFile(ride.GPXRideParser{}, r.GPXPath)
-	if err != nil {
-		return fmt.Errorf("compute Cotacol for ride %q: %w", r.ExternalID, err)
+	var cotacolScore any
+	var cotacolAlgorithmVersion any
+	if r.GPXPath != "" {
+		parsed, err := ride.ParseFile(ride.GPXRideParser{}, r.GPXPath)
+		if err != nil {
+			return fmt.Errorf("compute Cotacol for ride %q: %w", r.ExternalID, err)
+		}
+		cotacolScore = ride.Cotacol(parsed)
+		cotacolAlgorithmVersion = ride.CotacolAlgorithmVersion
 	}
-	cotacolScore := ride.Cotacol(parsed)
-	_, err = db.Exec(`
+	_, err := db.Exec(`
 		INSERT INTO rides (external_id, gpx_path, name, type, start_date, distance_m, moving_time_s, elapsed_time_s, total_elevation_gain_m, average_speed_mps, cotacol_score, cotacol_algo_version)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(external_id) DO UPDATE SET
@@ -64,7 +69,7 @@ func Save(db *sql.DB, r Ride) error {
 			cotacol_score = excluded.cotacol_score,
 			cotacol_algo_version = excluded.cotacol_algo_version,
 			updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
-	`, r.ExternalID, r.GPXPath, r.Name, r.Type, r.StartDate.UTC().Format(time.RFC3339), r.DistanceM, r.MovingTimeS, r.ElapsedTimeS, r.TotalElevationGainM, r.AverageSpeedMps, cotacolScore, ride.CotacolAlgorithmVersion)
+	`, r.ExternalID, r.GPXPath, r.Name, r.Type, r.StartDate.UTC().Format(time.RFC3339), r.DistanceM, r.MovingTimeS, r.ElapsedTimeS, r.TotalElevationGainM, r.AverageSpeedMps, cotacolScore, cotacolAlgorithmVersion)
 	return err
 }
 
