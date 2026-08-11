@@ -1,4 +1,5 @@
 [tools]
+"github:boyter/dcd" = "1.1.0"
 go = "1.25.12"
 watchexec = "latest"
 
@@ -18,6 +19,10 @@ run = "go vet ./... && go test ./..."
 [tasks.build]
 description = "Build the application"
 run = "go build -o biking_home ."
+
+[tasks.code-analysis]
+description = "Run code analysis tools"
+run = "dcd -i go -x '_test.go,templates_templ.go' -m 8 ."
 
 [tasks.migrate]
 description = "Apply SQLite migrations"
