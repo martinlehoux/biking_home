@@ -37,6 +37,11 @@ type Server struct {
 	syncActive  bool
 }
 
+type syncClient interface {
+	List(from, to time.Time) ([]strava.Activity, error)
+	Get(id int64) (strava.Activity, []byte, error)
+}
+
 func NewServer(db *sql.DB, configPath string) *Server {
 	return &Server{db: db, configPath: configPath}
 }
@@ -263,7 +268,7 @@ func (s *Server) handleStravaCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, returnTo, http.StatusSeeOther)
 }
 
-func (s *Server) syncRides(client *strava.Client, gpxDir string, from, to time.Time, report func(SyncProgress) error) (SyncProgress, error) {
+func (s *Server) syncRides(client syncClient, gpxDir string, from, to time.Time, report func(SyncProgress) error) (SyncProgress, error) {
 	activities, err := client.List(from, to)
 	if err != nil {
 		return SyncProgress{}, err
@@ -292,11 +297,18 @@ func (s *Server) syncRides(client *strava.Client, gpxDir string, from, to time.T
 		}
 		activity, gpxData, err := client.Get(summary.ID)
 		if err != nil {
-			return progress, err
+			if err := skipSyncActivity(&progress, report, summary, err); err != nil {
+				return progress, err
+			}
+			continue
 		}
 		gpxPath := filepath.Join(gpxDir, fmt.Sprintf("activity_%d.gpx", activity.ID))
 		if err := os.WriteFile(gpxPath, gpxData, 0o644); err != nil {
-			return progress, fmt.Errorf("write GPX for activity %d: %w", activity.ID, err)
+			_ = os.Remove(gpxPath)
+			if reportErr := skipSyncActivity(&progress, report, summary, fmt.Errorf("write GPX: %w", err)); reportErr != nil {
+				return progress, reportErr
+			}
+			continue
 		}
 		activityType := activity.SportType
 		if activityType == "" {
@@ -314,7 +326,11 @@ func (s *Server) syncRides(client *strava.Client, gpxDir string, from, to time.T
 			TotalElevationGainM: activity.TotalElevationGainM,
 			AverageSpeedMps:     activity.AverageSpeedMps,
 		}); err != nil {
-			return progress, fmt.Errorf("save activity %d: %w", activity.ID, err)
+			_ = os.Remove(gpxPath)
+			if reportErr := skipSyncActivity(&progress, report, summary, fmt.Errorf("save activity: %w", err)); reportErr != nil {
+				return progress, reportErr
+			}
+			continue
 		}
 		progress.Imported++
 		progress.Completed++
@@ -324,6 +340,13 @@ func (s *Server) syncRides(client *strava.Client, gpxDir string, from, to time.T
 		slog.Info("Imported Strava ride", "activity", activity.ID, "name", activity.Name)
 	}
 	return progress, nil
+}
+
+func skipSyncActivity(progress *SyncProgress, report func(SyncProgress) error, activity strava.Activity, err error) error {
+	progress.Skipped++
+	progress.Completed++
+	slog.Warn("Skipped Strava activity", "activity", activity.ID, "name", activity.Name, "error", err)
+	return reportSyncProgress(report, *progress)
 }
 
 func reportSyncProgress(report func(SyncProgress) error, progress SyncProgress) error {
@@ -469,7 +492,7 @@ func syncNotice(r *http.Request) string {
 	if imported == "" {
 		return ""
 	}
-	return fmt.Sprintf("Sync complete: %s imported, %s already stored.", imported, r.URL.Query().Get("skipped"))
+	return fmt.Sprintf("Sync complete: %s imported, %s skipped.", imported, r.URL.Query().Get("skipped"))
 }
 
 func safeReturnTo(value string) string {

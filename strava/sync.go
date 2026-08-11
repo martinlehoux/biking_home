@@ -1,6 +1,7 @@
 package strava
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -137,6 +138,9 @@ func (c *Client) activityStreams(id int64) (activityStreams, error) {
 }
 
 func activityGPX(activity Activity, streams activityStreams) ([]byte, error) {
+	if len(streams.LatLng) == 0 {
+		return nil, errors.New("activity has no track points")
+	}
 	points := make([]gpx.GPXPoint, len(streams.LatLng))
 	for i := range streams.LatLng {
 		point := gpx.GPXPoint{}

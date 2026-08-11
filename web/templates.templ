@@ -208,7 +208,7 @@ templ SyncContent(data SyncPageData) {
 				}
 				if (eventName === "complete") {
 					updateProgress(data);
-					notice.textContent = `Sync complete: ${data.imported} imported, ${data.skipped} already stored.`;
+					notice.textContent = `Sync complete: ${data.imported} imported, ${data.skipped} skipped.`;
 					notice.hidden = false;
 					return true;
 				}

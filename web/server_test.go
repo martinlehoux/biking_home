@@ -16,6 +16,7 @@ import (
 
 	"github.com/martinlehoux/biking_home/config"
 	"github.com/martinlehoux/biking_home/rides"
+	"github.com/martinlehoux/biking_home/strava"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -60,6 +61,32 @@ func testGPXPath(t *testing.T, name string) string {
 	require.NoError(t, os.WriteFile(path, []byte(`<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg><trkpt lat="43.0" lon="5.0"><ele>100</ele></trkpt><trkpt lat="43.001" lon="5.001"><ele>200</ele></trkpt></trkseg></trk></gpx>`), 0o600))
 	return path
 }
+
+type fakeSyncClient struct {
+	activities []strava.Activity
+	results    map[int64]fakeSyncResult
+}
+
+type fakeSyncResult struct {
+	activity strava.Activity
+	data     []byte
+	err      error
+}
+
+func (c fakeSyncClient) List(time.Time, time.Time) ([]strava.Activity, error) {
+	return c.activities, nil
+}
+
+func (c fakeSyncClient) Get(id int64) (strava.Activity, []byte, error) {
+	result, ok := c.results[id]
+	if !ok {
+		return strava.Activity{}, nil, fmt.Errorf("missing fake activity %d", id)
+	}
+	return result.activity, result.data, result.err
+}
+
+const emptyTrackGPX = `<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg></trkseg></trk></gpx>`
+const validTrackGPX = `<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg><trkpt lat="43.0" lon="5.0"><ele>100</ele></trkpt><trkpt lat="43.001" lon="5.001"><ele>200</ele></trkpt></trkseg></trk></gpx>`
 
 func TestHandlerRendersRidesPage(t *testing.T) {
 	server, db := newWebTestServer(t)
@@ -222,6 +249,41 @@ func TestSyncParsesMultipartDateRange(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, response.Code)
 	assert.Equal(t, "the end date must not be before the start date\n", response.Body.String())
 	assert.NotContains(t, response.Body.String(), "<!doctype html>")
+}
+
+func TestSyncRidesContinuesAfterInvalidActivity(t *testing.T) {
+	server, db := newWebTestServer(t)
+	invalidID := int64(14701658670)
+	validID := int64(14701658671)
+	startDate := time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC)
+	client := fakeSyncClient{
+		activities: []strava.Activity{
+			{ID: invalidID, Name: "Empty activity", Type: "Ride", StartDate: startDate},
+			{ID: validID, Name: "Valid activity", Type: "Ride", StartDate: startDate},
+		},
+		results: map[int64]fakeSyncResult{
+			invalidID: {activity: strava.Activity{ID: invalidID, Name: "Empty activity", Type: "Ride", StartDate: startDate}, data: []byte(emptyTrackGPX)},
+			validID:   {activity: strava.Activity{ID: validID, Name: "Valid activity", Type: "Ride", StartDate: startDate}, data: []byte(validTrackGPX)},
+		},
+	}
+	var updates []SyncProgress
+	gpxDir := t.TempDir()
+
+	progress, err := server.syncRides(client, gpxDir, startDate, startDate.AddDate(0, 0, 1), func(progress SyncProgress) error {
+		updates = append(updates, progress)
+		return nil
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, SyncProgress{Total: 2, Completed: 2, Imported: 1, Skipped: 1}, progress)
+	assert.Len(t, updates, 3)
+	_, found, err := rides.GetByExternalID(db, "strava:14701658670")
+	require.NoError(t, err)
+	assert.False(t, found)
+	_, found, err = rides.GetByExternalID(db, "strava:14701658671")
+	require.NoError(t, err)
+	assert.True(t, found)
+	assert.NoFileExists(t, filepath.Join(gpxDir, "activity_14701658670.gpx"))
 }
 
 func TestSyncRejectsConcurrentImport(t *testing.T) {

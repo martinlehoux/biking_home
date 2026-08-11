@@ -112,3 +112,23 @@ func TestGet(t *testing.T) {
 	require.True(t, found)
 	assert.Equal(t, 0.0, powerValue)
 }
+
+func TestGetRejectsActivityWithoutTrackPoints(t *testing.T) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/activities/14701658670":
+			_, err := w.Write([]byte(`{"id":14701658670,"name":"Empty activity","type":"Ride","sport_type":"Ride","start_date":"2026-01-01T10:00:00Z"}`))
+			require.NoError(t, err)
+		case "/activities/14701658670/streams":
+			_, err := w.Write([]byte(`{"latlng":{"data":[]}}`))
+			require.NoError(t, err)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+
+	_, _, err := client.Get(14701658670)
+
+	require.EqualError(t, err, "activity has no track points")
+}
