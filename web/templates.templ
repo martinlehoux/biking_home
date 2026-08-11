@@ -28,6 +28,9 @@ templ Layout(title string, content templ.Component) {
 				label { display: grid; gap: .35rem; color: #5b675f; font-size: .85rem; font-weight: 650; }
 				input { border: 1px solid #c8d0c9; border-radius: .55rem; padding: .65rem .7rem; font: inherit; color: inherit; background: #fff; }
 				.form-row { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }
+				.sync-progress { display: grid; gap: .7rem; margin-top: 1.25rem; }
+				.progress-heading { display: flex; justify-content: space-between; gap: 1rem; }
+				progress { width: 100%; height: .8rem; accent-color: #d96932; }
 				.notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #e5f3e9; color: #17633f; }
 				.error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: #fbe8df; color: #8c3517; }
 				table { width: 100%; border-collapse: collapse; }
@@ -147,23 +150,129 @@ templ SyncContent(data SyncPageData) {
 	<h1>Sync Strava rides</h1>
 	<p class="lead">Choose a date range. New rides are downloaded as GPX files and recorded in the local library.</p>
 	if data.Notice != "" {
-		<div class="notice">{ data.Notice }</div>
+		<div id="sync-notice" class="notice">{ data.Notice }</div>
+	} else {
+		<div id="sync-notice" class="notice" hidden></div>
 	}
 	if data.Error != "" {
-		<div class="error">{ data.Error }</div>
+		<div id="sync-error" class="error">{ data.Error }</div>
+	} else {
+		<div id="sync-error" class="error" hidden></div>
 	}
 	<section class="panel">
 		if !data.HasAuth {
 			<p>Strava authorization is required before the first sync.</p>
 			<a class="button secondary" href={ templ.URL("/strava/login?return_to=/sync") }>Authorize Strava</a>
 		} else {
-			<form method="post" action="/sync">
+			<form id="sync-form" method="post" action="/sync">
 				<div class="form-row">
 					<label>From<input type="date" name="from" value={ data.From } required/></label>
 					<label>To<input type="date" name="to" value={ data.To } required/></label>
 					<button class="button" type="submit">Sync rides</button>
 				</div>
 			</form>
+			<div id="sync-progress" class="sync-progress" role="status" aria-live="polite" hidden>
+				<div class="progress-heading"><strong>Importing rides</strong><span id="sync-progress-count">0 / 0</span></div>
+				<progress id="sync-progress-bar" max="1" value="0" aria-label="Strava import progress"></progress>
+				<span id="sync-progress-details">0 imported · 0 skipped</span>
+			</div>
 		}
 	</section>
+	<script>
+		(() => {
+			const form = document.getElementById("sync-form");
+			if (!form) return;
+			const button = form.querySelector("button[type=submit]");
+			const progressPanel = document.getElementById("sync-progress");
+			const progressBar = document.getElementById("sync-progress-bar");
+			const progressCount = document.getElementById("sync-progress-count");
+			const progressDetails = document.getElementById("sync-progress-details");
+			const notice = document.getElementById("sync-notice");
+			const error = document.getElementById("sync-error");
+
+			const showError = (message) => {
+				error.textContent = message;
+				error.hidden = false;
+			};
+			const updateProgress = (progress) => {
+				progressPanel.hidden = false;
+				progressBar.max = Math.max(progress.total, 1);
+				progressBar.value = progress.completed;
+				progressCount.textContent = `${progress.completed} / ${progress.total}`;
+				progressDetails.textContent = `${progress.imported} imported · ${progress.skipped} skipped`;
+			};
+			const handleEvent = (eventName, data) => {
+				if (eventName === "progress") {
+					updateProgress(data);
+					return false;
+				}
+				if (eventName === "complete") {
+					updateProgress(data);
+					notice.textContent = `Sync complete: ${data.imported} imported, ${data.skipped} already stored.`;
+					notice.hidden = false;
+					return true;
+				}
+				if (eventName === "error") {
+					if (data.progress) updateProgress(data.progress);
+					throw new Error(data.message || "Strava sync failed");
+				}
+				return false;
+			};
+			const consumeEvents = async (response) => {
+				const reader = response.body.getReader();
+				const decoder = new TextDecoder();
+				let buffer = "";
+				let completed = false;
+				const consumeBlock = (block) => {
+					let eventName = "message";
+					let data = "";
+					for (const line of block.split(/\r?\n/)) {
+						if (line.startsWith("event: ")) eventName = line.slice(7);
+						if (line.startsWith("data: ")) data += line.slice(6);
+					}
+					if (data) completed = handleEvent(eventName, JSON.parse(data)) || completed;
+				};
+				while (true) {
+					const { value, done } = await reader.read();
+					buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+					const blocks = buffer.split(/\r?\n\r?\n/);
+					buffer = blocks.pop();
+					for (const block of blocks) consumeBlock(block);
+					if (done) break;
+				}
+				if (buffer.trim()) consumeBlock(buffer);
+				if (!completed) throw new Error("Strava sync ended before completion");
+			};
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				button.disabled = true;
+				button.textContent = "Syncing...";
+				notice.hidden = true;
+				error.hidden = true;
+				progressPanel.hidden = false;
+				progressCount.textContent = "0 / 0";
+				progressDetails.textContent = "Preparing import...";
+				try {
+					const response = await fetch(form.action, {
+						method: "POST",
+						body: new FormData(form),
+						headers: { Accept: "text/event-stream" },
+					});
+					if (response.redirected) {
+						window.location.assign(response.url);
+						return;
+					}
+					if (!response.ok) throw new Error(await response.text() || `Sync failed (HTTP ${response.status})`);
+					if (!response.body) throw new Error("The browser does not support streaming responses");
+					await consumeEvents(response);
+				} catch (caught) {
+					showError(caught instanceof Error ? caught.message : "Strava sync failed");
+				} finally {
+					button.disabled = false;
+					button.textContent = "Sync rides";
+				}
+			});
+		})();
+	</script>
 }

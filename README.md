@@ -16,6 +16,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Strava stream metrics** — preserves heart rate, cadence, and power in Garmin-compatible GPX files and in-memory ride columns
 - **Ride table sorting** — sorts every ride-library column through clickable server-side headers and query parameters
 - **Ride detail maps** — opens a stored ride with its recorded route on an interactive OpenStreetMap map
+- **Strava import progress** — streams live import progress with an aggregate progress bar and prevents overlapping syncs
 
 ## Getting started
 
@@ -142,8 +143,7 @@ mise run build
 - Cotacol with a different step size
 - Cotacol with a variable step size (constant slope is the best?)
 - Road quality (Arbois = 2/5, Roquefavour = 4/5)
-- Display rides + passes on map
-- Strava import progress
+- Display passes on map
 
 Workflow:
 - Detect climbs in ride (already exists)

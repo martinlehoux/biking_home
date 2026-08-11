@@ -1,8 +1,10 @@
 package web
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -164,6 +166,28 @@ func TestSyncPageRequestsAuthorization(t *testing.T) {
 	assert.Contains(t, response.Body.String(), "Authorize Strava")
 }
 
+func TestSyncPageIncludesProgressUIWhenAuthorized(t *testing.T) {
+	server, _ := newWebTestServer(t)
+	appConfig, err := config.Load(server.configPath)
+	require.NoError(t, err)
+	appConfig.Strava.AccessToken = "access"
+	appConfig.Strava.RefreshToken = "refresh"
+	appConfig.Strava.ExpiresAt = time.Now().Add(time.Hour).Unix()
+	require.NoError(t, config.Save(server.configPath, appConfig))
+
+	req := httptest.NewRequest(http.MethodGet, "/sync", nil)
+	response := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(response, req)
+
+	body := response.Body.String()
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, body, `id="sync-form"`)
+	assert.Contains(t, body, `id="sync-progress"`)
+	assert.Contains(t, body, `<progress id="sync-progress-bar"`)
+	assert.Contains(t, body, `text/event-stream`)
+}
+
 func TestSyncRedirectsToOAuthWhenUnauthenticated(t *testing.T) {
 	server, _ := newWebTestServer(t)
 	form := url.Values{"from": {"2026-08-01"}, "to": {"2026-08-04"}}
@@ -178,6 +202,61 @@ func TestSyncRedirectsToOAuthWhenUnauthenticated(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "/strava/login", location.Path)
 	assert.Equal(t, "/sync?from=2026-08-01&to=2026-08-04", location.Query().Get("return_to"))
+}
+
+func TestSyncParsesMultipartDateRange(t *testing.T) {
+	server, _ := newWebTestServer(t)
+	var body bytes.Buffer
+	form := multipart.NewWriter(&body)
+	require.NoError(t, form.WriteField("from", "2026-08-11"))
+	require.NoError(t, form.WriteField("to", "2026-08-01"))
+	require.NoError(t, form.Close())
+
+	req := httptest.NewRequest(http.MethodPost, "/sync", &body)
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Content-Type", form.FormDataContentType())
+	response := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(response, req)
+
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	assert.Equal(t, "the end date must not be before the start date\n", response.Body.String())
+	assert.NotContains(t, response.Body.String(), "<!doctype html>")
+}
+
+func TestSyncRejectsConcurrentImport(t *testing.T) {
+	server, _ := newWebTestServer(t)
+	appConfig, err := config.Load(server.configPath)
+	require.NoError(t, err)
+	appConfig.Strava.AccessToken = "access"
+	appConfig.Strava.RefreshToken = "refresh"
+	appConfig.Strava.ExpiresAt = time.Now().Add(time.Hour).Unix()
+	require.NoError(t, config.Save(server.configPath, appConfig))
+	require.True(t, server.beginSync())
+	defer server.endSync()
+
+	form := url.Values{"from": {"2026-08-01"}, "to": {"2026-08-04"}}
+	req := httptest.NewRequest(http.MethodPost, "/sync", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	response := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(response, req)
+
+	assert.Equal(t, http.StatusConflict, response.Code)
+	assert.Contains(t, response.Body.String(), "already in progress")
+}
+
+func TestWriteSyncEvent(t *testing.T) {
+	response := httptest.NewRecorder()
+	progress := SyncProgress{Total: 2, Completed: 1, Imported: 1}
+
+	require.NoError(t, writeSyncEvent(response, response, "progress", progress))
+	require.NoError(t, writeSyncEvent(response, response, "complete", progress))
+
+	body := response.Body.String()
+	assert.Contains(t, body, "event: progress\ndata: {\"total\":2,\"completed\":1,\"imported\":1,\"skipped\":0}\n\n")
+	assert.Contains(t, body, "event: complete\ndata: {\"total\":2,\"completed\":1,\"imported\":1,\"skipped\":0}\n\n")
+	assert.Less(t, strings.Index(body, "event: progress"), strings.Index(body, "event: complete"))
 }
 
 func TestStravaLoginRedirectsToAuthorize(t *testing.T) {

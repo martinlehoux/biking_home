@@ -180,6 +180,13 @@ type SyncPageData struct {
 	HasAuth bool
 }
 
+type SyncProgress struct {
+	Total     int `json:"total"`
+	Completed int `json:"completed"`
+	Imported  int `json:"imported"`
+	Skipped   int `json:"skipped"`
+}
+
 func formatRideDate(value time.Time) string {
 	return value.Local().Format("02 Jan 2006, 15:04")
 }
