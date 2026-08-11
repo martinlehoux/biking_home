@@ -97,6 +97,27 @@ templ RideDetailContent(data RideDetailView) {
 				const canvas = document.getElementById("ride-profile-chart");
 				const hoverOutput = document.getElementById("ride-profile-hover");
 				if (!mapElement || !routeElement || !profileElement || !canvas || !hoverOutput) return;
+				const colorProbe = document.createElement("span");
+				colorProbe.hidden = true;
+				document.body.append(colorProbe);
+				const resolveColor = (name) => {
+					colorProbe.style.color = `var(${name})`;
+					return getComputedStyle(colorProbe).color;
+				};
+				const colors = {
+					accent: resolveColor("--color-accent"),
+					forest: resolveColor("--color-forest"),
+					subtle: resolveColor("--color-subtle"),
+					plotSurface: resolveColor("--color-plot-surface"),
+					plotSurfaceOverlay: resolveColor("--color-plot-surface-overlay"),
+					grid: resolveColor("--color-plot-grid"),
+					accentFill: resolveColor("--color-accent-fill"),
+					climbLabel: resolveColor("--color-climb-label"),
+					crossing: resolveColor("--color-crossing"),
+					crossingLabel: resolveColor("--color-crossing-label"),
+					hoverLine: resolveColor("--color-hover-line"),
+				};
+				colorProbe.remove();
 				const route = JSON.parse(routeElement.textContent);
 				const profile = JSON.parse(profileElement.textContent);
 				const map = L.map(mapElement);
@@ -106,7 +127,7 @@ templ RideDetailContent(data RideDetailView) {
 				});
 				tiles.addTo(map);
 				const routeLayer = L.geoJSON(route, {
-					style: { color: "#d96932", weight: 4, opacity: 0.9 },
+					style: { color: colors.accent, weight: 4, opacity: 0.9 },
 				}).addTo(map);
 				const bounds = routeLayer.getBounds();
 				if (bounds.isValid()) {
@@ -116,8 +137,8 @@ templ RideDetailContent(data RideDetailView) {
 				const points = profile.points || [];
 				if (points.length === 0) return;
 				const routeCursor = L.circleMarker([points[0].latitude, points[0].longitude], {
-					color: "#173b2a",
-					fillColor: "#d96932",
+					color: colors.forest,
+					fillColor: colors.accent,
 					fillOpacity: 0,
 					opacity: 0,
 					radius: 7,
@@ -176,7 +197,7 @@ templ RideDetailContent(data RideDetailView) {
 					state.plot = { left: 52, right: rect.width - 20, top: 24, bottom: rect.height - 34 };
 					const plot = state.plot;
 					context.clearRect(0, 0, rect.width, rect.height);
-					context.fillStyle = "#fbfcfa";
+					context.fillStyle = colors.plotSurface;
 					context.fillRect(0, 0, rect.width, rect.height);
 
 					context.font = "12px system-ui, sans-serif";
@@ -185,13 +206,13 @@ templ RideDetailContent(data RideDetailView) {
 						const fraction = step / 4;
 						const y = plot.top + fraction * (plot.bottom - plot.top);
 						const elevation = maxElevation - fraction * (maxElevation - minElevation);
-						context.strokeStyle = "#e5e9e5";
+						context.strokeStyle = colors.grid;
 						context.lineWidth = 1;
 						context.beginPath();
 						context.moveTo(plot.left, y);
 						context.lineTo(plot.right, y);
 						context.stroke();
-						context.fillStyle = "#68746c";
+						context.fillStyle = colors.subtle;
 						context.textAlign = "right";
 						context.fillText(formatElevation(elevation), plot.left - 8, y);
 					}
@@ -199,10 +220,10 @@ templ RideDetailContent(data RideDetailView) {
 					for (const climb of profile.climbs || []) {
 						const startX = clamp(xForDistance(climb.startKm), plot.left, plot.right);
 						const endX = clamp(xForDistance(climb.endKm), plot.left, plot.right);
-						context.fillStyle = "#d9693230";
+						context.fillStyle = colors.accentFill;
 						context.fillRect(startX, plot.top, Math.max(endX - startX, 1), plot.bottom - plot.top);
 						const label = climb.name || `${climb.category} ${Math.round(climb.score)}`;
-						context.fillStyle = "#8c421f";
+						context.fillStyle = colors.climbLabel;
 						context.textAlign = "center";
 						context.textBaseline = "top";
 						context.fillText(label, clamp((startX + endX) / 2, plot.left + 24, plot.right - 24), plot.top + 4);
@@ -210,7 +231,7 @@ templ RideDetailContent(data RideDetailView) {
 
 					for (const crossing of profile.crossings || []) {
 						const x = xForDistance(crossing.distanceKm);
-						context.strokeStyle = "#18794e99";
+						context.strokeStyle = colors.crossing;
 						context.lineWidth = 1;
 						context.setLineDash([4, 3]);
 						context.beginPath();
@@ -225,7 +246,7 @@ templ RideDetailContent(data RideDetailView) {
 					for (const point of points) context.lineTo(xForDistance(point.distanceKm), yForElevation(point.elevationM));
 					context.lineTo(xForDistance(points[points.length - 1].distanceKm), plot.bottom);
 					context.closePath();
-					context.fillStyle = "#d9693220";
+					context.fillStyle = colors.accentFill;
 					context.fill();
 					context.beginPath();
 					for (let i = 0; i < points.length; i++) {
@@ -233,7 +254,7 @@ templ RideDetailContent(data RideDetailView) {
 						if (i === 0) context.moveTo(xForDistance(point.distanceKm), yForElevation(point.elevationM));
 						else context.lineTo(xForDistance(point.distanceKm), yForElevation(point.elevationM));
 					}
-					context.strokeStyle = "#d96932";
+					context.strokeStyle = colors.accent;
 					context.lineWidth = 2.5;
 					context.stroke();
 					for (const crossing of profile.crossings || []) {
@@ -242,15 +263,15 @@ templ RideDetailContent(data RideDetailView) {
 						const labelWidth = context.measureText(label).width;
 						const labelX = clamp(x, plot.left + labelWidth / 2 + 3, plot.right - labelWidth / 2 - 3);
 						const labelY = plot.top - 6;
-						context.fillStyle = "#fbfcfae6";
+						context.fillStyle = colors.plotSurfaceOverlay;
 						context.fillRect(labelX - labelWidth / 2 - 3, labelY - 15, labelWidth + 6, 16);
-						context.fillStyle = "#17633f";
+						context.fillStyle = colors.crossingLabel;
 						context.textAlign = "center";
 						context.textBaseline = "bottom";
 						context.fillText(label, labelX, labelY);
 					}
 
-					context.fillStyle = "#68746c";
+					context.fillStyle = colors.subtle;
 					context.textAlign = "center";
 					context.textBaseline = "top";
 					for (let step = 0; step <= 4; step++) {
@@ -262,7 +283,7 @@ templ RideDetailContent(data RideDetailView) {
 						const point = points[state.hoveredIndex];
 						const x = xForDistance(point.distanceKm);
 						const y = yForElevation(point.elevationM);
-						context.strokeStyle = "#173b2a99";
+						context.strokeStyle = colors.hoverLine;
 						context.lineWidth = 1;
 						context.setLineDash([3, 3]);
 						context.beginPath();
@@ -270,7 +291,7 @@ templ RideDetailContent(data RideDetailView) {
 						context.lineTo(x, plot.bottom);
 						context.stroke();
 						context.setLineDash([]);
-						context.fillStyle = "#173b2a";
+						context.fillStyle = colors.forest;
 						context.beginPath();
 						context.arc(x, y, 5, 0, 2 * Math.PI);
 						context.fill();
