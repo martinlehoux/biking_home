@@ -6,7 +6,7 @@ server:
   public_url: http://localhost:8080
 
 storage:
-  gpx_dir: rides
+  gpx_dir: data/rides
 
 strava:
   client_id: ""

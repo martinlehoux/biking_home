@@ -43,7 +43,7 @@ func Default() Config {
 			Address:   "127.0.0.1:8080",
 			PublicURL: "http://localhost:8080",
 		},
-		Storage: StorageConfig{GPXDir: "rides"},
+		Storage: StorageConfig{GPXDir: "data/rides"},
 	}
 }
 
