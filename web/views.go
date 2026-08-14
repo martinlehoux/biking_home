@@ -2,14 +2,13 @@ package web
 
 import (
 	"fmt"
-	"math"
 	"net/url"
 	"time"
 
-	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/official_climb"
 	"github.com/martinlehoux/biking_home/ride"
+	"github.com/martinlehoux/biking_home/rideanalysis"
 	"github.com/martinlehoux/biking_home/rides"
 )
 
@@ -239,42 +238,27 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, off
 			Longitude:  coordinate.Lon,
 		}
 	}
-	climbs := parsed.AllClimbs()
-	for i := range climbs {
-		displayClimb := climbs[i]
-		if matchedPass, ok := mountain_pass.MatchClimb(displayClimb, passes, 300, 50); ok {
-			displayClimb.Name = matchedPass.Name
-		}
-		matchedOfficial, officialFound := official_climb.MatchClimb(climbs[i], officialClimbs, matchPolicy)
-		if officialFound {
-			startIndex := nearestCoordIndex(parsed, matchedOfficial.StartCoord)
-			endIndex := nearestCoordIndex(parsed, matchedOfficial.EndCoord)
-			if startIndex < endIndex {
-				displayClimb = parsed.ClimbFromIndexes(startIndex, endIndex)
-				displayClimb.Name = matchedOfficial.Name
-			} else {
-				officialFound = false
-				matchedOfficial = official_climb.OfficialClimb{}
-			}
-		}
+	analysis := rideanalysis.Analyze(parsed, passes, officialClimbs, matchPolicy)
+	for _, analyzedClimb := range analysis.Climbs {
+		climb := analyzedClimb.Segment
 		profile.Climbs = append(profile.Climbs, RideProfileClimb{
-			StartKm:         displayClimb.StartDistanceM() / 1000,
-			EndKm:           displayClimb.EndDistanceM() / 1000,
-			TopKm:           displayClimb.TopDistanceM() / 1000,
-			TopElevationM:   displayClimb.TopElevationM(),
-			Name:            displayClimb.Name,
-			Score:           displayClimb.Score(),
-			Category:        ride.Category(displayClimb.Score()),
-			DistanceKm:      (displayClimb.EndDistanceM() - displayClimb.StartDistanceM()) / 1000,
-			SlopePercent:    ride.Slope(parsed, displayClimb.StartIndex(), displayClimb.EndIndex()) * 100,
-			Cotacol:         displayClimb.DifficultyScore(),
-			OfficialClimbID: officialClimbID(matchedOfficial, officialFound),
-			OfficialName:    officialClimbName(matchedOfficial, officialFound),
-			StartIndex:      displayClimb.StartIndex(),
-			EndIndex:        displayClimb.EndIndex(),
+			StartKm:         climb.StartDistanceM() / 1000,
+			EndKm:           climb.EndDistanceM() / 1000,
+			TopKm:           climb.TopDistanceM() / 1000,
+			TopElevationM:   climb.TopElevationM(),
+			Name:            analyzedClimb.Name,
+			Score:           analyzedClimb.Score,
+			Category:        analyzedClimb.Category,
+			DistanceKm:      analyzedClimb.DistanceM / 1000,
+			SlopePercent:    analyzedClimb.SlopePercent,
+			Cotacol:         analyzedClimb.Cotacol,
+			OfficialClimbID: analyzedClimb.OfficialClimbID,
+			OfficialName:    analyzedClimb.OfficialName,
+			StartIndex:      climb.StartIndex(),
+			EndIndex:        climb.EndIndex(),
 		})
 	}
-	for _, crossing := range mountain_pass.DetectCrossings(parsed, passes, 100, 25) {
+	for _, crossing := range analysis.Crossings {
 		profile.Crossings = append(profile.Crossings, RideProfileCrossing{
 			DistanceKm:    crossing.RideDistanceM / 1000,
 			PassElevation: float64(crossing.Pass.Elevation),
@@ -285,33 +269,6 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, off
 		})
 	}
 	return profile
-}
-
-func nearestCoordIndex(parsed ride.Ride, target geodist.Coord) int {
-	bestIndex := 0
-	bestDistance := math.Inf(1)
-	for index := 0; index < parsed.Len(); index++ {
-		_, distanceKm := geodist.HaversineDistance(parsed.Coord(index), target)
-		if distanceKm < bestDistance {
-			bestDistance = distanceKm
-			bestIndex = index
-		}
-	}
-	return bestIndex
-}
-
-func officialClimbID(climb official_climb.OfficialClimb, found bool) int64 {
-	if !found {
-		return 0
-	}
-	return climb.ID
-}
-
-func officialClimbName(climb official_climb.OfficialClimb, found bool) string {
-	if !found {
-		return ""
-	}
-	return climb.Name
 }
 
 type SyncPageData struct {
