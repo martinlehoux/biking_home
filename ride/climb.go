@@ -40,6 +40,19 @@ func (climb Climb) EndDistanceM() float64 {
 	return climb.ride.DistanceM(climb.rideEnd)
 }
 
+func (climb Climb) StartCoord() geodist.Coord {
+	return climb.ride.Coord(climb.rideStart)
+}
+
+func (climb Climb) EndCoord() geodist.Coord {
+	return climb.ride.Coord(climb.rideEnd)
+}
+
+func (climb Climb) PointCoord(index int) geodist.Coord {
+	kcore.Assert(index >= climb.rideStart && index <= climb.rideEnd, "point is outside climb")
+	return climb.ride.Coord(index)
+}
+
 // TopIndex returns the highest point inside the climb, used as the crest anchor.
 func (climb Climb) TopIndex() int {
 	top := climb.rideStart

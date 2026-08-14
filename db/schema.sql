@@ -27,8 +27,16 @@ CREATE TABLE rides (
     elapsed_time_s integer not null,
     total_elevation_gain_m real not null,
     average_speed_mps real not null,
-    cotacol_score real,
-    cotacol_algo_version text,
+    created_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+, cotacol_score real, cotacol_algo_version text);
+CREATE TABLE official_climbs (
+    id integer primary key,
+    name text not null,
+    start_latitude real not null,
+    start_longitude real not null,
+    end_latitude real not null,
+    end_longitude real not null,
     created_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
@@ -37,4 +45,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20250802140659'),
   ('20260802090000'),
   ('20260804000000'),
-  ('20260807000000');
+  ('20260807000000'),
+  ('20260813000000');

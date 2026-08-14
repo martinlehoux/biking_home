@@ -2,17 +2,20 @@ package config
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 
+	"github.com/martinlehoux/biking_home/official_climb"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Database DatabaseConfig `yaml:"database"`
-	Server   ServerConfig   `yaml:"server"`
-	Storage  StorageConfig  `yaml:"storage"`
-	Strava   StravaConfig   `yaml:"strava"`
+	Database      DatabaseConfig      `yaml:"database"`
+	Server        ServerConfig        `yaml:"server"`
+	Storage       StorageConfig       `yaml:"storage"`
+	Strava        StravaConfig        `yaml:"strava"`
+	OfficialClimb OfficialClimbConfig `yaml:"official_climb"`
 }
 
 type DatabaseConfig struct {
@@ -36,6 +39,10 @@ type StravaConfig struct {
 	ExpiresAt    int64  `yaml:"expires_at"`
 }
 
+type OfficialClimbConfig struct {
+	MatchRadiusM float64 `yaml:"match_radius_m"`
+}
+
 func Default() Config {
 	return Config{
 		Database: DatabaseConfig{Path: "biking_home.db"},
@@ -43,7 +50,8 @@ func Default() Config {
 			Address:   "127.0.0.1:8080",
 			PublicURL: "http://localhost:8080",
 		},
-		Storage: StorageConfig{GPXDir: "data/rides"},
+		Storage:       StorageConfig{GPXDir: "data/rides"},
+		OfficialClimb: OfficialClimbConfig{MatchRadiusM: official_climb.DefaultMatchRadiusM},
 	}
 }
 
@@ -64,6 +72,9 @@ func Load(filename string) (Config, error) {
 	}
 	if config.Storage.GPXDir == "" {
 		return Config{}, fmt.Errorf("config %q: storage.gpx_dir is required", filename)
+	}
+	if math.IsNaN(config.OfficialClimb.MatchRadiusM) || math.IsInf(config.OfficialClimb.MatchRadiusM, 0) || config.OfficialClimb.MatchRadiusM <= 0 {
+		return Config{}, fmt.Errorf("config %q: official_climb.match_radius_m must be greater than zero", filename)
 	}
 	return config, nil
 }

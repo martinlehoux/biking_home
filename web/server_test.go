@@ -17,6 +17,7 @@ import (
 	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/config"
 	"github.com/martinlehoux/biking_home/mountain_pass"
+	"github.com/martinlehoux/biking_home/official_climb"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 	"github.com/martinlehoux/biking_home/strava"
@@ -63,6 +64,19 @@ func newWebTestServer(t *testing.T) (*Server, *sql.DB) {
 		)
 	`)
 	require.NoError(t, err)
+	_, err = db.Exec(`
+		create table official_climbs (
+			id integer primary key,
+			name text not null,
+			start_latitude real not null,
+			start_longitude real not null,
+			end_latitude real not null,
+			end_longitude real not null,
+			created_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+			updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+		)
+	`)
+	require.NoError(t, err)
 	configPath := filepath.Join(t.TempDir(), "config.yaml")
 	appConfig := config.Default()
 	appConfig.Strava.ClientID = "123"
@@ -103,6 +117,7 @@ func (c fakeSyncClient) Get(id int64) (strava.Activity, []byte, error) {
 
 const emptyTrackGPX = `<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg></trkseg></trk></gpx>`
 const validTrackGPX = `<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg><trkpt lat="43.0" lon="5.0"><ele>100</ele></trkpt><trkpt lat="43.001" lon="5.001"><ele>200</ele></trkpt></trkseg></trk></gpx>`
+const officialClimbTrackGPX = `<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1"><trk><trkseg><trkpt lat="43.0" lon="5.0"><ele>100</ele></trkpt><trkpt lat="43.005" lon="5.005"><ele>300</ele></trkpt><trkpt lat="43.01" lon="5.01"><ele>100</ele></trkpt></trkseg></trk></gpx>`
 
 func TestHandlerRendersRidesPage(t *testing.T) {
 	server, db := newWebTestServer(t)
@@ -157,10 +172,15 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	body := response.Body.String()
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Contains(t, body, "Detailed Ride")
+	assert.Contains(t, body, `<h1 class="ride-detail-title">Detailed Ride</h1>`)
+	assert.NotContains(t, body, `<p class="eyebrow">Ride detail</p>`)
 	assert.Contains(t, body, `id="ride-route"`)
 	assert.Contains(t, body, `id="ride-profile"`)
 	assert.Contains(t, body, `id="ride-profile-chart"`)
 	assert.Contains(t, body, `id="ride-map"`)
+	assert.Contains(t, body, `class="ride-detail-grid"`)
+	assert.Contains(t, body, `class="ride-detail-sidebar"`)
+	assert.Contains(t, body, `class="ride-detail-main"`)
 	assert.Contains(t, body, `<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>`)
 	assert.Contains(t, body, `<script src="/static/ride-detail.js" defer></script>`)
 	assert.NotContains(t, body, "pointermove")
@@ -175,6 +195,11 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Contains(t, script, "pointermove")
 	assert.Contains(t, script, "circleMarker")
 	assert.Contains(t, script, "crossing.passElevationM")
+	assert.Contains(t, script, "climbRoute")
+	assert.Contains(t, script, "L.polyline")
+	assert.Contains(t, script, "zoomToClimb")
+	assert.Contains(t, script, "Cotacol")
+	assert.Contains(t, script, "cotacolForClimb")
 	assert.Contains(t, script, "const labelY = plot.top - 6")
 	assert.Contains(t, body, "leaflet@1.9.4/dist/leaflet.js")
 	assert.Contains(t, script, "tile.openstreetmap.org/{z}/{x}/{y}.png")
@@ -196,7 +221,7 @@ func TestBuildRideProfileIncludesClimbsAndCrossings(t *testing.T) {
 		Coord:     &geodist.Coord{Lat: 43.62, Lon: 5.43},
 	}}
 
-	profile := buildRideProfile(parsed, passes)
+	profile := buildRideProfile(parsed, passes, nil, official_climb.DefaultMatchPolicy())
 
 	require.Len(t, profile.Points, 3)
 	assert.Equal(t, 1.0, profile.Points[1].DistanceKm)
@@ -207,6 +232,97 @@ func TestBuildRideProfileIncludesClimbsAndCrossings(t *testing.T) {
 	require.Len(t, profile.Crossings, 1)
 	assert.Equal(t, "Pas de Magnan", profile.Crossings[0].Name)
 	assert.Equal(t, 1.0, profile.Crossings[0].DistanceKm)
+}
+
+func TestBuildRideProfileIncludesOfficialClimbMatch(t *testing.T) {
+	parsed := ride.FromColumns(
+		[]float64{0, 1000, 2000},
+		[]float64{300, 447, 380},
+		[]geodist.Coord{{Lat: 43.61, Lon: 5.42}, {Lat: 43.62, Lon: 5.43}, {Lat: 43.63, Lon: 5.44}},
+		make([]time.Time, 3),
+	)
+	profile := buildRideProfile(parsed, nil, []official_climb.OfficialClimb{{
+		ID:         42,
+		Name:       "Col de Test",
+		StartCoord: parsed.Coord(0),
+		EndCoord:   parsed.Coord(1),
+	}}, official_climb.DefaultMatchPolicy())
+
+	require.Len(t, profile.Climbs, 1)
+	assert.Equal(t, int64(42), profile.Climbs[0].OfficialClimbID)
+	assert.Equal(t, "Col de Test", profile.Climbs[0].OfficialName)
+	assert.Equal(t, "Col de Test", profile.Climbs[0].Name)
+}
+
+func TestBuildRideProfileUsesOfficialClimbBoundaries(t *testing.T) {
+	parsed := ride.FromColumns(
+		[]float64{0, 1000, 2000},
+		[]float64{300, 447, 380},
+		[]geodist.Coord{{Lat: 43.61, Lon: 5.42}, {Lat: 43.62, Lon: 5.43}, {Lat: 43.6205, Lon: 5.4305}},
+		make([]time.Time, 3),
+	)
+	profile := buildRideProfile(parsed, nil, []official_climb.OfficialClimb{{
+		ID:         42,
+		Name:       "Col de Test",
+		StartCoord: parsed.Coord(0),
+		EndCoord:   parsed.Coord(2),
+	}}, official_climb.DefaultMatchPolicy())
+
+	require.Len(t, profile.Climbs, 1)
+	assert.Equal(t, 0, profile.Climbs[0].StartIndex)
+	assert.Equal(t, 2, profile.Climbs[0].EndIndex)
+	assert.Equal(t, 2.0, profile.Climbs[0].EndKm)
+	assert.Equal(t, 2.0, profile.Climbs[0].DistanceKm)
+	assert.Equal(t, 4.0, profile.Climbs[0].SlopePercent)
+	assert.Greater(t, profile.Climbs[0].Cotacol, 0.0)
+}
+
+func TestHandlerCreatesOfficialClimbFromRoutePoints(t *testing.T) {
+	server, db := newWebTestServer(t)
+	routePath := filepath.Join(t.TempDir(), "official-climb.gpx")
+	require.NoError(t, os.WriteFile(routePath, []byte(officialClimbTrackGPX), 0o600))
+	require.NoError(t, rides.Save(db, rides.Ride{
+		ExternalID: "strava:550e8400-e29b-41d4-a716-446655440000",
+		GPXPath:    routePath,
+		Name:       "Climb Candidate",
+		Type:       "Ride",
+		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
+		DistanceM:  2_000,
+	}))
+	item, found, err := rides.GetByExternalID(db, "strava:550e8400-e29b-41d4-a716-446655440000")
+	require.NoError(t, err)
+	require.True(t, found)
+
+	getRequest := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/rides/%d", item.ID), nil)
+	getResponse := httptest.NewRecorder()
+	server.Handler().ServeHTTP(getResponse, getRequest)
+	assert.Equal(t, http.StatusOK, getResponse.Code)
+	assert.Contains(t, getResponse.Body.String(), "No official climb matched yet.")
+	assert.Contains(t, getResponse.Body.String(), "Select on profile")
+	assert.Contains(t, getResponse.Body.String(), "Select on map")
+	assert.Contains(t, getResponse.Body.String(), "Climb 1")
+	assert.Contains(t, getResponse.Body.String(), "data-climb-next")
+
+	form := url.Values{"name": {"Col de Test"}, "start_index": {"0"}, "end_index": {"1"}}
+	request := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/rides/%d/official-climbs", item.ID), strings.NewReader(form.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusSeeOther, response.Code)
+	assert.Equal(t, fmt.Sprintf("/rides/%d?official_climb=created", item.ID), response.Header().Get("Location"))
+	climbs, err := official_climb.List(db)
+	require.NoError(t, err)
+	require.Len(t, climbs, 1)
+	assert.Equal(t, "Col de Test", climbs[0].Name)
+	assert.Equal(t, geodist.Coord{Lat: 43.0, Lon: 5.0}, climbs[0].StartCoord)
+	assert.Equal(t, geodist.Coord{Lat: 43.005, Lon: 5.005}, climbs[0].EndCoord)
+
+	getRequest = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/rides/%d?official_climb=created", item.ID), nil)
+	getResponse = httptest.NewRecorder()
+	server.Handler().ServeHTTP(getResponse, getRequest)
+	assert.Contains(t, getResponse.Body.String(), "Official climb saved and matched to this ride by coordinates.")
+	assert.Contains(t, getResponse.Body.String(), "Official climb matched: Col de Test")
 }
 
 func TestHandlerRendersRideDetailWithoutRoute(t *testing.T) {

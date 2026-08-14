@@ -299,3 +299,8 @@ func (r *Ride) ClimbFromDist(startDist, endDist float64) Climb {
 	}
 	return Climb{ride: *r, rideStart: start, rideEnd: end}
 }
+
+func (r *Ride) ClimbFromIndexes(startIndex, endIndex int) Climb {
+	kcore.Assert(startIndex >= 0 && endIndex < r.Len() && startIndex < endIndex, "invalid climb indexes")
+	return Climb{ride: *r, rideStart: startIndex, rideEnd: endIndex}
+}

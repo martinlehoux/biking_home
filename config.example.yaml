@@ -8,6 +8,9 @@ server:
 storage:
   gpx_dir: data/rides
 
+official_climb:
+  match_radius_m: 100
+
 strava:
   client_id: ""
   client_secret: ""

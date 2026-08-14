@@ -19,6 +19,7 @@ import (
 
 	"github.com/martinlehoux/biking_home/config"
 	"github.com/martinlehoux/biking_home/mountain_pass"
+	"github.com/martinlehoux/biking_home/official_climb"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 	"github.com/martinlehoux/biking_home/strava"
@@ -52,6 +53,7 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /static/", http.FileServer(http.FS(staticFiles)))
 	mux.HandleFunc("GET /", s.handleRides)
 	mux.HandleFunc("GET /rides/{id}", s.handleRide)
+	mux.HandleFunc("POST /rides/{id}/official-climbs", s.handleCreateOfficialClimb)
 	mux.HandleFunc("GET /sync", s.handleSyncForm)
 	mux.HandleFunc("POST /sync", s.handleSync)
 	mux.HandleFunc("GET /strava/login", s.handleStravaLogin)
@@ -93,7 +95,7 @@ func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
 	}
 	if item.GPXPath == "" {
 		slog.Info("Loaded ride detail without route", "ride_id", id)
-		kcore.RenderPage(r.Context(), RideDetailPage(RideDetailView{RideView: buildRideView(item)}), w)
+		kcore.RenderPage(r.Context(), RideDetailPage(RideDetailView{RideView: buildRideView(item), Notice: rideDetailNotice(r)}), w)
 		return
 	}
 	parsed, err := ride.ParseFile(ride.GPXRideParser{}, item.GPXPath)
@@ -102,6 +104,7 @@ func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
 		kcore.RenderPage(r.Context(), RideDetailPage(RideDetailView{
 			RideView:   buildRideView(item),
 			RouteError: "The recorded route is unavailable.",
+			Notice:     rideDetailNotice(r),
 		}), w)
 		return
 	}
@@ -109,8 +112,87 @@ func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Warn("Failed to load mountain passes for ride detail", "ride_id", id, "error", err)
 	}
+	officialClimbs, err := official_climb.List(s.db)
+	if err != nil {
+		slog.Warn("Failed to load official climbs for ride detail", "ride_id", id, "error", err)
+	}
+	matchPolicy := official_climb.DefaultMatchPolicy()
+	appConfig, err := s.loadConfig()
+	if err != nil {
+		slog.Warn("Failed to load official climb matching configuration", "ride_id", id, "error", err)
+	} else {
+		matchPolicy.EndpointRadiusM = appConfig.OfficialClimb.MatchRadiusM
+	}
 	slog.Info("Loaded ride detail", "ride_id", id)
-	kcore.RenderPage(r.Context(), RideDetailPage(buildRideDetailView(item, parsed, passes)), w)
+	view := buildRideDetailView(item, parsed, passes, officialClimbs, matchPolicy)
+	view.Notice = rideDetailNotice(r)
+	kcore.RenderPage(r.Context(), RideDetailPage(view), w)
+}
+
+func (s *Server) handleCreateOfficialClimb(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+	item, found, err := rides.GetByID(s.db, id)
+	if err != nil {
+		slog.Error("Failed to load ride for official climb creation", "ride_id", id, "error", err)
+		http.Error(w, "failed to load ride", http.StatusInternalServerError)
+		return
+	}
+	if !found {
+		http.NotFound(w, r)
+		return
+	}
+	if item.GPXPath == "" {
+		http.Error(w, "a recorded route is required to create an official climb", http.StatusBadRequest)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		return
+	}
+	startIndex, err := parseRouteIndex(r.FormValue("start_index"))
+	if err != nil {
+		http.Error(w, "a valid start route point is required", http.StatusBadRequest)
+		return
+	}
+	endIndex, err := parseRouteIndex(r.FormValue("end_index"))
+	if err != nil {
+		http.Error(w, "a valid end route point is required", http.StatusBadRequest)
+		return
+	}
+	parsed, err := ride.ParseFile(ride.GPXRideParser{}, item.GPXPath)
+	if err != nil {
+		slog.Error("Failed to load ride route for official climb creation", "ride_id", id, "file", item.GPXPath, "error", err)
+		http.Error(w, "the recorded route is unavailable", http.StatusBadRequest)
+		return
+	}
+	if startIndex >= endIndex || endIndex >= parsed.Len() {
+		http.Error(w, "the official climb boundaries must be ordered route points", http.StatusBadRequest)
+		return
+	}
+	created, err := official_climb.Create(s.db, official_climb.OfficialClimb{
+		Name:       r.FormValue("name"),
+		StartCoord: parsed.Coord(startIndex),
+		EndCoord:   parsed.Coord(endIndex),
+	})
+	if err != nil {
+		slog.Warn("Failed to create official climb", "ride_id", id, "error", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	slog.Info("Created official climb", "official_climb_id", created.ID, "ride_id", id, "start_index", startIndex, "end_index", endIndex)
+	http.Redirect(w, r, rideDetailURL(id)+"?official_climb=created", http.StatusSeeOther)
+}
+
+func parseRouteIndex(value string) (int, error) {
+	index, err := strconv.Atoi(value)
+	if err != nil || index < 0 {
+		return 0, errors.New("invalid route point index")
+	}
+	return index, nil
 }
 
 func (s *Server) listRides(rideSort RideSort) ([]rides.Ride, error) {
@@ -524,6 +606,13 @@ func syncNotice(r *http.Request) string {
 		return ""
 	}
 	return fmt.Sprintf("Sync complete: %s imported, %s skipped.", imported, r.URL.Query().Get("skipped"))
+}
+
+func rideDetailNotice(r *http.Request) string {
+	if r.URL.Query().Get("official_climb") == "created" {
+		return "Official climb saved and matched to this ride by coordinates."
+	}
+	return ""
 }
 
 func safeReturnTo(value string) string {

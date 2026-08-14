@@ -36,6 +36,8 @@
   --color-crossing: oklch(from var(--palette-leaf) l c h / 60%);
   --color-crossing-label: var(--color-notice-text);
   --color-hover-line: oklch(from var(--palette-forest) l c h / 60%);
+  --color-climb-route: var(--palette-leaf);
+  --color-climb-focus-fill: oklch(from var(--palette-leaf) l c h / 18%);
 }
 
 * { box-sizing: border-box; }
@@ -48,6 +50,7 @@ a { color: var(--color-leaf); }
 .container { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }
 .eyebrow { margin: 0 0 .4rem; color: var(--color-leaf); font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; }
+.ride-detail-title { margin: 0 0 .4rem; color: var(--color-leaf); font-size: .78rem; font-weight: 700; letter-spacing: .12em; line-height: normal; }
 .lead { max-width: 42rem; color: var(--color-muted); }
 .panel { margin-top: 2rem; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); box-shadow: 0 1rem 2.5rem var(--color-panel-shadow); }
 .toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
@@ -61,6 +64,9 @@ input { border: 1px solid var(--color-input-border); border-radius: .55rem; padd
 progress { width: 100%; height: .8rem; accent-color: var(--color-accent); }
 .notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: var(--color-notice-surface); color: var(--color-notice-text); }
 .error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: var(--color-error-surface); color: var(--color-error-text); }
+.ride-detail-grid { display: grid; grid-template-columns: minmax(16rem, .85fr) minmax(0, 1.75fr); gap: 1.25rem; margin-top: 2rem; align-items: start; }
+.ride-detail-sidebar, .ride-detail-main { display: grid; gap: 1.25rem; min-width: 0; }
+.ride-detail-grid .panel { margin-top: 0; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: .85rem .5rem; border-bottom: 1px solid var(--color-border-subtle); text-align: left; }
 th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
@@ -79,8 +85,28 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .profile-chart canvas { display: block; width: 100%; height: 22rem; border-radius: .65rem; background: var(--color-plot-surface); outline: none; }
 .profile-chart canvas:focus-visible { box-shadow: 0 0 0 .2rem var(--color-focus); }
 .profile-hover { display: block; min-height: 1.4rem; margin: .7rem 0 0; color: var(--color-muted); font-size: .9rem; }
+.climb-list { display: grid; gap: 1rem; margin-top: 1.25rem; }
+.climb-item { padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); }
+.climb-item-heading { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.climb-number { display: inline-block; margin-right: .45rem; color: var(--color-accent); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+.climb-item-heading > span, .climb-status { color: var(--color-muted); font-size: .9rem; }
+.climb-metrics { margin: .35rem 0 0; color: var(--color-muted); font-size: .9rem; }
+.climb-status { margin: .35rem 0 0; }
+.climb-status.matched { color: var(--color-notice-text); }
+.official-climb-form { display: grid; gap: .8rem; margin-top: .8rem; padding: .8rem; border: 1px solid var(--color-border-subtle); border-radius: .65rem; background: var(--color-plot-surface); }
+.boundary-controls { display: flex; gap: .75rem; flex-wrap: wrap; }
+.boundary-controls > div { display: grid; gap: .35rem; }
+.boundary-controls > div > div { display: flex; gap: .35rem; flex-wrap: wrap; }
+.boundary-controls output { color: var(--color-muted); font-size: .85rem; }
+.boundary-controls .button.active { outline: .2rem solid var(--color-focus); }
+.boundary-preview { color: var(--color-notice-text); font-size: .9rem; }
+.climb-navigation { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.25rem; }
+.climbs-panel > .climb-navigation { margin-top: 0; }
+.climb-navigation output { color: var(--color-muted); font-size: .9rem; font-weight: 700; }
+.climb-navigation .button:disabled { opacity: .45; cursor: default; }
 dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 0; }
 dt { color: var(--color-subtle); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 dd { margin: .25rem 0 0; font-size: 1.2rem; font-weight: 700; }
+@media (max-width: 900px) { .ride-detail-grid { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }
 @media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } }

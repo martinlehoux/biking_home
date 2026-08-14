@@ -2,10 +2,13 @@ package web
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"time"
 
+	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/mountain_pass"
+	"github.com/martinlehoux/biking_home/official_climb"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/biking_home/rides"
 )
@@ -18,10 +21,12 @@ type RideView struct {
 
 type RideDetailView struct {
 	RideView
-	Route      GeoJSONFeatureCollection
-	HasRoute   bool
-	Profile    RideProfile
-	RouteError string
+	Route       GeoJSONFeatureCollection
+	HasRoute    bool
+	Profile     RideProfile
+	RouteError  string
+	ActionError string
+	Notice      string
 }
 
 type RideProfile struct {
@@ -38,13 +43,20 @@ type RideProfilePoint struct {
 }
 
 type RideProfileClimb struct {
-	StartKm       float64 `json:"startKm"`
-	EndKm         float64 `json:"endKm"`
-	TopKm         float64 `json:"topKm"`
-	TopElevationM float64 `json:"topElevationM"`
-	Name          string  `json:"name"`
-	Score         float64 `json:"score"`
-	Category      string  `json:"category"`
+	StartKm         float64 `json:"startKm"`
+	EndKm           float64 `json:"endKm"`
+	TopKm           float64 `json:"topKm"`
+	TopElevationM   float64 `json:"topElevationM"`
+	Name            string  `json:"name"`
+	Score           float64 `json:"score"`
+	Category        string  `json:"category"`
+	DistanceKm      float64 `json:"distanceKm"`
+	SlopePercent    float64 `json:"slopePercent"`
+	Cotacol         float64 `json:"cotacol"`
+	OfficialClimbID int64   `json:"officialClimbId,omitempty"`
+	OfficialName    string  `json:"officialName,omitempty"`
+	StartIndex      int     `json:"startIndex"`
+	EndIndex        int     `json:"endIndex"`
 }
 
 type RideProfileCrossing struct {
@@ -184,13 +196,17 @@ func rideDetailURL(id int64) string {
 	return fmt.Sprintf("/rides/%d", id)
 }
 
-func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pass.MountainPass) RideDetailView {
+func officialClimbCreateURL(id int64) string {
+	return fmt.Sprintf("/rides/%d/official-climbs", id)
+}
+
+func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pass.MountainPass, officialClimbs []official_climb.OfficialClimb, matchPolicy official_climb.MatchPolicy) RideDetailView {
 	coordinates := make([][]float64, parsed.Len())
 	for i := 0; i < parsed.Len(); i++ {
 		coordinate := parsed.Coord(i)
 		coordinates[i] = []float64{coordinate.Lon, coordinate.Lat}
 	}
-	profile := buildRideProfile(parsed, passes)
+	profile := buildRideProfile(parsed, passes, officialClimbs, matchPolicy)
 	return RideDetailView{
 		RideView: buildRideView(item),
 		Route: GeoJSONFeatureCollection{
@@ -208,7 +224,7 @@ func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pa
 	}
 }
 
-func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass) RideProfile {
+func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, officialClimbs []official_climb.OfficialClimb, matchPolicy official_climb.MatchPolicy) RideProfile {
 	profile := RideProfile{
 		Points:    make([]RideProfilePoint, parsed.Len()),
 		Climbs:    make([]RideProfileClimb, 0),
@@ -225,17 +241,37 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass) Rid
 	}
 	climbs := parsed.AllClimbs()
 	for i := range climbs {
-		if matched, ok := mountain_pass.MatchClimb(climbs[i], passes, 300, 50); ok {
-			climbs[i].Name = matched.Name
+		displayClimb := climbs[i]
+		if matchedPass, ok := mountain_pass.MatchClimb(displayClimb, passes, 300, 50); ok {
+			displayClimb.Name = matchedPass.Name
+		}
+		matchedOfficial, officialFound := official_climb.MatchClimb(climbs[i], officialClimbs, matchPolicy)
+		if officialFound {
+			startIndex := nearestCoordIndex(parsed, matchedOfficial.StartCoord)
+			endIndex := nearestCoordIndex(parsed, matchedOfficial.EndCoord)
+			if startIndex < endIndex {
+				displayClimb = parsed.ClimbFromIndexes(startIndex, endIndex)
+				displayClimb.Name = matchedOfficial.Name
+			} else {
+				officialFound = false
+				matchedOfficial = official_climb.OfficialClimb{}
+			}
 		}
 		profile.Climbs = append(profile.Climbs, RideProfileClimb{
-			StartKm:       climbs[i].StartDistanceM() / 1000,
-			EndKm:         climbs[i].EndDistanceM() / 1000,
-			TopKm:         climbs[i].TopDistanceM() / 1000,
-			TopElevationM: climbs[i].TopElevationM(),
-			Name:          climbs[i].Name,
-			Score:         climbs[i].Score(),
-			Category:      ride.Category(climbs[i].Score()),
+			StartKm:         displayClimb.StartDistanceM() / 1000,
+			EndKm:           displayClimb.EndDistanceM() / 1000,
+			TopKm:           displayClimb.TopDistanceM() / 1000,
+			TopElevationM:   displayClimb.TopElevationM(),
+			Name:            displayClimb.Name,
+			Score:           displayClimb.Score(),
+			Category:        ride.Category(displayClimb.Score()),
+			DistanceKm:      (displayClimb.EndDistanceM() - displayClimb.StartDistanceM()) / 1000,
+			SlopePercent:    ride.Slope(parsed, displayClimb.StartIndex(), displayClimb.EndIndex()) * 100,
+			Cotacol:         displayClimb.DifficultyScore(),
+			OfficialClimbID: officialClimbID(matchedOfficial, officialFound),
+			OfficialName:    officialClimbName(matchedOfficial, officialFound),
+			StartIndex:      displayClimb.StartIndex(),
+			EndIndex:        displayClimb.EndIndex(),
 		})
 	}
 	for _, crossing := range mountain_pass.DetectCrossings(parsed, passes, 100, 25) {
@@ -249,6 +285,33 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass) Rid
 		})
 	}
 	return profile
+}
+
+func nearestCoordIndex(parsed ride.Ride, target geodist.Coord) int {
+	bestIndex := 0
+	bestDistance := math.Inf(1)
+	for index := 0; index < parsed.Len(); index++ {
+		_, distanceKm := geodist.HaversineDistance(parsed.Coord(index), target)
+		if distanceKm < bestDistance {
+			bestDistance = distanceKm
+			bestIndex = index
+		}
+	}
+	return bestIndex
+}
+
+func officialClimbID(climb official_climb.OfficialClimb, found bool) int64 {
+	if !found {
+		return 0
+	}
+	return climb.ID
+}
+
+func officialClimbName(climb official_climb.OfficialClimb, found bool) string {
+	if !found {
+		return ""
+	}
+	return climb.Name
 }
 
 type SyncPageData struct {
@@ -294,4 +357,20 @@ func formatCotacolPer100Km(score, distanceM float64) string {
 		return "-"
 	}
 	return fmt.Sprintf("%.1f", score*100/distanceKm)
+}
+
+func formatRouteIndex(index int) string {
+	return fmt.Sprintf("%d", index)
+}
+
+func formatClimbNumber(index int) string {
+	return fmt.Sprintf("%d", index+1)
+}
+
+func formatProfileDistance(distanceKm float64) string {
+	return fmt.Sprintf("%.1f km", distanceKm)
+}
+
+func formatSlope(slopePercent float64) string {
+	return fmt.Sprintf("%.1f%%", slopePercent)
 }
