@@ -7,39 +7,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/martinlehoux/biking_home/internal/dbtest"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/martinlehoux/kagamigo/kcore"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func newTestDB(t *testing.T) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("sqlite3", ":memory:")
-	require.NoError(t, err)
-	t.Cleanup(func() { db.Close() })
-	_, err = db.Exec(`
-		create table rides (
-			id integer primary key,
-			external_id text unique not null,
-			gpx_path text not null,
-			name text not null,
-			type text not null,
-			start_date text not null,
-			distance_m real not null,
-			moving_time_s integer not null,
-			elapsed_time_s integer not null,
-			total_elevation_gain_m real not null,
-			average_speed_mps real not null,
-			cotacol_score real,
-			cotacol_algo_version text,
-			created_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-			updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-		)
-	`)
-	require.NoError(t, err)
-	return db
+	return dbtest.New(t)
 }
 
 func sampleRide(t *testing.T) Ride {

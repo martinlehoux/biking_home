@@ -1,41 +1,19 @@
 package official_climb_test
 
 import (
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/jftuga/geodist"
+	"github.com/martinlehoux/biking_home/internal/dbtest"
 	"github.com/martinlehoux/biking_home/official_climb"
 	"github.com/martinlehoux/biking_home/ride"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestDB(t *testing.T) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("sqlite3", ":memory:")
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, db.Close()) })
-	_, err = db.Exec(`
-		CREATE TABLE official_climbs (
-			id INTEGER PRIMARY KEY,
-			name TEXT NOT NULL,
-			start_latitude REAL NOT NULL,
-			start_longitude REAL NOT NULL,
-			end_latitude REAL NOT NULL,
-			end_longitude REAL NOT NULL,
-			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-		)
-	`)
-	require.NoError(t, err)
-	return db
-}
-
 func TestCreateListAndGetOfficialClimb(t *testing.T) {
-	db := newTestDB(t)
+	db := dbtest.New(t)
 	created, err := official_climb.Create(db, official_climb.OfficialClimb{
 		Name:       "Col de Test",
 		StartCoord: geodist.Coord{Lat: 43.1, Lon: 5.1},
@@ -60,7 +38,7 @@ func TestCreateListAndGetOfficialClimb(t *testing.T) {
 }
 
 func TestCreateRejectsInvalidOfficialClimb(t *testing.T) {
-	db := newTestDB(t)
+	db := dbtest.New(t)
 	_, err := official_climb.Create(db, official_climb.OfficialClimb{
 		Name:       " ",
 		StartCoord: geodist.Coord{Lat: 43.1, Lon: 5.1},
