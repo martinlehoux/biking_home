@@ -6,7 +6,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 
 - **GPX parsing** — reads elevation-tracked rides from Garmin/Strava GPX exports into a `Ride` model
 - **Climb detection** — automatically finds climbs within a ride, each scored and categorized (Cat 4 … HC)
-- **Difficulty score (Cotacol)** — scores any ride or climb by splitting it into 100 m segments and summing `0.1 km × slope²` per segment
+- **Difficulty score (Cotacol)** — scores any ride or climb by splitting it into 100 m segments and summing `0.1 km × slope²` per segment. This fixed step is a deliberate compromise: smaller steps increase sensitivity to elevation noise, while unconstrained variable steps maximize noise rather than meaningful difficulty.
 - **Similar-climb matching** — finds the same climb across rides by matching start/end coordinates, so times can be compared
 - **Mountain pass download** — imports French mountain passes from centcols.org into a SQLite database
 - **Pass crossing detection** — enriches passes with OSM coordinates, flags which passes a ride crosses, and names each climb after the pass it tops (e.g. "Col de Castellaras")
@@ -128,20 +128,17 @@ mise run build
 
 ## TODO
 
-- Compute estimated power?
+- Compute estimated power, speed
 - Plot speed and slope per segment, colored by heart rate
 - Plot speed vs ctc/100km
-- Persist the chosen climb variant across activities
 - Blog with pictures and markdown
-- Cotacol with a different step size
-- Cotacol with a variable step size (constant slope is the best?)
 - Road quality (Arbois = 2/5, Roquefavour = 4/5)
-- Display passes on map
-
-Workflow:
-- Detect climbs in ride (already exists)
-- Match them with official climbs from db if exists
-- If not, suggest to add to official climbs (with correction)
+- Climb - Display step by step slope curve like TdF
+- Planning rides
+- Ride details
+    - Display mountain pass on map in bounding box
+    - pretty climb card, to reuse for official as well as preview and detected
+    - Climb on map - display start and end icons
 
 ## Resources
 
