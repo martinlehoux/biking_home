@@ -2,12 +2,12 @@
   color-scheme: light;
   font-family: system-ui, sans-serif;
 
-  --palette-forest: oklch(27% 0.065 155);
-  --palette-leaf: oklch(51% 0.14 154);
-  --palette-coral: oklch(65% 0.17 48);
-  --palette-paper: oklch(96% 0.015 90);
-  --palette-ink: oklch(25% 0.04 155);
-  --palette-white: oklch(100% 0 0);
+  --palette-forest: oklch(27% 0.065 155deg);
+  --palette-leaf: oklch(51% 0.14 154deg);
+  --palette-coral: oklch(65% 0.17 48deg);
+  --palette-paper: oklch(96% 0.015 90deg);
+  --palette-ink: oklch(25% 0.04 155deg);
+  --palette-white: oklch(100% 0 0deg);
 
   --color-background: var(--palette-paper);
   --color-foreground: var(--palette-ink);
@@ -38,11 +38,11 @@
   --color-hover-line: oklch(from var(--palette-forest) l c h / 60%);
   --color-climb-route: var(--palette-leaf);
   --color-climb-focus-fill: oklch(from var(--palette-leaf) l c h / 18%);
-  --color-profile-downhill: oklch(58% 0.02 155);
-  --color-profile-0-3: oklch(58% 0.15 145);
-  --color-profile-3-6: oklch(58% 0.17 255);
-  --color-profile-6-9: oklch(58% 0.2 25);
-  --color-profile-9-plus: oklch(0% 0 0);
+  --color-profile-downhill: oklch(58% 0.02 155deg);
+  --color-profile-0-3: oklch(58% 0.15 145deg);
+  --color-profile-3-6: oklch(58% 0.17 255deg);
+  --color-profile-6-9: oklch(58% 0.2 25deg);
+  --color-profile-9-plus: oklch(0% 0 0deg);
 }
 
 * { box-sizing: border-box; }
@@ -149,6 +149,6 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 0; }
 dt { color: var(--color-subtle); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 dd { margin: .25rem 0 0; font-size: 1.2rem; font-weight: 700; }
-@media (max-width: 900px) { .ride-detail-columns { grid-template-columns: 1fr; } }
-@media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }
-@media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } .official-climb-summary-stats { gap: .55rem; } .official-climb-card-title { display: block; } }
+@media (width <= 900px) { .ride-detail-columns { grid-template-columns: 1fr; } }
+@media (width <= 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }
+@media (width <= 500px) { dl { grid-template-columns: repeat(2, 1fr); } .official-climb-summary-stats { gap: .55rem; } .official-climb-card-title { display: block; } }
