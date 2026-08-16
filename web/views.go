@@ -29,11 +29,29 @@ type RideDetailView struct {
 }
 
 type RideProfile struct {
-	Points          []RideProfilePoint    `json:"points"`
-	Climbs          []RideProfileClimb    `json:"climbs"`
-	OfficialClimbs  []RideProfileClimb    `json:"-"`
-	UnmatchedClimbs []RideProfileClimb    `json:"-"`
-	Crossings       []RideProfileCrossing `json:"crossings"`
+	Points    []RideProfilePoint    `json:"points"`
+	Climbs    []RideProfileClimb    `json:"climbs"`
+	Crossings []RideProfileCrossing `json:"crossings"`
+}
+
+func (profile RideProfile) OfficialClimbs() []RideProfileClimb {
+	climbs := make([]RideProfileClimb, 0)
+	for _, climb := range profile.Climbs {
+		if climb.OfficialClimbID > 0 {
+			climbs = append(climbs, climb)
+		}
+	}
+	return climbs
+}
+
+func (profile RideProfile) UnmatchedClimbs() []RideProfileClimb {
+	climbs := make([]RideProfileClimb, 0)
+	for _, climb := range profile.Climbs {
+		if climb.OfficialClimbID == 0 {
+			climbs = append(climbs, climb)
+		}
+	}
+	return climbs
 }
 
 type RideProfilePoint struct {
@@ -228,11 +246,9 @@ func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pa
 
 func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, officialClimbs []official_climb.OfficialClimb, matchPolicy official_climb.MatchPolicy) RideProfile {
 	profile := RideProfile{
-		Points:          make([]RideProfilePoint, parsed.Len()),
-		Climbs:          make([]RideProfileClimb, 0),
-		OfficialClimbs:  make([]RideProfileClimb, 0),
-		UnmatchedClimbs: make([]RideProfileClimb, 0),
-		Crossings:       make([]RideProfileCrossing, 0),
+		Points:    make([]RideProfilePoint, parsed.Len()),
+		Climbs:    make([]RideProfileClimb, 0),
+		Crossings: make([]RideProfileCrossing, 0),
 	}
 	for i := 0; i < parsed.Len(); i++ {
 		coordinate := parsed.Coord(i)
@@ -264,11 +280,6 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, off
 			EndIndex:        segment.EndIndex(),
 		}
 		profile.Climbs = append(profile.Climbs, climb)
-		if climb.OfficialClimbID > 0 {
-			profile.OfficialClimbs = append(profile.OfficialClimbs, climb)
-		} else {
-			profile.UnmatchedClimbs = append(profile.UnmatchedClimbs, climb)
-		}
 	}
 	for _, crossing := range analysis.Crossings {
 		profile.Crossings = append(profile.Crossings, RideProfileCrossing{

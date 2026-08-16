@@ -79,13 +79,13 @@ templ RideDetailContent(data RideDetailView) {
 			</dl>
 		</section>
 		if data.HasRoute {
-			if len(data.Profile.OfficialClimbs) > 0 {
+			if len(data.Profile.OfficialClimbs()) > 0 {
 				<section class="panel official-climbs-panel">
 					<div class="section-heading">
 						<p class="eyebrow">Official climbs</p>
 					</div>
 					<div class="official-climb-list">
-						for _, climb := range data.Profile.OfficialClimbs {
+						for _, climb := range data.Profile.OfficialClimbs() {
 							<details class="official-climb-card" data-official-climb-card>
 								<summary>
 									<span class="official-climb-card-title"><span class="climb-number">Climb { formatClimbNumber(climb.Index) }</span><strong>{ climb.OfficialName }</strong></span>
@@ -112,20 +112,20 @@ templ RideDetailContent(data RideDetailView) {
 					</div>
 				</section>
 			}
-			<div class={ rideDetailColumnsClass(len(data.Profile.UnmatchedClimbs)) }>
-				if len(data.Profile.UnmatchedClimbs) > 0 {
+			<div class={ rideDetailColumnsClass(len(data.Profile.UnmatchedClimbs())) }>
+				if len(data.Profile.UnmatchedClimbs()) > 0 {
 				<section class="panel climbs-panel">
 					<div class="section-heading">
 						<div><p class="eyebrow">Next steps</p><h2>Climbs to match</h2></div>
-						<span class="section-count">{ formatClimbCount(len(data.Profile.UnmatchedClimbs)) }</span>
+						<span class="section-count">{ formatClimbCount(len(data.Profile.UnmatchedClimbs())) }</span>
 					</div>
 					<nav class="climb-navigation" aria-label="Climb navigation">
 						<button class="button secondary" type="button" data-climb-previous aria-label="Previous climb">←</button>
-						<output data-climb-position>Climb 1 of { formatClimbCount(len(data.Profile.UnmatchedClimbs)) }</output>
+						<output data-climb-position>Climb 1 of { formatClimbCount(len(data.Profile.UnmatchedClimbs())) }</output>
 						<button class="button secondary" type="button" data-climb-next aria-label="Next climb">→</button>
 					</nav>
 					<div class="climb-list" data-climb-list>
-						for _, climb := range data.Profile.UnmatchedClimbs {
+						for _, climb := range data.Profile.UnmatchedClimbs() {
 							<article class="climb-item todo-item" data-climb-item data-climb-index={ formatRouteIndex(climb.Index) }>
 								<div class="climb-item-heading">
 									<strong><span class="todo-check" aria-hidden="true"></span><span class="climb-number">Climb { formatClimbNumber(climb.Index) }</span>{ climb.Name }</strong>

@@ -196,8 +196,8 @@ func TestBuildRideProfileIncludesClimbsAndCrossings(t *testing.T) {
 	require.Len(t, profile.Climbs, 1)
 	assert.Equal(t, "Pas de Magnan", profile.Climbs[0].Name)
 	assert.Equal(t, 1.0, profile.Climbs[0].TopKm)
-	assert.Empty(t, profile.OfficialClimbs)
-	assert.Len(t, profile.UnmatchedClimbs, 1)
+	assert.Empty(t, profile.OfficialClimbs())
+	assert.Len(t, profile.UnmatchedClimbs(), 1)
 	require.Len(t, profile.Crossings, 1)
 	assert.Equal(t, "Pas de Magnan", profile.Crossings[0].Name)
 	assert.Equal(t, 1.0, profile.Crossings[0].DistanceKm)
@@ -221,8 +221,8 @@ func TestBuildRideProfileIncludesOfficialClimbMatch(t *testing.T) {
 	assert.Equal(t, int64(42), profile.Climbs[0].OfficialClimbID)
 	assert.Equal(t, "Col de Test", profile.Climbs[0].OfficialName)
 	assert.Equal(t, "Col de Test", profile.Climbs[0].Name)
-	assert.Len(t, profile.OfficialClimbs, 1)
-	assert.Empty(t, profile.UnmatchedClimbs)
+	assert.Len(t, profile.OfficialClimbs(), 1)
+	assert.Empty(t, profile.UnmatchedClimbs())
 }
 
 func TestBuildRideProfileUsesOfficialClimbBoundaries(t *testing.T) {

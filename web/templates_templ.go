@@ -524,12 +524,12 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if data.HasRoute {
-			if len(data.Profile.OfficialClimbs) > 0 {
+			if len(data.Profile.OfficialClimbs()) > 0 {
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section class=\"panel official-climbs-panel\"><div class=\"section-heading\"><p class=\"eyebrow\">Official climbs</p></div><div class=\"official-climb-list\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, climb := range data.Profile.OfficialClimbs {
+				for _, climb := range data.Profile.OfficialClimbs() {
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<details class=\"official-climb-card\" data-official-climb-card><summary><span class=\"official-climb-card-title\"><span class=\"climb-number\">Climb ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -648,7 +648,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var39 = []any{rideDetailColumnsClass(len(data.Profile.UnmatchedClimbs))}
+			var templ_7745c5c3_Var39 = []any{rideDetailColumnsClass(len(data.Profile.UnmatchedClimbs()))}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var39...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -670,15 +670,15 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(data.Profile.UnmatchedClimbs) > 0 {
+			if len(data.Profile.UnmatchedClimbs()) > 0 {
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section class=\"panel climbs-panel\"><div class=\"section-heading\"><div><p class=\"eyebrow\">Next steps</p><h2>Climbs to match</h2></div><span class=\"section-count\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var41 string
-				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(formatClimbCount(len(data.Profile.UnmatchedClimbs)))
+				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(formatClimbCount(len(data.Profile.UnmatchedClimbs())))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 120, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 120, Col: 89}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
@@ -689,9 +689,9 @@ func RideDetailContent(data RideDetailView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var42 string
-				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(formatClimbCount(len(data.Profile.UnmatchedClimbs)))
+				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(formatClimbCount(len(data.Profile.UnmatchedClimbs())))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 124, Col: 98}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 124, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -701,7 +701,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, climb := range data.Profile.UnmatchedClimbs {
+				for _, climb := range data.Profile.UnmatchedClimbs() {
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"climb-item todo-item\" data-climb-item data-climb-index=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
