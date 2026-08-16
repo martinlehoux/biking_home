@@ -1,28 +1,32 @@
 import { displayStepForLength, officialProfileSections } from "./official-climb-profile-logic.js";
+import type { OfficialProfileColors, RideProfilePoint } from "./types.js";
 
 export class OfficialClimbProfileController {
-  constructor(points) {
+  readonly points: RideProfilePoint[];
+  readonly colors: OfficialProfileColors;
+  readonly cards: HTMLDetailsElement[];
+
+  constructor(points: RideProfilePoint[]) {
     this.points = points;
     this.colors = this.resolveColors();
-    this.cards = [...document.querySelectorAll("[data-official-climb-card]")].map((card) => /** @type {HTMLDetailsElement} */ (card));
+    this.cards = [...document.querySelectorAll("[data-official-climb-card]")].map((card) => card as HTMLDetailsElement);
     for (const card of this.cards) {
       card.addEventListener("toggle", () => {
         if (!card.open) return;
         for (const other of this.cards) {
           if (other !== card) other.open = false;
         }
-        /** @type {HTMLCanvasElement | null} */
-        const profileCanvas = card.querySelector("[data-official-profile]");
+        const profileCanvas = card.querySelector<HTMLCanvasElement>("[data-official-profile]");
         if (profileCanvas) this.drawOfficialProfile(profileCanvas);
       });
     }
   }
 
-  resolveColors() {
+  resolveColors(): OfficialProfileColors {
     const colorProbe = document.createElement("span");
     colorProbe.hidden = true;
     document.body.append(colorProbe);
-    const resolveColor = (name) => {
+    const resolveColor = (name: string): string => {
       colorProbe.style.color = `var(${name})`;
       return getComputedStyle(colorProbe).color;
     };
@@ -42,10 +46,10 @@ export class OfficialClimbProfileController {
     return colors;
   }
 
-  drawOfficialProfile(profileCanvas) {
+  drawOfficialProfile(profileCanvas: HTMLCanvasElement): void {
     const { points, colors } = this;
-    const startIndex = Number.parseInt(profileCanvas.dataset.profileStart, 10);
-    const endIndex = Number.parseInt(profileCanvas.dataset.profileEnd, 10);
+    const startIndex = Number.parseInt(profileCanvas.dataset.profileStart ?? "", 10);
+    const endIndex = Number.parseInt(profileCanvas.dataset.profileEnd ?? "", 10);
     if (
       !Number.isInteger(startIndex) ||
       !Number.isInteger(endIndex) ||
@@ -79,8 +83,8 @@ export class OfficialClimbProfileController {
     const maxDistance = sections[sections.length - 1].endDistanceKm;
     const distanceSpan = Math.max(maxDistance - minDistance, 0.1);
     const elevationSpan = Math.max(maxElevation - minElevation, 1);
-    const xForDistance = (distanceKm) => plot.left + ((distanceKm - minDistance) / distanceSpan) * (plot.right - plot.left);
-    const yForElevation = (elevationM) => plot.bottom - ((elevationM - minElevation) / elevationSpan) * (plot.bottom - plot.top);
+    const xForDistance = (distanceKm: number) => plot.left + ((distanceKm - minDistance) / distanceSpan) * (plot.right - plot.left);
+    const yForElevation = (elevationM: number) => plot.bottom - ((elevationM - minElevation) / elevationSpan) * (plot.bottom - plot.top);
     context.clearRect(0, 0, rect.width, rect.height);
     context.fillStyle = colors.plotSurface;
     context.fillRect(0, 0, rect.width, rect.height);
@@ -151,15 +155,14 @@ export class OfficialClimbProfileController {
     context.fillText(this.formatDistance(maxDistance - minDistance), plot.right, rect.height - 16);
   }
 
-  formatDistance(distance) {
+  formatDistance(distance: number): string {
     return `${distance.toFixed(distance < 10 ? 1 : 0)} km`;
   }
 
   redrawOpen() {
-    /** @type {NodeListOf<HTMLCanvasElement>} */
-    const profileCanvases = document.querySelectorAll("[data-official-profile]");
+    const profileCanvases = document.querySelectorAll<HTMLCanvasElement>("[data-official-profile]");
     for (const profileCanvas of profileCanvases) {
-      const card = /** @type {HTMLDetailsElement | null} */ (profileCanvas.closest("[data-official-climb-card]"));
+      const card = profileCanvas.closest<HTMLDetailsElement>("[data-official-climb-card]");
       if (card?.open) this.drawOfficialProfile(profileCanvas);
     }
   }

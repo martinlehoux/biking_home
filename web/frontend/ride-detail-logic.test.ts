@@ -8,7 +8,7 @@ import {
   formatDistance,
   formatElevation,
   nearestPointIndex,
-} from "../static/ride-detail-logic.js";
+} from "./ride-detail-logic.ts";
 
 const points = [
   { distanceKm: 0, elevationM: 100 },
@@ -30,6 +30,7 @@ test("interpolates elevation between route points", () => {
 
 test("calculates climb metrics with the Cotacol score", () => {
   const metrics = climbMetrics(points, { startIndex: 0, endIndex: 3 });
+  assert.ok(metrics);
 
   assert.equal(metrics.distanceKm, 0.25);
   assert.equal(metrics.elevationGain, 20);

@@ -1,10 +1,12 @@
-export const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+import type { ClimbBounds, ClimbMetrics, ProfilePoint } from "./types.js";
 
-export const formatDistance = (distance) => `${distance.toFixed(distance < 10 ? 1 : 0)} km`;
+export const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 
-export const formatElevation = (elevation) => `${Math.round(elevation)} m`;
+export const formatDistance = (distance: number): string => `${distance.toFixed(distance < 10 ? 1 : 0)} km`;
 
-export const nearestPointIndex = (points, distance) => {
+export const formatElevation = (elevation: number): string => `${Math.round(elevation)} m`;
+
+export const nearestPointIndex = (points: ProfilePoint[], distance: number): number => {
   let low = 0;
   let high = points.length - 1;
   while (low < high) {
@@ -17,7 +19,7 @@ export const nearestPointIndex = (points, distance) => {
   return distance - previous.distanceKm < points[low].distanceKm - distance ? low - 1 : low;
 };
 
-export const categoryForScore = (score) => {
+export const categoryForScore = (score: number): string => {
   if (score < 35) return "NO";
   if (score < 80) return "Cat 4";
   if (score < 180) return "Cat 3";
@@ -26,7 +28,7 @@ export const categoryForScore = (score) => {
   return "HC";
 };
 
-export const elevationAtDistance = (points, index, distanceM) => {
+export const elevationAtDistance = (points: ProfilePoint[], index: number, distanceM: number): number => {
   if (index + 1 >= points.length) return points[index].elevationM;
   const startDistanceM = points[index].distanceKm * 1000;
   const endDistanceM = points[index + 1].distanceKm * 1000;
@@ -34,7 +36,7 @@ export const elevationAtDistance = (points, index, distanceM) => {
   return points[index].elevationM + fraction * (points[index + 1].elevationM - points[index].elevationM);
 };
 
-export const cotacolForClimb = (points, startIndex, endIndex) => {
+export const cotacolForClimb = (points: ProfilePoint[], startIndex: number, endIndex: number): number => {
   const startDistanceM = points[startIndex].distanceKm * 1000;
   const lastDistanceM = points[endIndex].distanceKm * 1000;
   if (lastDistanceM <= startDistanceM) return 0;
@@ -52,7 +54,7 @@ export const cotacolForClimb = (points, startIndex, endIndex) => {
   return score;
 };
 
-export const climbMetrics = (points, bounds) => {
+export const climbMetrics = (points: ProfilePoint[], bounds: ClimbBounds | undefined): ClimbMetrics | null => {
   if (
     !bounds ||
     !Number.isInteger(bounds.startIndex) ||

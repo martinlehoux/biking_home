@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
+    "allowImportingTsExtensions": true,
     "lib": ["DOM", "ES2022"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
-    "strict": false,
+    "strict": true,
     "skipLibCheck": true,
     "target": "ES2022",
     "types": ["leaflet", "node"]
   },
-  "include": ["web/static/**/*.js", "web/static_test/**/*.js", "web/types/**/*.d.ts"]
+  "include": ["web/frontend/**/*.ts", "web/frontend/**/*.d.ts", "web/types/**/*.d.ts"]
 }

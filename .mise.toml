@@ -1,6 +1,7 @@
 [tools]
 "github:boyter/dcd" = "1.1.0"
 go = "1.25.12"
+node = "26.6.0"
 watchexec = "latest"
 
 [tasks.generate]
@@ -11,15 +12,18 @@ run = "go tool templ generate"
 description = "Format Go sources"
 run = "go fmt ./..."
 
+[tasks.frontend-build]
+description = "Compile TypeScript browser assets"
+run = "npm run build"
+
 [tasks.check]
-description = "Run formatting, JavaScript and Go gate checks"
-depends = ["generate", "format"]
+description = "Run formatting, TypeScript and Go gate checks"
+depends = ["generate", "format", "frontend-build"]
 run = [
   "npm run format:check",
   "npm run lint",
   "npm run typecheck",
-  "for file in web/static/*.js; do node --check \"$file\"; done",
-  "node --test web/static_test/*.test.js",
+  "npm test",
   "go vet ./...",
   "go build ./...",
   "go test ./...",
@@ -27,6 +31,7 @@ run = [
 
 [tasks.build]
 description = "Build the application"
+depends = ["frontend-build"]
 run = "go build -o biking_home ."
 
 [tasks.code-analysis]
@@ -39,8 +44,9 @@ run = "DATABASE_URL=sqlite:biking_home.db go tool dbmate up"
 
 [tasks.dev]
 description = "Run the web server"
+depends = ["frontend-build"]
 run = "go run ."
 
 [tasks.dev-watch]
-description = "Regenerate templates and run the web server"
-run = ["mise run generate", "go run ."]
+description = "Regenerate templates, compile TypeScript, and run the web server"
+run = ["mise run generate", "mise run frontend-build", "go run ."]

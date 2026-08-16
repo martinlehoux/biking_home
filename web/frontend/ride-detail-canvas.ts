@@ -1,7 +1,52 @@
 import { clamp, climbMetrics, formatDistance, formatElevation, nearestPointIndex } from "./ride-detail-logic.js";
+import type { BoundarySource, ClimbBounds, RideDetailColors, RideProfile, RideProfilePoint } from "./types.js";
+
+interface Plot {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+interface RideProfileCanvasOptions {
+  canvas: HTMLCanvasElement;
+  points: RideProfilePoint[];
+  profile: RideProfile;
+  colors: RideDetailColors;
+  getClimbBounds: () => ClimbBounds[];
+  canSelectPoint: (source: BoundarySource) => boolean;
+  onPointSelected: (index: number) => void;
+  onPointHover: (index: number) => void;
+}
 
 export class RideProfileCanvas {
-  constructor({ canvas, points, profile, colors, getClimbBounds, canSelectPoint, onPointSelected, onPointHover }) {
+  private readonly canvas: HTMLCanvasElement;
+  private readonly points: RideProfilePoint[];
+  private readonly profile: RideProfile;
+  private readonly colors: RideDetailColors;
+  private readonly getClimbBounds: () => ClimbBounds[];
+  private readonly canSelectPoint: (source: BoundarySource) => boolean;
+  private readonly onPointSelected: (index: number) => void;
+  private readonly onPointHover: (index: number) => void;
+  private readonly context: CanvasRenderingContext2D;
+  private hoveredIndex: number;
+  private focusedClimbIndex: number;
+  private plot: Plot | null;
+  private readonly minDistance: number;
+  private readonly maxDistance: number;
+  private readonly minElevation: number;
+  private readonly maxElevation: number;
+
+  constructor({
+    canvas,
+    points,
+    profile,
+    colors,
+    getClimbBounds,
+    canSelectPoint,
+    onPointSelected,
+    onPointHover,
+  }: RideProfileCanvasOptions) {
     this.canvas = canvas;
     this.points = points;
     this.profile = profile;
@@ -10,8 +55,9 @@ export class RideProfileCanvas {
     this.canSelectPoint = canSelectPoint;
     this.onPointSelected = onPointSelected;
     this.onPointHover = onPointHover;
-    this.context = canvas.getContext("2d");
-    if (!this.context) throw new Error("Ride profile canvas is unavailable");
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Ride profile canvas is unavailable");
+    this.context = context;
     this.hoveredIndex = -1;
     this.focusedClimbIndex = 0;
     this.plot = null;
@@ -29,34 +75,38 @@ export class RideProfileCanvas {
     this.bindEvents();
   }
 
-  setFocusedClimbIndex(index) {
+  setFocusedClimbIndex(index: number): void {
     this.focusedClimbIndex = index;
     this.draw();
   }
 
-  redraw() {
+  redraw(): void {
     this.draw();
   }
 
-  xForDistance(distance) {
+  xForDistance(distance: number): number {
+    const plot = this.plot;
+    if (!plot) throw new Error("Ride profile canvas has not been drawn");
     const span = Math.max(this.maxDistance - this.minDistance, 1);
-    return this.plot.left + ((distance - this.minDistance) / span) * (this.plot.right - this.plot.left);
+    return plot.left + ((distance - this.minDistance) / span) * (plot.right - plot.left);
   }
 
-  yForElevation(elevation) {
+  yForElevation(elevation: number): number {
+    const plot = this.plot;
+    if (!plot) throw new Error("Ride profile canvas has not been drawn");
     const span = Math.max(this.maxElevation - this.minElevation, 1);
-    return this.plot.bottom - ((elevation - this.minElevation) / span) * (this.plot.bottom - this.plot.top);
+    return plot.bottom - ((elevation - this.minElevation) / span) * (plot.bottom - plot.top);
   }
 
-  draw() {
+  draw(): void {
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
     const ratio = window.devicePixelRatio || 1;
     this.canvas.width = Math.floor(rect.width * ratio);
     this.canvas.height = Math.floor(rect.height * ratio);
     this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    this.plot = { left: 52, right: rect.width - 20, top: 24, bottom: rect.height - 34 };
-    const plot = this.plot;
+    const plot: Plot = { left: 52, right: rect.width - 20, top: 24, bottom: rect.height - 34 };
+    this.plot = plot;
     this.context.clearRect(0, 0, rect.width, rect.height);
     this.context.fillStyle = this.colors.plotSurface;
     this.context.fillRect(0, 0, rect.width, rect.height);
@@ -163,25 +213,27 @@ export class RideProfileCanvas {
     }
   }
 
-  clearHover() {
+  clearHover(): void {
     this.hoveredIndex = -1;
     this.onPointHover(-1);
     this.draw();
   }
 
-  showPoint(index) {
+  showPoint(index: number): void {
     this.hoveredIndex = clamp(index, 0, this.points.length - 1);
     this.onPointHover(this.hoveredIndex);
     this.draw();
   }
 
-  pointIndexAtX(x) {
-    const distance = this.minDistance + ((x - this.plot.left) / (this.plot.right - this.plot.left)) * (this.maxDistance - this.minDistance);
+  pointIndexAtX(x: number): number {
+    const plot = this.plot;
+    if (!plot) throw new Error("Ride profile canvas has not been drawn");
+    const distance = this.minDistance + ((x - plot.left) / (plot.right - plot.left)) * (this.maxDistance - this.minDistance);
     return nearestPointIndex(this.points, distance);
   }
 
-  bindEvents() {
-    this.canvas.addEventListener("pointermove", (event) => {
+  bindEvents(): void {
+    this.canvas.addEventListener("pointermove", (event: PointerEvent) => {
       if (!this.plot) return;
       const rect = this.canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
@@ -193,14 +245,14 @@ export class RideProfileCanvas {
     });
     this.canvas.addEventListener("pointerleave", () => this.clearHover());
     this.canvas.addEventListener("pointercancel", () => this.clearHover());
-    this.canvas.addEventListener("click", (event) => {
+    this.canvas.addEventListener("click", (event: MouseEvent) => {
       if (!this.canSelectPoint("profile") || !this.plot) return;
       const rect = this.canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       if (x < this.plot.left || x > this.plot.right) return;
       this.onPointSelected(this.pointIndexAtX(x));
     });
-    this.canvas.addEventListener("keydown", (event) => {
+    this.canvas.addEventListener("keydown", (event: KeyboardEvent) => {
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
       const direction = event.key === "ArrowRight" ? 1 : -1;

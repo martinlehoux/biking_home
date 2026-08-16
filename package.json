@@ -2,12 +2,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "format": "biome format --write web/static/*.js web/static_test/*.js",
-    "format:check": "biome format web/static/*.js web/static_test/*.js",
-    "lint": "biome lint web/static/*.js web/static_test/*.js",
+    "format": "biome format --write web/frontend",
+    "format:check": "biome format web/frontend",
+    "lint": "biome lint web/frontend",
     "typecheck": "tsc --noEmit",
-    "test": "node --test web/static_test/*.test.js",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --experimental-strip-types --test web/frontend/*.test.ts",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.8",

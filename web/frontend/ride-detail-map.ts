@@ -1,7 +1,27 @@
 import { clamp } from "./ride-detail-logic.js";
+import type { ClimbBounds, RideDetailColors, RideProfilePoint, RideRoute } from "./types.js";
+import type { CircleMarker, LeafletMouseEvent, Map as LeafletMap, Polyline } from "leaflet";
+
+type LeafletApi = typeof import("leaflet");
+
+interface RideDetailMapOptions {
+  leaflet: LeafletApi;
+  element: HTMLElement;
+  route: RideRoute;
+  points: RideProfilePoint[];
+  climbs: ClimbBounds[];
+  colors: RideDetailColors;
+}
 
 export class RideDetailMap {
-  constructor({ leaflet, element, route, points, climbs, colors }) {
+  private readonly leaflet: LeafletApi;
+  private readonly points: RideProfilePoint[];
+  private readonly colors: RideDetailColors;
+  private readonly map: LeafletMap;
+  private readonly climbLayers: (Polyline | null)[];
+  private readonly routeCursor: CircleMarker;
+
+  constructor({ leaflet, element, route, points, climbs, colors }: RideDetailMapOptions) {
     this.leaflet = leaflet;
     this.points = points;
     this.colors = colors;
@@ -32,9 +52,11 @@ export class RideDetailMap {
       .addTo(this.map);
   }
 
-  createClimbLayer(climb) {
+  createClimbLayer(climb: ClimbBounds): Polyline | null {
     if (!this.isValidBounds(climb)) return null;
-    const coordinates = this.points.slice(climb.startIndex, climb.endIndex + 1).map((point) => [point.latitude, point.longitude]);
+    const coordinates: [number, number][] = this.points
+      .slice(climb.startIndex, climb.endIndex + 1)
+      .map((point) => [point.latitude, point.longitude]);
     return this.leaflet
       .polyline(coordinates, {
         color: this.colors.climbRoute,
@@ -47,29 +69,31 @@ export class RideDetailMap {
       .addTo(this.map);
   }
 
-  isValidBounds(bounds) {
-    return (
+  isValidBounds(bounds: ClimbBounds | undefined): boolean {
+    return Boolean(
       bounds &&
-      Number.isInteger(bounds.startIndex) &&
-      Number.isInteger(bounds.endIndex) &&
-      bounds.startIndex >= 0 &&
-      bounds.endIndex < this.points.length &&
-      bounds.startIndex < bounds.endIndex
+        Number.isInteger(bounds.startIndex) &&
+        Number.isInteger(bounds.endIndex) &&
+        bounds.startIndex >= 0 &&
+        bounds.endIndex < this.points.length &&
+        bounds.startIndex < bounds.endIndex,
     );
   }
 
-  updateClimbLayer(index, bounds, active) {
+  updateClimbLayer(index: number, bounds: ClimbBounds | undefined, active: boolean): void {
     const layer = this.climbLayers[index];
     if (!layer) return;
-    if (!this.isValidBounds(bounds)) {
+    if (!bounds || !this.isValidBounds(bounds)) {
       layer.setLatLngs([]);
       return;
     }
-    layer.setLatLngs(this.points.slice(bounds.startIndex, bounds.endIndex + 1).map((point) => [point.latitude, point.longitude]));
+    layer.setLatLngs(
+      this.points.slice(bounds.startIndex, bounds.endIndex + 1).map((point) => [point.latitude, point.longitude] as [number, number]),
+    );
     layer.setStyle({ weight: active ? 9 : 7, opacity: active ? 1 : 0.65 });
   }
 
-  nearestPointIndex(latitude, longitude) {
+  nearestPointIndex(latitude: number, longitude: number): number {
     let nearestIndex = 0;
     let nearestDistance = Infinity;
     for (let index = 0; index < this.points.length; index++) {
@@ -83,7 +107,7 @@ export class RideDetailMap {
     return nearestIndex;
   }
 
-  showPoint(index) {
+  showPoint(index: number): void {
     const point = this.points[clamp(index, 0, this.points.length - 1)];
     this.routeCursor.setLatLng([point.latitude, point.longitude]);
     this.routeCursor.setStyle({ opacity: 1, fillOpacity: 0.9 });
@@ -93,14 +117,14 @@ export class RideDetailMap {
     this.routeCursor.setStyle({ opacity: 0, fillOpacity: 0 });
   }
 
-  zoomToClimb(bounds) {
-    if (!this.isValidBounds(bounds)) return;
+  zoomToClimb(bounds: ClimbBounds | undefined): void {
+    if (!bounds || !this.isValidBounds(bounds)) return;
     const climbPoints = this.points.slice(bounds.startIndex, bounds.endIndex + 1);
-    const mapBounds = this.leaflet.latLngBounds(climbPoints.map((point) => [point.latitude, point.longitude]));
+    const mapBounds = this.leaflet.latLngBounds(climbPoints.map((point) => [point.latitude, point.longitude] as [number, number]));
     if (mapBounds.isValid()) this.map.fitBounds(mapBounds, { padding: [32, 32], maxZoom: 15 });
   }
 
-  onClick(listener) {
+  onClick(listener: (event: LeafletMouseEvent) => void): void {
     this.map.on("click", listener);
   }
 }

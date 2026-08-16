@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { displayStepForLength, profileBandForSlope, officialProfileSections } from "../static/official-climb-profile-logic.js";
+import { displayStepForLength, profileBandForSlope, officialProfileSections } from "./official-climb-profile-logic.ts";
 
 test("selects a display step that keeps long profiles readable", () => {
   assert.equal(displayStepForLength(2_400), 100);

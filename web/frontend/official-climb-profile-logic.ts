@@ -1,8 +1,19 @@
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const profileStepSizesM = [100, 200, 500, 1000];
-const displayStepForLength = (lengthM) =>
+import type { ProfileBand, ProfilePoint } from "./types.js";
+
+export interface OfficialProfileSection {
+  startDistanceKm: number;
+  endDistanceKm: number;
+  startElevation: number;
+  endElevation: number;
+  slopePercent: number;
+  band: ProfileBand;
+}
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const profileStepSizesM: number[] = [100, 200, 500, 1000];
+const displayStepForLength = (lengthM: number): number =>
   profileStepSizesM.find((stepM) => Math.ceil(lengthM / stepM) <= 30) || profileStepSizesM[profileStepSizesM.length - 1];
-const profileBandForSlope = (slopePercent) => {
+const profileBandForSlope = (slopePercent: number): ProfileBand => {
   if (slopePercent < 0) return "downhill";
   if (slopePercent < 3) return "0-3";
   if (slopePercent < 6) return "3-6";
@@ -10,12 +21,12 @@ const profileBandForSlope = (slopePercent) => {
   if (slopePercent < 12) return "9-12";
   return "12-plus";
 };
-const officialProfileSections = (points, startIndex, endIndex, stepM) => {
+const officialProfileSections = (points: ProfilePoint[], startIndex: number, endIndex: number, stepM: number): OfficialProfileSection[] => {
   const startDistanceM = points[startIndex].distanceKm * 1000;
   const endDistanceM = points[endIndex].distanceKm * 1000;
-  const sections = [];
+  const sections: OfficialProfileSection[] = [];
   let pointIndex = startIndex;
-  const elevationAtDistance = (distanceM) => {
+  const elevationAtDistance = (distanceM: number) => {
     while (pointIndex < endIndex - 1 && points[pointIndex + 1].distanceKm * 1000 < distanceM) pointIndex++;
     const nextIndex = Math.min(pointIndex + 1, endIndex);
     const first = points[pointIndex];

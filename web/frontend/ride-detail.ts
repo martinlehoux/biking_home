@@ -3,26 +3,29 @@ import { RideBoundaryController } from "./ride-detail-boundaries.js";
 import { RideProfileCanvas } from "./ride-detail-canvas.js";
 import { RideDetailMap } from "./ride-detail-map.js";
 import { formatDistance, formatElevation } from "./ride-detail-logic.js";
+import type { ClimbBounds, RideDetailColors, RideProfile, RideProfilePoint, RideRoute } from "./types.js";
 
-export const mountRideDetail = () => {
+export const mountRideDetail = (): void => {
   const mapElement = document.getElementById("ride-map");
-  const routeElement = /** @type {HTMLScriptElement | null} */ (document.getElementById("ride-route"));
-  const profileElement = /** @type {HTMLScriptElement | null} */ (document.getElementById("ride-profile"));
-  const canvas = /** @type {HTMLCanvasElement | null} */ (document.getElementById("ride-profile-chart"));
-  /** @type {HTMLElement | null} */
+  const routeElement = document.getElementById("ride-route");
+  const profileElement = document.getElementById("ride-profile");
+  const canvas = document.getElementById("ride-profile-chart");
   const hoverOutput = document.getElementById("ride-profile-hover");
   if (!mapElement || !routeElement || !profileElement || !canvas || !hoverOutput) return;
+  const routeScript = routeElement as HTMLScriptElement;
+  const profileScript = profileElement as HTMLScriptElement;
+  const profileCanvasElement = canvas as HTMLCanvasElement;
   const leaflet = window.L;
   if (!leaflet) return;
 
   const colorProbe = document.createElement("span");
   colorProbe.hidden = true;
   document.body.append(colorProbe);
-  const resolveColor = (name) => {
+  const resolveColor = (name: string): string => {
     colorProbe.style.color = `var(${name})`;
     return getComputedStyle(colorProbe).color;
   };
-  const colors = {
+  const colors: RideDetailColors = {
     accent: resolveColor("--color-accent"),
     forest: resolveColor("--color-forest"),
     subtle: resolveColor("--color-subtle"),
@@ -39,20 +42,17 @@ export const mountRideDetail = () => {
   };
   colorProbe.remove();
 
-  const route = JSON.parse(routeElement.textContent);
-  const profile = JSON.parse(profileElement.textContent);
-  const points = profile.points || [];
+  const route = JSON.parse(routeScript.textContent ?? "") as RideRoute;
+  const profile = JSON.parse(profileScript.textContent ?? "") as RideProfile;
+  const points: RideProfilePoint[] = profile.points;
   if (points.length === 0) return;
 
-  const climbItems = [...document.querySelectorAll("[data-climb-item]")].map((item) => /** @type {HTMLElement} */ (item));
-  const climbItemIndices = climbItems.map((item) => Number.parseInt(item.dataset.climbIndex, 10));
-  /** @type {HTMLButtonElement | null} */
-  const previousClimbButton = document.querySelector("[data-climb-previous]");
-  /** @type {HTMLButtonElement | null} */
-  const nextClimbButton = document.querySelector("[data-climb-next]");
-  /** @type {HTMLElement | null} */
-  const climbPosition = document.querySelector("[data-climb-position]");
-  const climbBounds = (profile.climbs || []).map((climb) => ({ startIndex: climb.startIndex, endIndex: climb.endIndex }));
+  const climbItems = [...document.querySelectorAll<HTMLElement>("[data-climb-item]")];
+  const climbItemIndices = climbItems.map((item) => Number.parseInt(item.dataset.climbIndex ?? "", 10));
+  const previousClimbButton = document.querySelector<HTMLButtonElement>("[data-climb-previous]");
+  const nextClimbButton = document.querySelector<HTMLButtonElement>("[data-climb-next]");
+  const climbPosition = document.querySelector<HTMLElement>("[data-climb-position]");
+  const climbBounds: ClimbBounds[] = profile.climbs.map((climb) => ({ startIndex: climb.startIndex, endIndex: climb.endIndex }));
   const state = {
     focusedClimbItemIndex: 0,
     focusedClimbIndex: climbItemIndices[0] ?? 0,
@@ -67,9 +67,9 @@ export const mountRideDetail = () => {
     colors,
   });
   const officialProfileController = new OfficialClimbProfileController(points);
-  let boundaryController;
+  let boundaryController: RideBoundaryController | undefined;
   const profileCanvas = new RideProfileCanvas({
-    canvas,
+    canvas: profileCanvasElement,
     points,
     profile,
     colors,
@@ -88,11 +88,11 @@ export const mountRideDetail = () => {
     },
   });
 
-  const updateClimbLayer = (index) => {
+  const updateClimbLayer = (index: number): void => {
     mapController.updateClimbLayer(index, climbBounds[index], index === state.focusedClimbIndex);
   };
   boundaryController = new RideBoundaryController({
-    forms: [...document.querySelectorAll("[data-official-climb-form]")].map((form) => /** @type {HTMLFormElement} */ (form)),
+    forms: [...document.querySelectorAll<HTMLFormElement>("[data-official-climb-form]")],
     points,
     climbBounds,
     onBoundaryChanged: (index) => {
@@ -106,11 +106,11 @@ export const mountRideDetail = () => {
   });
 
   mapController.onClick((event) => {
-    if (!boundaryController.isSelecting("map")) return;
+    if (!boundaryController?.isSelecting("map")) return;
     boundaryController.choosePoint(mapController.nearestPointIndex(event.latlng.lat, event.latlng.lng));
   });
 
-  const updateClimbFocus = (index, zoom) => {
+  const updateClimbFocus = (index: number, zoom: boolean): void => {
     if (climbItems.length === 0) return;
     state.focusedClimbItemIndex = Math.max(0, Math.min(climbItems.length - 1, index));
     state.focusedClimbIndex = climbItemIndices[state.focusedClimbItemIndex];
@@ -124,7 +124,7 @@ export const mountRideDetail = () => {
     if (climbPosition) climbPosition.textContent = `Climb ${state.focusedClimbItemIndex + 1} of ${climbItems.length}`;
     if (previousClimbButton) previousClimbButton.disabled = state.focusedClimbItemIndex === 0;
     if (nextClimbButton) nextClimbButton.disabled = state.focusedClimbItemIndex === climbItems.length - 1;
-    boundaryController.clearSelection();
+    boundaryController?.clearSelection();
     profileCanvas.setFocusedClimbIndex(state.focusedClimbIndex);
     if (zoom) mapController.zoomToClimb(climbBounds[state.focusedClimbIndex]);
   };

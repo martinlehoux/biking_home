@@ -6,3 +6,4 @@ debug_department_*.csv
 france-latest.osm.pbf
 biking_home
 node_modules/
+web/static/*.js
