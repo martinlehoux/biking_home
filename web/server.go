@@ -218,10 +218,10 @@ func buildRideViews(items []rides.Ride) []RideView {
 
 func buildRideView(item rides.Ride) RideView {
 	view := RideView{Ride: item, Cotacol: "-", CotacolPer100Km: "-"}
-	score, ready := item.CotacolScore()
+	cotacol, ready := item.CotacolScore()
 	if ready && item.CotacolAlgorithmVersion() == ride.CotacolAlgorithmVersion && item.DistanceM > 0 {
-		view.Cotacol = formatCotacol(score)
-		view.CotacolPer100Km = formatCotacolPer100Km(score, item.DistanceM)
+		view.Cotacol = formatCotacol(cotacol)
+		view.CotacolPer100Km = formatCotacolPer100Km(cotacol, item.DistanceM)
 	}
 	return view
 }

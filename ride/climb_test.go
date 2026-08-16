@@ -86,12 +86,12 @@ func TestPogacar20220721(t *testing.T) {
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 6)
-	assert.Equal(t, "0.6km-5.6km: 5.0km at 3.5% (62 pts - Cat 4)", climbs[0].String())
-	assert.Equal(t, "42.9km-45.2km: 2.3km at 5.0% (59 pts - Cat 4)", climbs[1].String())
-	assert.Equal(t, "60.0km-76.4km: 16.4km at 7.2% (854 pts - HC)", climbs[2].String())
-	assert.Equal(t, "83.8km-85.9km: 2.0km at 5.4% (59 pts - Cat 4)", climbs[3].String())
-	assert.Equal(t, "99.2km-109.3km: 10.2km at 8.4% (710 pts - HC)", climbs[4].String())
-	assert.Equal(t, "128.6km-142.2km: 13.6km at 7.8% (832 pts - HC)", climbs[5].String())
+	assert.Equal(t, "0.6km-5.6km: 5.0km at 3.5% (92 pts - Cat 3)", climbs[0].String())
+	assert.Equal(t, "42.9km-45.2km: 2.3km at 5.0% (74 pts - Cat 4)", climbs[1].String())
+	assert.Equal(t, "60.0km-76.4km: 16.4km at 7.2% (977 pts - HC)", climbs[2].String())
+	assert.Equal(t, "83.8km-85.9km: 2.0km at 5.4% (79 pts - Cat 4)", climbs[3].String())
+	assert.Equal(t, "99.2km-109.3km: 10.2km at 8.4% (751 pts - HC)", climbs[4].String())
+	assert.Equal(t, "128.6km-142.2km: 13.6km at 7.8% (930 pts - HC)", climbs[5].String())
 }
 
 func TestBouclesVerdon2024(t *testing.T) {
@@ -100,12 +100,12 @@ func TestBouclesVerdon2024(t *testing.T) {
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 6)
-	assert.Equal(t, "3.6km-13.8km: 10.3km at 2.1% (44 pts - Cat 4)", climbs[0].String()) // TODO: Not steep enough
-	assert.Equal(t, "34.7km-37.3km: 2.5km at 5.0% (62 pts - Cat 4)", climbs[1].String())
-	assert.Equal(t, "41.9km-51.0km: 9.0km at 2.5% (55 pts - Cat 4)", climbs[2].String()) // TODO: Not steep enough
-	assert.Equal(t, "57.6km-60.8km: 3.1km at 6.3% (124 pts - Cat 3)", climbs[3].String())
-	assert.Equal(t, "71.7km-74.7km: 3.0km at 5.3% (84 pts - Cat 3)", climbs[4].String())
-	assert.Equal(t, "77.4km-78.7km: 1.3km at 5.3% (37 pts - Cat 4)", climbs[5].String())
+	assert.Equal(t, "3.6km-13.8km: 10.3km at 2.1% (98 pts - Cat 3)", climbs[0].String()) // TODO: Not steep enough
+	assert.Equal(t, "34.7km-37.3km: 2.5km at 5.0% (67 pts - Cat 4)", climbs[1].String())
+	assert.Equal(t, "41.9km-51.0km: 9.0km at 2.5% (113 pts - Cat 3)", climbs[2].String()) // TODO: Not steep enough
+	assert.Equal(t, "57.6km-60.8km: 3.1km at 6.3% (139 pts - Cat 3)", climbs[3].String())
+	assert.Equal(t, "71.7km-74.7km: 3.0km at 5.3% (89 pts - Cat 3)", climbs[4].String())
+	assert.Equal(t, "77.4km-78.7km: 1.3km at 5.3% (39 pts - Cat 4)", climbs[5].String())
 }
 
 func TestMimetArbois20241229(t *testing.T) {
@@ -114,8 +114,8 @@ func TestMimetArbois20241229(t *testing.T) {
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 2)
-	assert.Equal(t, "3.9km-5.3km: 1.4km at 10.3% (153 pts - Cat 3)", climbs[0].String())
-	assert.Equal(t, "14.4km-19.8km: 5.4km at 4.3% (98 pts - Cat 3)", climbs[1].String())
+	assert.Equal(t, "3.9km-5.3km: 1.4km at 10.3% (165 pts - Cat 3)", climbs[0].String())
+	assert.Equal(t, "14.4km-19.8km: 5.4km at 4.3% (113 pts - Cat 3)", climbs[1].String())
 }
 
 func TestMimetArbois20250104(t *testing.T) {
@@ -124,8 +124,8 @@ func TestMimetArbois20250104(t *testing.T) {
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 2)
-	assert.Equal(t, "4.5km-5.9km: 1.4km at 10.1% (148 pts - Cat 3)", climbs[0].String())
-	assert.Equal(t, "12.0km-20.2km: 8.2km at 2.9% (67 pts - Cat 4)", climbs[1].String()) // TODO: Not steep enough
+	assert.Equal(t, "4.5km-5.9km: 1.4km at 10.1% (159 pts - Cat 3)", climbs[0].String())
+	assert.Equal(t, "12.0km-20.2km: 8.2km at 2.9% (148 pts - Cat 3)", climbs[1].String()) // TODO: Not steep enough
 }
 
 // https://www.strava.com/activities/9282265844
@@ -135,10 +135,10 @@ func TestAlpesVerdonTour20230617(t *testing.T) {
 	climbs := r.AllClimbs()
 
 	assert.Len(t, climbs, 6)
-	assert.Equal(t, "0.7km-18.6km: 17.9km at 3.5% (217 pts - Cat 2)", climbs[0].String()) // TODO: Should split in 2 (10km at 4.5% is Cat 2)
-	assert.Equal(t, "36.1km-41.6km: 5.4km at 5.8% (182 pts - Cat 2)", climbs[1].String())
+	assert.Equal(t, "0.7km-18.6km: 17.9km at 3.5% (364 pts - Cat 1)", climbs[0].String()) // TODO: Should split in 2 (10km at 4.5% is Cat 2)
+	assert.Equal(t, "36.1km-41.6km: 5.4km at 5.8% (193 pts - Cat 2)", climbs[1].String())
 	assert.Equal(t, "47.0km-48.2km: 1.2km at 6.1% (45 pts - Cat 4)", climbs[2].String())
-	assert.Equal(t, "51.9km-54.7km: 2.8km at 4.0% (45 pts - Cat 4)", climbs[3].String())
-	assert.Equal(t, "86.7km-92.8km: 6.1km at 2.7% (44 pts - Cat 4)", climbs[4].String())
-	assert.Equal(t, "114.1km-114.7km: 0.6km at 14.3% (118 pts - Cat 3)", climbs[5].String())
+	assert.Equal(t, "51.9km-54.7km: 2.8km at 4.0% (48 pts - Cat 4)", climbs[3].String())
+	assert.Equal(t, "86.7km-92.8km: 6.1km at 2.7% (60 pts - Cat 4)", climbs[4].String())
+	assert.Equal(t, "114.1km-114.7km: 0.6km at 14.3% (119 pts - Cat 3)", climbs[5].String())
 }

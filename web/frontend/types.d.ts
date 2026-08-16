@@ -18,7 +18,6 @@ export interface RideProfileClimb {
   topKm: number;
   topElevationM: number;
   name: string;
-  score: number;
   category: string;
   distanceKm: number;
   slopePercent: number;
@@ -69,7 +68,6 @@ export interface ClimbMetrics {
   distanceKm: number;
   elevationGain: number;
   slope: number;
-  score: number;
   cotacol: number;
   category: string;
 }

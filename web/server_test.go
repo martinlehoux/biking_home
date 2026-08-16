@@ -151,6 +151,7 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Contains(t, body, `"type":"FeatureCollection"`)
 	assert.Contains(t, body, `"type":"LineString"`)
 	assert.Contains(t, body, `"coordinates":[[5,43]`)
+	assert.NotContains(t, body, `"score":`)
 
 	profileStaticRequest := httptest.NewRequest(http.MethodGet, "/static/official-climb-profile.js", nil)
 	profileStaticResponse := httptest.NewRecorder()

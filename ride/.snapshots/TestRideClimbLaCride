@@ -1,5 +1,5 @@
 ([]string) (len=3) {
-  (string) (len=69) "Climb 17.1km-18.8km: 1.7km at 4.8% (38 pts - Cat 4) (5m50s, 17.0km/h)",
-  (string) (len=65) "  17.2km-18.8km: 1.6km at 4.9% (38 pts - Cat 4) (7m42s, 12.8km/h)",
-  (string) (len=70) "Climb 35.1km-40.1km: 5.1km at 4.3% (94 pts - Cat 3) (18m48s, 16.2km/h)"
+  (string) (len=69) "Climb 17.1km-18.8km: 1.7km at 4.8% (45 pts - Cat 4) (5m50s, 17.0km/h)",
+  (string) (len=65) "  17.2km-18.8km: 1.6km at 4.9% (45 pts - Cat 4) (7m42s, 12.8km/h)",
+  (string) (len=71) "Climb 35.1km-40.1km: 5.1km at 4.3% (126 pts - Cat 3) (18m48s, 16.2km/h)"
 }

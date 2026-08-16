@@ -17,7 +17,6 @@ type Result struct {
 type AnalyzedClimb struct {
 	Segment         ride.Climb
 	Name            string
-	Score           float64
 	Category        string
 	DistanceM       float64
 	SlopePercent    float64
@@ -48,15 +47,14 @@ func Analyze(parsed ride.Ride, passes []mountain_pass.MountainPass, officialClim
 				matchedOfficial = official_climb.OfficialClimb{}
 			}
 		}
-		score := displayClimb.Score()
+		cotacol := displayClimb.DifficultyScore()
 		result.Climbs = append(result.Climbs, AnalyzedClimb{
 			Segment:         displayClimb,
 			Name:            displayClimb.Name,
-			Score:           score,
-			Category:        ride.Category(score),
+			Category:        ride.Category(cotacol),
 			DistanceM:       displayClimb.EndDistanceM() - displayClimb.StartDistanceM(),
 			SlopePercent:    ride.Slope(parsed, displayClimb.StartIndex(), displayClimb.EndIndex()) * 100,
-			Cotacol:         displayClimb.DifficultyScore(),
+			Cotacol:         cotacol,
 			OfficialClimbID: officialClimbID(matchedOfficial, officialFound),
 			OfficialName:    officialClimbName(matchedOfficial, officialFound),
 		})

@@ -1,10 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  categoryForScore,
+  categoryForCotacol,
   climbMetrics,
   cotacolForClimb,
   elevationAtDistance,
+  formatClimbLabel,
   formatDistance,
   formatElevation,
   nearestPointIndex,
@@ -28,7 +29,7 @@ test("interpolates elevation between route points", () => {
   assert.equal(elevationAtDistance(points, 2, 250), 120);
 });
 
-test("calculates climb metrics with the Cotacol score", () => {
+test("calculates climb metrics with Cotacol", () => {
   const metrics = climbMetrics(points, { startIndex: 0, endIndex: 3 });
   assert.ok(metrics);
 
@@ -36,7 +37,12 @@ test("calculates climb metrics with the Cotacol score", () => {
   assert.equal(metrics.elevationGain, 20);
   assert.equal(metrics.slope, 8);
   assert.equal(metrics.cotacol, cotacolForClimb(points, 0, 3));
-  assert.equal(metrics.category, categoryForScore(metrics.score));
+  assert.equal(metrics.category, categoryForCotacol(metrics.cotacol));
+});
+
+test("formats profile climb labels with Cotacol", () => {
+  assert.equal(formatClimbLabel("", "Cat 4", 45.9), "Cat 4 45.9");
+  assert.equal(formatClimbLabel("Col de Test", "Cat 4", 45.9), "Col de Test");
 });
 
 test("formats profile labels consistently", () => {

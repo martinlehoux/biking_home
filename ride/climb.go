@@ -79,16 +79,12 @@ func (climb Climb) TopCoord() geodist.Coord {
 func (climb Climb) String() string {
 	startDistance := climb.StartDistanceM()
 	endDistance := climb.EndDistanceM()
-	score := climb.Score()
-	body := fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", startDistance/1000, endDistance/1000, (endDistance-startDistance)/1000, Slope(climb.ride, climb.rideStart, climb.rideEnd)*100, int(score), Category(score))
+	cotacol := climb.DifficultyScore()
+	body := fmt.Sprintf("%.1fkm-%.1fkm: %.1fkm at %.1f%% (%d pts - %s)", startDistance/1000, endDistance/1000, (endDistance-startDistance)/1000, Slope(climb.ride, climb.rideStart, climb.rideEnd)*100, int(cotacol), Category(cotacol))
 	if climb.Name == "" {
 		return body
 	}
 	return climb.Name + ": " + body
-}
-
-func (climb Climb) Score() float64 {
-	return Score(climb.ride, climb.rideStart, climb.rideEnd)
 }
 
 func (climb Climb) DifficultyScore() float64 {
@@ -99,28 +95,27 @@ func Slope(r Ride, start, end int) float64 {
 	return (r.ElevationM(end) - r.ElevationM(start)) / (r.DistanceM(end) - r.DistanceM(start))
 }
 
-func Score(r Ride, start, end int) float64 {
-	kcore.Assert(end > start, "no points for score")
+func climbDetectionScore(r Ride, start, end int) float64 {
+	kcore.Assert(end > start, "no points for climb detection")
 	distance := r.DistanceM(end) - r.DistanceM(start)
 	if distance == 0 {
 		return 0
 	}
 	dElevation := r.ElevationM(end) - r.ElevationM(start)
-
 	return math.Abs(dElevation) * dElevation / distance * 100.0 * 100.0 / 1000.0
 }
 
-func Category(score float64) string {
+func Category(cotacol float64) string {
 	switch {
-	case score < 35:
+	case cotacol < 35:
 		return "NO"
-	case score < 80:
+	case cotacol < 80:
 		return "Cat 4"
-	case score < 180:
+	case cotacol < 180:
 		return "Cat 3"
-	case score < 250:
+	case cotacol < 250:
 		return "Cat 2"
-	case score < 600:
+	case cotacol < 600:
 		return "Cat 1"
 	default:
 		return "HC"
@@ -130,28 +125,28 @@ func Category(score float64) string {
 func bestClimbBetween(r Ride, start, end int) Climb {
 	kcore.Assert(end > start, "empty points")
 
-	bestScore := Score(r, start, end)
+	bestDetectionScore := climbDetectionScore(r, start, end)
 	bestStart := start
 	for i := start; i < end; i++ {
-		score := Score(r, i, end)
-		if score > bestScore {
+		detectionScore := climbDetectionScore(r, i, end)
+		if detectionScore > bestDetectionScore {
 			bestStart = i
-			bestScore = score
+			bestDetectionScore = detectionScore
 		}
 	}
 	bestEnd := end
 	for i := end; i > bestStart; i-- {
-		score := Score(r, bestStart, i)
-		if score > bestScore {
+		detectionScore := climbDetectionScore(r, bestStart, i)
+		if detectionScore > bestDetectionScore {
 			bestEnd = i
-			bestScore = score
+			bestDetectionScore = detectionScore
 		}
 	}
 	for i := bestStart; i < bestEnd; i++ {
-		score := Score(r, i, bestEnd)
-		if score > bestScore {
+		detectionScore := climbDetectionScore(r, i, bestEnd)
+		if detectionScore > bestDetectionScore {
 			bestStart = i
-			bestScore = score
+			bestDetectionScore = detectionScore
 		}
 	}
 	kcore.Assert(bestStart < bestEnd, "empty climb")
@@ -175,7 +170,7 @@ func climbsBetween(r Ride, start, end int) []Climb {
 		return climbsBetween(r, start+1, end)
 	}
 	climb := bestClimbBetween(r, start, highest)
-	if climb.Score() >= 35 && climb.EndDistanceM()-climb.StartDistanceM() >= ClimbDistanceMinimum {
+	if climbDetectionScore(r, climb.rideStart, climb.rideEnd) >= 35 && climb.EndDistanceM()-climb.StartDistanceM() >= ClimbDistanceMinimum {
 		slog.Debug("Found climb between", slog.Int("start", int(climb.StartDistanceM())), slog.Int("end", int(climb.EndDistanceM())))
 		climbs = append(climbs, climb)
 	}

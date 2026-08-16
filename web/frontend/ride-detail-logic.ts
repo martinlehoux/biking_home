@@ -19,14 +19,16 @@ export const nearestPointIndex = (points: ProfilePoint[], distance: number): num
   return distance - previous.distanceKm < points[low].distanceKm - distance ? low - 1 : low;
 };
 
-export const categoryForScore = (score: number): string => {
-  if (score < 35) return "NO";
-  if (score < 80) return "Cat 4";
-  if (score < 180) return "Cat 3";
-  if (score < 250) return "Cat 2";
-  if (score < 600) return "Cat 1";
+export const categoryForCotacol = (cotacol: number): string => {
+  if (cotacol < 35) return "NO";
+  if (cotacol < 80) return "Cat 4";
+  if (cotacol < 180) return "Cat 3";
+  if (cotacol < 250) return "Cat 2";
+  if (cotacol < 600) return "Cat 1";
   return "HC";
 };
+
+export const formatClimbLabel = (name: string, category: string, cotacol: number): string => name || `${category} ${cotacol.toFixed(1)}`;
 
 export const elevationAtDistance = (points: ProfilePoint[], index: number, distanceM: number): number => {
   if (index + 1 >= points.length) return points[index].elevationM;
@@ -40,7 +42,7 @@ export const cotacolForClimb = (points: ProfilePoint[], startIndex: number, endI
   const startDistanceM = points[startIndex].distanceKm * 1000;
   const lastDistanceM = points[endIndex].distanceKm * 1000;
   if (lastDistanceM <= startDistanceM) return 0;
-  let score = 0;
+  let cotacol = 0;
   let pointIndex = startIndex;
   for (let segmentStartM = startDistanceM; segmentStartM < lastDistanceM; segmentStartM += 100) {
     const segmentEndM = Math.min(segmentStartM + 100, lastDistanceM);
@@ -49,9 +51,9 @@ export const cotacolForClimb = (points: ProfilePoint[], startIndex: number, endI
     while (pointIndex < endIndex && points[pointIndex + 1].distanceKm * 1000 < segmentEndM) pointIndex++;
     const endElevation = elevationAtDistance(points, pointIndex, segmentEndM);
     const slope = (endElevation - startElevation) / (segmentEndM - segmentStartM);
-    if (slope > 0) score += ((segmentEndM - segmentStartM) / 1000) * (slope * 100) ** 2;
+    if (slope > 0) cotacol += ((segmentEndM - segmentStartM) / 1000) * (slope * 100) ** 2;
   }
-  return score;
+  return cotacol;
 };
 
 export const climbMetrics = (points: ProfilePoint[], bounds: ClimbBounds | undefined): ClimbMetrics | null => {
@@ -70,15 +72,14 @@ export const climbMetrics = (points: ProfilePoint[], bounds: ClimbBounds | undef
   const distanceKm = end.distanceKm - start.distanceKm;
   const elevationGain = end.elevationM - start.elevationM;
   const slope = distanceKm > 0 ? elevationGain / (distanceKm * 10) : 0;
-  const score = distanceKm > 0 ? ((Math.abs(elevationGain) * elevationGain) / (distanceKm * 1000)) * 10 : 0;
+  const cotacol = cotacolForClimb(points, bounds.startIndex, bounds.endIndex);
   return {
     start,
     end,
     distanceKm,
     elevationGain,
     slope,
-    score,
-    cotacol: cotacolForClimb(points, bounds.startIndex, bounds.endIndex),
-    category: categoryForScore(score),
+    cotacol,
+    category: categoryForCotacol(cotacol),
   };
 };

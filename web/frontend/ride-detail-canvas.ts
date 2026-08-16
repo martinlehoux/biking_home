@@ -1,4 +1,4 @@
-import { clamp, climbMetrics, formatDistance, formatElevation, nearestPointIndex } from "./ride-detail-logic.js";
+import { clamp, climbMetrics, formatClimbLabel, formatDistance, formatElevation, nearestPointIndex } from "./ride-detail-logic.js";
 import type { BoundarySource, ClimbBounds, RideDetailColors, RideProfile, RideProfilePoint } from "./types.js";
 
 interface Plot {
@@ -137,7 +137,7 @@ export class RideProfileCanvas {
       const endX = clamp(this.xForDistance(metrics.end.distanceKm), plot.left, plot.right);
       this.context.fillStyle = climbIndex === this.focusedClimbIndex ? this.colors.climbFocusFill : this.colors.accentFill;
       this.context.fillRect(startX, plot.top, Math.max(endX - startX, 1), plot.bottom - plot.top);
-      const label = climb.name || `${metrics.category} ${Math.round(metrics.score)}`;
+      const label = formatClimbLabel(climb.name, metrics.category, metrics.cotacol);
       this.context.fillStyle = this.colors.climbLabel;
       this.context.textAlign = "center";
       this.context.textBaseline = "top";

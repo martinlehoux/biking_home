@@ -226,21 +226,6 @@ func metricValue(point gpx.GPXPoint, name string) (*float64, error) {
 	return &value, nil
 }
 
-func (r *Ride) ScoreFromKm(start, end float64) float64 {
-	i := 0
-	j := 0
-	for k, distance := range r.distances {
-		if i == 0 && distance >= start*1000 {
-			i = k
-		}
-		if j == 0 && distance >= end*1000 {
-			j = k
-			break
-		}
-	}
-	return Score(*r, i, j)
-}
-
 const CotacolAlgorithmVersion = "v1"
 
 func Cotacol(ride Ride) float64 {
@@ -256,7 +241,7 @@ func difficultyScore(r Ride, startIndex, endIndex int) float64 {
 	if lastDistance <= startDistance {
 		return 0
 	}
-	score := 0.0
+	cotacol := 0.0
 	i := startIndex
 	for start := startDistance; start < lastDistance; start += 100 {
 		end := math.Min(start+100, lastDistance)
@@ -270,10 +255,10 @@ func difficultyScore(r Ride, startIndex, endIndex int) float64 {
 		endElevation := interpolateElevation(r, i, end)
 		slope := (endElevation - startElevation) / (end - start)
 		if slope > 0 {
-			score += (end - start) / 1000 * (slope * 100) * (slope * 100)
+			cotacol += (end - start) / 1000 * (slope * 100) * (slope * 100)
 		}
 	}
-	return score
+	return cotacol
 }
 
 func interpolateElevation(r Ride, i int, distance float64) float64 {

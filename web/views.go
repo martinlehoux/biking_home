@@ -68,7 +68,6 @@ type RideProfileClimb struct {
 	TopKm           float64 `json:"topKm"`
 	TopElevationM   float64 `json:"topElevationM"`
 	Name            string  `json:"name"`
-	Score           float64 `json:"score"`
 	Category        string  `json:"category"`
 	DistanceKm      float64 `json:"distanceKm"`
 	SlopePercent    float64 `json:"slopePercent"`
@@ -269,7 +268,6 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, off
 			TopKm:           segment.TopDistanceM() / 1000,
 			TopElevationM:   segment.TopElevationM(),
 			Name:            analyzedClimb.Name,
-			Score:           analyzedClimb.Score,
 			Category:        analyzedClimb.Category,
 			DistanceKm:      analyzedClimb.DistanceM / 1000,
 			SlopePercent:    analyzedClimb.SlopePercent,
@@ -327,16 +325,16 @@ func formatElevation(meters float64) string {
 	return fmt.Sprintf("%.0f m", meters)
 }
 
-func formatCotacol(score float64) string {
-	return fmt.Sprintf("%.1f", score)
+func formatCotacol(cotacol float64) string {
+	return fmt.Sprintf("%.1f", cotacol)
 }
 
-func formatCotacolPer100Km(score, distanceM float64) string {
+func formatCotacolPer100Km(cotacol, distanceM float64) string {
 	distanceKm := distanceM / 1000
 	if distanceKm <= 0 {
 		return "-"
 	}
-	return fmt.Sprintf("%.1f", score*100/distanceKm)
+	return fmt.Sprintf("%.1f", cotacol*100/distanceKm)
 }
 
 func formatRouteIndex(index int) string {
