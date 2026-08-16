@@ -1,0 +1,211 @@
+import { clamp, climbMetrics, formatDistance, formatElevation, nearestPointIndex } from "./ride-detail-logic.js";
+
+export class RideProfileCanvas {
+  constructor({ canvas, points, profile, colors, getClimbBounds, canSelectPoint, onPointSelected, onPointHover }) {
+    this.canvas = canvas;
+    this.points = points;
+    this.profile = profile;
+    this.colors = colors;
+    this.getClimbBounds = getClimbBounds;
+    this.canSelectPoint = canSelectPoint;
+    this.onPointSelected = onPointSelected;
+    this.onPointHover = onPointHover;
+    this.context = canvas.getContext("2d");
+    if (!this.context) throw new Error("Ride profile canvas is unavailable");
+    this.hoveredIndex = -1;
+    this.focusedClimbIndex = 0;
+    this.plot = null;
+    this.minDistance = points[0].distanceKm;
+    this.maxDistance = points[points.length - 1].distanceKm;
+    let minElevation = points[0].elevationM;
+    let maxElevation = points[0].elevationM;
+    for (const point of points) {
+      minElevation = Math.min(minElevation, point.elevationM);
+      maxElevation = Math.max(maxElevation, point.elevationM);
+    }
+    const elevationPadding = Math.max((maxElevation - minElevation) * 0.1, 20);
+    this.minElevation = minElevation - elevationPadding;
+    this.maxElevation = maxElevation + elevationPadding;
+    this.bindEvents();
+  }
+
+  setFocusedClimbIndex(index) {
+    this.focusedClimbIndex = index;
+    this.draw();
+  }
+
+  redraw() {
+    this.draw();
+  }
+
+  xForDistance(distance) {
+    const span = Math.max(this.maxDistance - this.minDistance, 1);
+    return this.plot.left + ((distance - this.minDistance) / span) * (this.plot.right - this.plot.left);
+  }
+
+  yForElevation(elevation) {
+    const span = Math.max(this.maxElevation - this.minElevation, 1);
+    return this.plot.bottom - ((elevation - this.minElevation) / span) * (this.plot.bottom - this.plot.top);
+  }
+
+  draw() {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const ratio = window.devicePixelRatio || 1;
+    this.canvas.width = Math.floor(rect.width * ratio);
+    this.canvas.height = Math.floor(rect.height * ratio);
+    this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    this.plot = { left: 52, right: rect.width - 20, top: 24, bottom: rect.height - 34 };
+    const plot = this.plot;
+    this.context.clearRect(0, 0, rect.width, rect.height);
+    this.context.fillStyle = this.colors.plotSurface;
+    this.context.fillRect(0, 0, rect.width, rect.height);
+
+    this.context.font = "12px system-ui, sans-serif";
+    this.context.textBaseline = "middle";
+    for (let step = 0; step <= 4; step++) {
+      const fraction = step / 4;
+      const y = plot.top + fraction * (plot.bottom - plot.top);
+      const elevation = this.maxElevation - fraction * (this.maxElevation - this.minElevation);
+      this.context.strokeStyle = this.colors.grid;
+      this.context.lineWidth = 1;
+      this.context.beginPath();
+      this.context.moveTo(plot.left, y);
+      this.context.lineTo(plot.right, y);
+      this.context.stroke();
+      this.context.fillStyle = this.colors.subtle;
+      this.context.textAlign = "right";
+      this.context.fillText(formatElevation(elevation), plot.left - 8, y);
+    }
+
+    const climbBounds = this.getClimbBounds();
+    for (let climbIndex = 0; climbIndex < (this.profile.climbs || []).length; climbIndex++) {
+      const climb = this.profile.climbs[climbIndex];
+      const metrics = climbMetrics(this.points, climbBounds[climbIndex]);
+      if (!metrics) continue;
+      const startX = clamp(this.xForDistance(metrics.start.distanceKm), plot.left, plot.right);
+      const endX = clamp(this.xForDistance(metrics.end.distanceKm), plot.left, plot.right);
+      this.context.fillStyle = climbIndex === this.focusedClimbIndex ? this.colors.climbFocusFill : this.colors.accentFill;
+      this.context.fillRect(startX, plot.top, Math.max(endX - startX, 1), plot.bottom - plot.top);
+      const label = climb.name || `${metrics.category} ${Math.round(metrics.score)}`;
+      this.context.fillStyle = this.colors.climbLabel;
+      this.context.textAlign = "center";
+      this.context.textBaseline = "top";
+      this.context.fillText(label, clamp((startX + endX) / 2, plot.left + 24, plot.right - 24), plot.top + 4);
+    }
+
+    for (const crossing of this.profile.crossings || []) {
+      const x = this.xForDistance(crossing.distanceKm);
+      this.context.strokeStyle = this.colors.crossing;
+      this.context.lineWidth = 1;
+      this.context.setLineDash([4, 3]);
+      this.context.beginPath();
+      this.context.moveTo(x, plot.top);
+      this.context.lineTo(x, plot.bottom);
+      this.context.stroke();
+      this.context.setLineDash([]);
+    }
+
+    this.context.beginPath();
+    this.context.moveTo(this.xForDistance(this.points[0].distanceKm), plot.bottom);
+    for (const point of this.points) this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
+    this.context.lineTo(this.xForDistance(this.points[this.points.length - 1].distanceKm), plot.bottom);
+    this.context.closePath();
+    this.context.fillStyle = this.colors.accentFill;
+    this.context.fill();
+    this.context.beginPath();
+    for (let index = 0; index < this.points.length; index++) {
+      const point = this.points[index];
+      if (index === 0) this.context.moveTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
+      else this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
+    }
+    this.context.strokeStyle = this.colors.accent;
+    this.context.lineWidth = 2.5;
+    this.context.stroke();
+    for (const crossing of this.profile.crossings || []) {
+      const x = this.xForDistance(crossing.distanceKm);
+      const label = `${crossing.name} ${Math.round(crossing.passElevationM)} m`;
+      const labelWidth = this.context.measureText(label).width;
+      const labelX = clamp(x, plot.left + labelWidth / 2 + 3, plot.right - labelWidth / 2 - 3);
+      const labelY = plot.top - 6;
+      this.context.fillStyle = this.colors.plotSurfaceOverlay;
+      this.context.fillRect(labelX - labelWidth / 2 - 3, labelY - 15, labelWidth + 6, 16);
+      this.context.fillStyle = this.colors.crossingLabel;
+      this.context.textAlign = "center";
+      this.context.textBaseline = "bottom";
+      this.context.fillText(label, labelX, labelY);
+    }
+
+    this.context.fillStyle = this.colors.subtle;
+    this.context.textAlign = "center";
+    this.context.textBaseline = "top";
+    for (let step = 0; step <= 4; step++) {
+      const distance = this.minDistance + (step / 4) * (this.maxDistance - this.minDistance);
+      this.context.fillText(formatDistance(distance), this.xForDistance(distance), plot.bottom + 10);
+    }
+
+    if (this.hoveredIndex >= 0) {
+      const point = this.points[this.hoveredIndex];
+      const x = this.xForDistance(point.distanceKm);
+      const y = this.yForElevation(point.elevationM);
+      this.context.strokeStyle = this.colors.hoverLine;
+      this.context.lineWidth = 1;
+      this.context.setLineDash([3, 3]);
+      this.context.beginPath();
+      this.context.moveTo(x, plot.top);
+      this.context.lineTo(x, plot.bottom);
+      this.context.stroke();
+      this.context.setLineDash([]);
+      this.context.fillStyle = this.colors.forest;
+      this.context.beginPath();
+      this.context.arc(x, y, 5, 0, 2 * Math.PI);
+      this.context.fill();
+    }
+  }
+
+  clearHover() {
+    this.hoveredIndex = -1;
+    this.onPointHover(-1);
+    this.draw();
+  }
+
+  showPoint(index) {
+    this.hoveredIndex = clamp(index, 0, this.points.length - 1);
+    this.onPointHover(this.hoveredIndex);
+    this.draw();
+  }
+
+  pointIndexAtX(x) {
+    const distance = this.minDistance + ((x - this.plot.left) / (this.plot.right - this.plot.left)) * (this.maxDistance - this.minDistance);
+    return nearestPointIndex(this.points, distance);
+  }
+
+  bindEvents() {
+    this.canvas.addEventListener("pointermove", (event) => {
+      if (!this.plot) return;
+      const rect = this.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      if (x < this.plot.left || x > this.plot.right) {
+        this.clearHover();
+        return;
+      }
+      this.showPoint(this.pointIndexAtX(x));
+    });
+    this.canvas.addEventListener("pointerleave", () => this.clearHover());
+    this.canvas.addEventListener("pointercancel", () => this.clearHover());
+    this.canvas.addEventListener("click", (event) => {
+      if (!this.canSelectPoint("profile") || !this.plot) return;
+      const rect = this.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      if (x < this.plot.left || x > this.plot.right) return;
+      this.onPointSelected(this.pointIndexAtX(x));
+    });
+    this.canvas.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const index = this.hoveredIndex < 0 ? (direction > 0 ? 0 : this.points.length - 1) : this.hoveredIndex + direction;
+      this.showPoint(index);
+    });
+  }
+}
