@@ -38,12 +38,11 @@
   --color-hover-line: oklch(from var(--palette-forest) l c h / 60%);
   --color-climb-route: var(--palette-leaf);
   --color-climb-focus-fill: oklch(from var(--palette-leaf) l c h / 18%);
-  --color-profile-downhill: oklch(58% 0.12 245);
-  --color-profile-0-3: oklch(66% 0.13 145);
-  --color-profile-3-6: oklch(72% 0.16 112);
-  --color-profile-6-9: oklch(78% 0.16 91);
-  --color-profile-9-12: oklch(70% 0.17 57);
-  --color-profile-12-plus: oklch(60% 0.18 32);
+  --color-profile-downhill: oklch(58% 0.02 155);
+  --color-profile-0-3: oklch(58% 0.15 145);
+  --color-profile-3-6: oklch(58% 0.17 255);
+  --color-profile-6-9: oklch(58% 0.2 25);
+  --color-profile-9-plus: oklch(0% 0 0);
 }
 
 * { box-sizing: border-box; }
@@ -124,8 +123,7 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .profile-band-0-3 { background: var(--color-profile-0-3); }
 .profile-band-3-6 { background: var(--color-profile-3-6); }
 .profile-band-6-9 { background: var(--color-profile-6-9); }
-.profile-band-9-12 { background: var(--color-profile-9-12); }
-.profile-band-12-plus { background: var(--color-profile-12-plus); }
+.profile-band-9-plus { background: var(--color-profile-9-plus); }
 .climb-list { display: grid; gap: 1rem; margin-top: 1.25rem; }
 .climb-item { padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); }
 .climb-item-heading { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }

@@ -35,8 +35,7 @@ export class OfficialClimbProfileController {
       "0-3": resolveColor("--color-profile-0-3"),
       "3-6": resolveColor("--color-profile-3-6"),
       "6-9": resolveColor("--color-profile-6-9"),
-      "9-12": resolveColor("--color-profile-9-12"),
-      "12-plus": resolveColor("--color-profile-12-plus"),
+      "9-plus": resolveColor("--color-profile-9-plus"),
       plotSurface: resolveColor("--color-plot-surface"),
       grid: resolveColor("--color-plot-grid"),
       subtle: resolveColor("--color-subtle"),
@@ -66,7 +65,7 @@ export class OfficialClimbProfileController {
     profileCanvas.width = Math.floor(rect.width * ratio);
     profileCanvas.height = Math.floor(rect.height * ratio);
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const plot = { left: 10, right: rect.width - 10, top: 16, bottom: rect.height - 24 };
+    const plot = { left: 10, right: rect.width - 10, top: 16, bottom: rect.height - 34 };
     const climbLengthM = (points[endIndex].distanceKm - points[startIndex].distanceKm) * 1000;
     const sections = officialProfileSections(points, startIndex, endIndex, displayStepForLength(climbLengthM));
     if (sections.length === 0) return;
@@ -126,8 +125,7 @@ export class OfficialClimbProfileController {
       const startX = xForDistance(section.startDistanceKm);
       const endX = xForDistance(section.endDistanceKm);
       const label = `${section.slopePercent.toFixed(1)}%`;
-      const labelY = Math.max(plot.top + 10, Math.min(yForElevation(section.startElevation), yForElevation(section.endElevation)) - 4);
-      context.fillText(label, (startX + endX) / 2, labelY);
+      context.fillText(label, (startX + endX) / 2, plot.bottom - 4);
     }
     context.restore();
     let topElevation = sections[0].startElevation;
@@ -146,13 +144,22 @@ export class OfficialClimbProfileController {
     context.beginPath();
     context.arc(xForDistance(topDistance), yForElevation(topElevation), 3.5, 0, 2 * Math.PI);
     context.fill();
-    context.font = "11px system-ui, sans-serif";
+    context.font = "9px system-ui, sans-serif";
     context.fillStyle = colors.subtle;
     context.textBaseline = "top";
-    context.textAlign = "left";
-    context.fillText(this.formatDistance(0), plot.left, rect.height - 16);
-    context.textAlign = "right";
-    context.fillText(this.formatDistance(maxDistance - minDistance), plot.right, rect.height - 16);
+    context.strokeStyle = colors.grid;
+    context.lineWidth = 1;
+    for (let sectionIndex = 0; sectionIndex <= sections.length; sectionIndex++) {
+      const distanceKm =
+        sectionIndex === sections.length ? maxDistance - minDistance : sections[sectionIndex].startDistanceKm - minDistance;
+      const x = xForDistance(minDistance + distanceKm);
+      context.beginPath();
+      context.moveTo(x, plot.bottom);
+      context.lineTo(x, plot.bottom + 3);
+      context.stroke();
+      context.textAlign = sectionIndex === 0 ? "left" : sectionIndex === sections.length ? "right" : "center";
+      context.fillText(this.formatDistance(distanceKm), x, plot.bottom + 5);
+    }
   }
 
   formatDistance(distance: number): string {

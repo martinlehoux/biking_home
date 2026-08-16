@@ -1,4 +1,4 @@
-export type ProfileBand = "downhill" | "0-3" | "3-6" | "6-9" | "9-12" | "12-plus";
+export type ProfileBand = "downhill" | "0-3" | "3-6" | "6-9" | "9-plus";
 export type BoundaryTarget = "start" | "end";
 export type BoundarySource = "profile" | "map";
 
@@ -77,8 +77,7 @@ export interface OfficialProfileColors {
   "0-3": string;
   "3-6": string;
   "6-9": string;
-  "9-12": string;
-  "12-plus": string;
+  "9-plus": string;
   plotSurface: string;
   grid: string;
   subtle: string;

@@ -303,8 +303,11 @@ func TestHandlerCreatesOfficialClimbFromRoutePoints(t *testing.T) {
 	assert.Contains(t, body, "Cotacol")
 	assert.Contains(t, body, "Avg slope")
 	assert.Contains(t, body, "data-official-profile")
+	assert.Contains(t, body, "&lt;=0%")
 	assert.Contains(t, body, "0–3%")
-	assert.Contains(t, body, "12%+")
+	assert.Contains(t, body, "3–6%")
+	assert.Contains(t, body, "6–9%")
+	assert.Contains(t, body, "9%+")
 	assert.NotContains(t, body, "Waiting for an official climb match.")
 }
 

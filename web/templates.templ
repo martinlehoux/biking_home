@@ -99,12 +99,11 @@ templ RideDetailContent(data RideDetailView) {
 								<div class="official-climb-card-body">
 									<canvas class="official-climb-profile" data-official-profile data-profile-start={ formatRouteIndex(climb.StartIndex) } data-profile-end={ formatRouteIndex(climb.EndIndex) } tabindex="0" role="img" aria-label={ officialProfileLabel(climb.OfficialName) }></canvas>
 									<div class="official-climb-profile-legend" role="list" aria-label="Average slope color scale">
-										<span role="listitem"><i class="profile-band-swatch profile-band-downhill" aria-hidden="true"></i>Downhill</span>
+										<span role="listitem"><i class="profile-band-swatch profile-band-downhill" aria-hidden="true"></i>&lt;=0%</span>
 										<span role="listitem"><i class="profile-band-swatch profile-band-0-3" aria-hidden="true"></i>0–3%</span>
 										<span role="listitem"><i class="profile-band-swatch profile-band-3-6" aria-hidden="true"></i>3–6%</span>
 										<span role="listitem"><i class="profile-band-swatch profile-band-6-9" aria-hidden="true"></i>6–9%</span>
-										<span role="listitem"><i class="profile-band-swatch profile-band-9-12" aria-hidden="true"></i>9–12%</span>
-										<span role="listitem"><i class="profile-band-swatch profile-band-12-plus" aria-hidden="true"></i>12%+</span>
+										<span role="listitem"><i class="profile-band-swatch profile-band-9-plus" aria-hidden="true"></i>9%+</span>
 									</div>
 								</div>
 							</details>

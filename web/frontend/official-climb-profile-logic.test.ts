@@ -11,11 +11,13 @@ test("selects a display step that keeps long profiles readable", () => {
 
 test("assigns each slope to its color band", () => {
   assert.equal(profileBandForSlope(-0.1), "downhill");
+  assert.equal(profileBandForSlope(0), "downhill");
+  assert.equal(profileBandForSlope(0.1), "0-3");
   assert.equal(profileBandForSlope(2.9), "0-3");
   assert.equal(profileBandForSlope(3), "3-6");
   assert.equal(profileBandForSlope(6), "6-9");
-  assert.equal(profileBandForSlope(9), "9-12");
-  assert.equal(profileBandForSlope(12), "12-plus");
+  assert.equal(profileBandForSlope(9), "9-plus");
+  assert.equal(profileBandForSlope(12), "9-plus");
 });
 
 test("interpolates profile sections at the selected step", () => {

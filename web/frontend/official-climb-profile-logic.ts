@@ -14,12 +14,11 @@ const profileStepSizesM: number[] = [100, 200, 500, 1000];
 const displayStepForLength = (lengthM: number): number =>
   profileStepSizesM.find((stepM) => Math.ceil(lengthM / stepM) <= 30) || profileStepSizesM[profileStepSizesM.length - 1];
 const profileBandForSlope = (slopePercent: number): ProfileBand => {
-  if (slopePercent < 0) return "downhill";
+  if (slopePercent <= 0) return "downhill";
   if (slopePercent < 3) return "0-3";
   if (slopePercent < 6) return "3-6";
   if (slopePercent < 9) return "6-9";
-  if (slopePercent < 12) return "9-12";
-  return "12-plus";
+  return "9-plus";
 };
 const officialProfileSections = (points: ProfilePoint[], startIndex: number, endIndex: number, stepM: number): OfficialProfileSection[] => {
   const startDistanceM = points[startIndex].distanceKm * 1000;
