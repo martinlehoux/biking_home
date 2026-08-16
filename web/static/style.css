@@ -38,6 +38,12 @@
   --color-hover-line: oklch(from var(--palette-forest) l c h / 60%);
   --color-climb-route: var(--palette-leaf);
   --color-climb-focus-fill: oklch(from var(--palette-leaf) l c h / 18%);
+  --color-profile-downhill: oklch(58% 0.12 245);
+  --color-profile-0-3: oklch(66% 0.13 145);
+  --color-profile-3-6: oklch(72% 0.16 112);
+  --color-profile-6-9: oklch(78% 0.16 91);
+  --color-profile-9-12: oklch(70% 0.17 57);
+  --color-profile-12-plus: oklch(60% 0.18 32);
 }
 
 * { box-sizing: border-box; }
@@ -64,8 +70,10 @@ input { border: 1px solid var(--color-input-border); border-radius: .55rem; padd
 progress { width: 100%; height: .8rem; accent-color: var(--color-accent); }
 .notice { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: var(--color-notice-surface); color: var(--color-notice-text); }
 .error { margin: 1rem 0 0; border-radius: .6rem; padding: .75rem 1rem; background: var(--color-error-surface); color: var(--color-error-text); }
-.ride-detail-grid { display: grid; grid-template-columns: minmax(16rem, .85fr) minmax(0, 1.75fr); gap: 1.25rem; margin-top: 2rem; align-items: start; }
-.ride-detail-sidebar, .ride-detail-main { display: grid; gap: 1.25rem; min-width: 0; }
+.ride-detail-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-top: 2rem; align-items: start; }
+.ride-detail-columns { display: grid; grid-template-columns: minmax(16rem, .85fr) minmax(0, 1.75fr); gap: 1.25rem; align-items: start; min-width: 0; }
+.ride-detail-columns-single > .ride-detail-main { grid-column: 1 / -1; }
+.ride-detail-main { display: grid; gap: 1.25rem; min-width: 0; }
 .ride-detail-grid .panel { margin-top: 0; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: .85rem .5rem; border-bottom: 1px solid var(--color-border-subtle); text-align: left; }
@@ -85,9 +93,45 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .profile-chart canvas { display: block; width: 100%; height: 22rem; border-radius: .65rem; background: var(--color-plot-surface); outline: none; }
 .profile-chart canvas:focus-visible { box-shadow: 0 0 0 .2rem var(--color-focus); }
 .profile-hover { display: block; min-height: 1.4rem; margin: .7rem 0 0; color: var(--color-muted); font-size: .9rem; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.section-heading .eyebrow { margin-bottom: .2rem; }
+.section-heading h2 { margin: 0; font-size: 1.2rem; }
+.section-count { display: grid; place-items: center; min-width: 2rem; height: 2rem; border-radius: 999px; background: var(--color-secondary-surface); color: var(--color-forest); font-weight: 800; }
+.official-climbs-panel { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.official-climbs-panel .section-heading { margin-bottom: .75rem; }
+.official-climb-list { display: grid; gap: 0; }
+.official-climb-card { overflow: hidden; border: 1px solid var(--color-border); border-bottom: 0; border-radius: 0; background: var(--color-plot-surface); }
+.official-climb-card:last-child { border-bottom: 1px solid var(--color-border); }
+.official-climb-card > summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; color: var(--color-forest); cursor: pointer; list-style: none; }
+.official-climb-card > summary::-webkit-details-marker { display: none; }
+.official-climb-card > summary::marker { display: none; }
+.official-climb-card > summary:hover, .official-climb-card > summary:focus-visible { background: var(--color-secondary-surface); }
+.official-climb-card > summary:focus-visible { outline: .2rem solid var(--color-focus); outline-offset: -.2rem; }
+.official-climb-card-title { display: flex; align-items: baseline; gap: .2rem; min-width: 0; }
+.official-climb-card-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.official-climb-summary-stats { display: flex; gap: .8rem; margin: 0 0 0 auto; }
+.official-climb-summary-stats dt { font-size: .6rem; }
+.official-climb-summary-stats dd { margin-top: .1rem; font-size: .85rem; }
+.official-climb-chevron { color: var(--color-accent); font-size: 1.5rem; font-weight: 500; line-height: 1; }
+.official-climb-card[open] .official-climb-chevron { transform: rotate(180deg); }
+.official-climb-card-body { padding: .9rem 1rem 1rem; border-top: 1px solid var(--color-border-subtle); background: var(--color-surface); }
+.official-climb-profile { display: block; width: 100%; height: 10rem; margin-top: .75rem; border-radius: .55rem; background: var(--color-plot-surface); outline: none; }
+.official-climb-profile:focus-visible { box-shadow: 0 0 0 .2rem var(--color-focus); }
+.official-climb-profile-legend { display: flex; flex-wrap: wrap; gap: .45rem .8rem; margin-top: .65rem; color: var(--color-muted); font-size: .72rem; }
+.official-climb-profile-legend > span { display: inline-flex; align-items: center; gap: .3rem; }
+.profile-band-swatch { display: inline-block; width: .65rem; height: .65rem; border-radius: .15rem; }
+.profile-band-downhill { background: var(--color-profile-downhill); }
+.profile-band-0-3 { background: var(--color-profile-0-3); }
+.profile-band-3-6 { background: var(--color-profile-3-6); }
+.profile-band-6-9 { background: var(--color-profile-6-9); }
+.profile-band-9-12 { background: var(--color-profile-9-12); }
+.profile-band-12-plus { background: var(--color-profile-12-plus); }
 .climb-list { display: grid; gap: 1rem; margin-top: 1.25rem; }
 .climb-item { padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); }
 .climb-item-heading { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.todo-item { padding-left: .8rem; border-left: .2rem solid var(--color-accent); }
+.todo-item.focused { border-left-color: var(--color-forest); background: var(--color-plot-surface); }
+.todo-check { display: inline-block; width: .9rem; height: .9rem; margin-right: .5rem; border: 2px solid var(--color-accent); border-radius: .2rem; vertical-align: -.05rem; }
 .climb-number { display: inline-block; margin-right: .45rem; color: var(--color-accent); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
 .climb-item-heading > span, .climb-status { color: var(--color-muted); font-size: .9rem; }
 .climb-metrics { margin: .35rem 0 0; color: var(--color-muted); font-size: .9rem; }
@@ -107,6 +151,6 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 0; }
 dt { color: var(--color-subtle); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 dd { margin: .25rem 0 0; font-size: 1.2rem; font-weight: 700; }
-@media (max-width: 900px) { .ride-detail-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .ride-detail-columns { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .container { width: min(100% - 1rem, 70rem); padding-top: 1.5rem; } .site-header { padding-inline: 1rem; } th:nth-child(n+4), td:nth-child(n+4) { display: none; } .panel { padding: .8rem; } }
-@media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { dl { grid-template-columns: repeat(2, 1fr); } .official-climb-summary-stats { gap: .55rem; } .official-climb-card-title { display: block; } }

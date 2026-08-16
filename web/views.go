@@ -29,9 +29,11 @@ type RideDetailView struct {
 }
 
 type RideProfile struct {
-	Points    []RideProfilePoint    `json:"points"`
-	Climbs    []RideProfileClimb    `json:"climbs"`
-	Crossings []RideProfileCrossing `json:"crossings"`
+	Points          []RideProfilePoint    `json:"points"`
+	Climbs          []RideProfileClimb    `json:"climbs"`
+	OfficialClimbs  []RideProfileClimb    `json:"-"`
+	UnmatchedClimbs []RideProfileClimb    `json:"-"`
+	Crossings       []RideProfileCrossing `json:"crossings"`
 }
 
 type RideProfilePoint struct {
@@ -42,6 +44,7 @@ type RideProfilePoint struct {
 }
 
 type RideProfileClimb struct {
+	Index           int     `json:"-"`
 	StartKm         float64 `json:"startKm"`
 	EndKm           float64 `json:"endKm"`
 	TopKm           float64 `json:"topKm"`
@@ -225,9 +228,11 @@ func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pa
 
 func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, officialClimbs []official_climb.OfficialClimb, matchPolicy official_climb.MatchPolicy) RideProfile {
 	profile := RideProfile{
-		Points:    make([]RideProfilePoint, parsed.Len()),
-		Climbs:    make([]RideProfileClimb, 0),
-		Crossings: make([]RideProfileCrossing, 0),
+		Points:          make([]RideProfilePoint, parsed.Len()),
+		Climbs:          make([]RideProfileClimb, 0),
+		OfficialClimbs:  make([]RideProfileClimb, 0),
+		UnmatchedClimbs: make([]RideProfileClimb, 0),
+		Crossings:       make([]RideProfileCrossing, 0),
 	}
 	for i := 0; i < parsed.Len(); i++ {
 		coordinate := parsed.Coord(i)
@@ -240,12 +245,13 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, off
 	}
 	analysis := rideanalysis.Analyze(parsed, passes, officialClimbs, matchPolicy)
 	for _, analyzedClimb := range analysis.Climbs {
-		climb := analyzedClimb.Segment
-		profile.Climbs = append(profile.Climbs, RideProfileClimb{
-			StartKm:         climb.StartDistanceM() / 1000,
-			EndKm:           climb.EndDistanceM() / 1000,
-			TopKm:           climb.TopDistanceM() / 1000,
-			TopElevationM:   climb.TopElevationM(),
+		segment := analyzedClimb.Segment
+		climb := RideProfileClimb{
+			Index:           len(profile.Climbs),
+			StartKm:         segment.StartDistanceM() / 1000,
+			EndKm:           segment.EndDistanceM() / 1000,
+			TopKm:           segment.TopDistanceM() / 1000,
+			TopElevationM:   segment.TopElevationM(),
 			Name:            analyzedClimb.Name,
 			Score:           analyzedClimb.Score,
 			Category:        analyzedClimb.Category,
@@ -254,9 +260,15 @@ func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, off
 			Cotacol:         analyzedClimb.Cotacol,
 			OfficialClimbID: analyzedClimb.OfficialClimbID,
 			OfficialName:    analyzedClimb.OfficialName,
-			StartIndex:      climb.StartIndex(),
-			EndIndex:        climb.EndIndex(),
-		})
+			StartIndex:      segment.StartIndex(),
+			EndIndex:        segment.EndIndex(),
+		}
+		profile.Climbs = append(profile.Climbs, climb)
+		if climb.OfficialClimbID > 0 {
+			profile.OfficialClimbs = append(profile.OfficialClimbs, climb)
+		} else {
+			profile.UnmatchedClimbs = append(profile.UnmatchedClimbs, climb)
+		}
 	}
 	for _, crossing := range analysis.Crossings {
 		profile.Crossings = append(profile.Crossings, RideProfileCrossing{
@@ -324,10 +336,25 @@ func formatClimbNumber(index int) string {
 	return fmt.Sprintf("%d", index+1)
 }
 
+func formatClimbCount(count int) string {
+	return fmt.Sprintf("%d", count)
+}
+
 func formatProfileDistance(distanceKm float64) string {
 	return fmt.Sprintf("%.1f km", distanceKm)
 }
 
 func formatSlope(slopePercent float64) string {
 	return fmt.Sprintf("%.1f%%", slopePercent)
+}
+
+func officialProfileLabel(name string) string {
+	return "Elevation profile for " + name
+}
+
+func rideDetailColumnsClass(unmatchedClimbCount int) string {
+	if unmatchedClimbCount == 0 {
+		return "ride-detail-columns ride-detail-columns-single"
+	}
+	return "ride-detail-columns"
 }

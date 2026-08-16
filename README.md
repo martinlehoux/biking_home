@@ -11,6 +11,7 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 - **Mountain pass download** — imports French mountain passes from centcols.org into a SQLite database
 - **Pass crossing detection** — enriches passes with OSM coordinates, flags which passes a ride crosses, and names each climb after the pass it tops (e.g. "Col de Castellaras")
 - **Interactive ride profiles** — explores elevation, climbs, and mountain-pass crossings in the web ride detail view
+- **Official climb cards** — separates matched climbs from pending matches and expands each matched climb with its own elevation profile
 - **Web ride library** — starts a local web server by default, imports Strava rides over a date range, stores metadata in SQLite, and keeps their GPX files on disk
 - **Materialized ride values** — computes Cotacol on import, stores its algorithm version in SQLite, and refreshes all computed values with `-backfill`
 - **Strava stream metrics** — preserves heart rate, cadence, and power in Garmin-compatible GPX files and in-memory ride columns
@@ -29,7 +30,7 @@ go build -o biking_home .
 
 ```bash
 # Start the web server on http://localhost:8080
-mise watch dev-watch --restart --exts go,templ --ignore '*_templ.go'
+mise watch dev-watch --restart --exts go,templ,css,js --ignore '*_templ.go'
 
 # Recompute and persist all ride computed values
 ./biking_home -backfill
@@ -128,12 +129,15 @@ mise run build
 
 ## TODO
 
+- Bug: cotacol on global profile differs from cotacol in climbs to match
 - Compute estimated power, speed
 - Plot speed and slope per segment, colored by heart rate
 - Plot speed vs ctc/100km
 - Blog with pictures and markdown
 - Road quality (Arbois = 2/5, Roquefavour = 4/5)
-- Climb - Display step by step slope curve like TdF
+- OffClimb
+    - Keep trace appart from ride to display slope profile, compute cotacol
+    - Profile - Adaptative to show ramps
 - Planning rides
 - Ride details
     - Display mountain pass on map in bounding box
