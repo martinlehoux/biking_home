@@ -26,12 +26,6 @@
     hoverLine: resolveColor("--color-hover-line"),
     climbRoute: resolveColor("--color-climb-route"),
     climbFocusFill: resolveColor("--color-climb-focus-fill"),
-    profileDownhill: resolveColor("--color-profile-downhill"),
-    profile0To3: resolveColor("--color-profile-0-3"),
-    profile3To6: resolveColor("--color-profile-3-6"),
-    profile6To9: resolveColor("--color-profile-6-9"),
-    profile9To12: resolveColor("--color-profile-9-12"),
-    profile12Plus: resolveColor("--color-profile-12-plus"),
   };
   colorProbe.remove();
   const route = JSON.parse(routeElement.textContent);
@@ -54,7 +48,6 @@
   if (points.length === 0) return;
   const climbItems = [...document.querySelectorAll("[data-climb-item]")];
   const climbItemIndices = climbItems.map((item) => Number.parseInt(item.dataset.climbIndex, 10));
-  const officialProfileCanvases = [...document.querySelectorAll("[data-official-profile]")];
   const previousClimbButton = document.querySelector("[data-climb-previous]");
   const nextClimbButton = document.querySelector("[data-climb-next]");
   const climbPosition = document.querySelector("[data-climb-position]");
@@ -103,157 +96,7 @@
   const formatDistance = (distance) => `${distance.toFixed(distance < 10 ? 1 : 0)} km`;
   const formatElevation = (elevation) => `${Math.round(elevation)} m`;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  const profileStepSizesM = [100, 200, 500, 1000];
-  const displayStepForLength = (lengthM) => profileStepSizesM.find((stepM) => Math.ceil(lengthM / stepM) <= 30) || profileStepSizesM[profileStepSizesM.length - 1];
-  const profileBandForSlope = (slopePercent) => {
-    if (slopePercent < 0) return colors.profileDownhill;
-    if (slopePercent < 3) return colors.profile0To3;
-    if (slopePercent < 6) return colors.profile3To6;
-    if (slopePercent < 9) return colors.profile6To9;
-    if (slopePercent < 12) return colors.profile9To12;
-    return colors.profile12Plus;
-  };
-  const officialProfileSections = (startIndex, endIndex, stepM) => {
-    const startDistanceM = points[startIndex].distanceKm * 1000;
-    const endDistanceM = points[endIndex].distanceKm * 1000;
-    const sections = [];
-    let pointIndex = startIndex;
-    const elevationAtDistance = (distanceM) => {
-      while (pointIndex < endIndex - 1 && points[pointIndex + 1].distanceKm * 1000 < distanceM) pointIndex++;
-      const nextIndex = Math.min(pointIndex + 1, endIndex);
-      const first = points[pointIndex];
-      const next = points[nextIndex];
-      const distanceSpan = next.distanceKm * 1000 - first.distanceKm * 1000;
-      if (distanceSpan <= 0) return first.elevationM;
-      const fraction = (distanceM - first.distanceKm * 1000) / distanceSpan;
-      return first.elevationM + clamp(fraction, 0, 1) * (next.elevationM - first.elevationM);
-    };
-    for (let sectionStartM = startDistanceM; sectionStartM < endDistanceM; sectionStartM += stepM) {
-      const sectionEndM = Math.min(sectionStartM + stepM, endDistanceM);
-      const startElevation = elevationAtDistance(sectionStartM);
-      const endElevation = elevationAtDistance(sectionEndM);
-      const slopePercent = (endElevation - startElevation) / (sectionEndM - sectionStartM) * 100;
-      sections.push({
-        startDistanceKm: sectionStartM / 1000,
-        endDistanceKm: sectionEndM / 1000,
-        startElevation,
-        endElevation,
-        slopePercent,
-        color: profileBandForSlope(slopePercent),
-      });
-    }
-    return sections;
-  };
-  const drawOfficialProfile = (profileCanvas) => {
-    const startIndex = Number.parseInt(profileCanvas.dataset.profileStart, 10);
-    const endIndex = Number.parseInt(profileCanvas.dataset.profileEnd, 10);
-    if (!Number.isInteger(startIndex) || !Number.isInteger(endIndex) || startIndex < 0 || endIndex >= points.length || startIndex >= endIndex) return;
-    const rect = profileCanvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const context = profileCanvas.getContext("2d");
-    if (!context) return;
-    const ratio = window.devicePixelRatio || 1;
-    profileCanvas.width = Math.floor(rect.width * ratio);
-    profileCanvas.height = Math.floor(rect.height * ratio);
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const plot = { left: 10, right: rect.width - 10, top: 16, bottom: rect.height - 24 };
-    const climbLengthM = (points[endIndex].distanceKm - points[startIndex].distanceKm) * 1000;
-    const sections = officialProfileSections(startIndex, endIndex, displayStepForLength(climbLengthM));
-    if (sections.length === 0) return;
-    let minElevation = sections[0].startElevation;
-    let maxElevation = minElevation;
-    for (const section of sections) {
-      minElevation = Math.min(minElevation, section.startElevation, section.endElevation);
-      maxElevation = Math.max(maxElevation, section.startElevation, section.endElevation);
-    }
-    const elevationPadding = Math.max((maxElevation - minElevation) * 0.12, 8);
-    minElevation -= elevationPadding;
-    maxElevation += elevationPadding;
-    const minDistance = sections[0].startDistanceKm;
-    const maxDistance = sections[sections.length - 1].endDistanceKm;
-    const distanceSpan = Math.max(maxDistance - minDistance, 0.1);
-    const elevationSpan = Math.max(maxElevation - minElevation, 1);
-    const xForDistance = (distanceKm) => plot.left + (distanceKm - minDistance) / distanceSpan * (plot.right - plot.left);
-    const yForElevation = (elevationM) => plot.bottom - (elevationM - minElevation) / elevationSpan * (plot.bottom - plot.top);
-    context.clearRect(0, 0, rect.width, rect.height);
-    context.fillStyle = colors.plotSurface;
-    context.fillRect(0, 0, rect.width, rect.height);
-    context.strokeStyle = colors.grid;
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(plot.left, plot.bottom);
-    context.lineTo(plot.right, plot.bottom);
-    context.stroke();
-    for (const section of sections) {
-      const startX = xForDistance(section.startDistanceKm);
-      const endX = xForDistance(section.endDistanceKm);
-      context.beginPath();
-      context.moveTo(startX, plot.bottom);
-      context.lineTo(startX, yForElevation(section.startElevation));
-      context.lineTo(endX, yForElevation(section.endElevation));
-      context.lineTo(endX, plot.bottom);
-      context.closePath();
-      context.globalAlpha = 0.25;
-      context.fillStyle = section.color;
-      context.fill();
-      context.globalAlpha = 1;
-      context.beginPath();
-      context.moveTo(startX, yForElevation(section.startElevation));
-      context.lineTo(endX, yForElevation(section.endElevation));
-      context.strokeStyle = section.color;
-      context.lineWidth = 2.5;
-      context.stroke();
-    }
-    context.font = "9px system-ui, sans-serif";
-    context.fillStyle = colors.subtle;
-    context.textBaseline = "bottom";
-    context.textAlign = "center";
-    context.save();
-    context.beginPath();
-    context.rect(plot.left, plot.top, plot.right - plot.left, plot.bottom - plot.top);
-    context.clip();
-    for (const section of sections) {
-      const startX = xForDistance(section.startDistanceKm);
-      const endX = xForDistance(section.endDistanceKm);
-      const label = `${section.slopePercent.toFixed(1)}%`;
-      const labelY = Math.max(plot.top + 10, Math.min(yForElevation(section.startElevation), yForElevation(section.endElevation)) - 4);
-      context.fillText(label, (startX + endX) / 2, labelY);
-    }
-    context.restore();
-    let topElevation = sections[0].startElevation;
-    let topDistance = sections[0].startDistanceKm;
-    for (const section of sections) {
-      if (section.startElevation > topElevation) {
-        topElevation = section.startElevation;
-        topDistance = section.startDistanceKm;
-      }
-      if (section.endElevation > topElevation) {
-        topElevation = section.endElevation;
-        topDistance = section.endDistanceKm;
-      }
-    }
-    context.fillStyle = colors.accent;
-    context.beginPath();
-    context.arc(xForDistance(topDistance), yForElevation(topElevation), 3.5, 0, 2 * Math.PI);
-    context.fill();
-    context.font = "11px system-ui, sans-serif";
-    context.fillStyle = colors.subtle;
-    context.textBaseline = "top";
-    context.textAlign = "left";
-    context.fillText(formatDistance(0), plot.left, rect.height - 16);
-    context.textAlign = "right";
-    context.fillText(formatDistance(maxDistance - minDistance), plot.right, rect.height - 16);
-  };
-  for (const card of document.querySelectorAll("[data-official-climb-card]")) {
-    card.addEventListener("toggle", () => {
-      if (!card.open) return;
-      for (const other of document.querySelectorAll("[data-official-climb-card]")) {
-        if (other !== card) other.open = false;
-      }
-      const profileCanvas = card.querySelector("[data-official-profile]");
-      if (profileCanvas) drawOfficialProfile(profileCanvas);
-    });
-  }
+  const officialProfileController = window.createOfficialClimbProfileController(points);
   const xForDistance = (distance) => {
     const span = Math.max(maxDistance - minDistance, 1);
     return state.plot.left + (distance - minDistance) / span * (state.plot.right - state.plot.left);
@@ -598,10 +441,7 @@
   });
   window.addEventListener("resize", () => {
     draw();
-    for (const profileCanvas of officialProfileCanvases) {
-      const card = profileCanvas.closest("[data-official-climb-card]");
-      if (card?.open) drawOfficialProfile(profileCanvas);
-    }
+    officialProfileController.redrawOpen();
   });
   if (climbItems.length > 0) updateClimbFocus(0, false);
   else draw();

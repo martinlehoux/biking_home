@@ -135,6 +135,7 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.NotContains(t, body, "Climbs to match")
 	assert.Contains(t, body, `class="ride-detail-main"`)
 	assert.Contains(t, body, `<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>`)
+	assert.Contains(t, body, `<script src="/static/official-climb-profile.js" defer></script>`)
 	assert.Contains(t, body, `<script src="/static/ride-detail.js" defer></script>`)
 	assert.NotContains(t, body, "pointermove")
 
@@ -153,17 +154,25 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Contains(t, script, "zoomToClimb")
 	assert.Contains(t, script, "Cotacol")
 	assert.Contains(t, script, "cotacolForClimb")
-	assert.Contains(t, script, "officialProfileSections")
-	assert.Contains(t, script, "profileStepSizesM = [100, 200, 500, 1000]")
-	assert.Contains(t, script, "displayStepForLength")
-	assert.Contains(t, script, "profileBandForSlope")
-	assert.Contains(t, script, "section.slopePercent.toFixed(1)")
 	assert.Contains(t, script, "const labelY = plot.top - 6")
 	assert.Contains(t, body, "leaflet@1.9.4/dist/leaflet.js")
 	assert.Contains(t, script, "tile.openstreetmap.org/{z}/{x}/{y}.png")
 	assert.Contains(t, body, `"type":"FeatureCollection"`)
 	assert.Contains(t, body, `"type":"LineString"`)
 	assert.Contains(t, body, `"coordinates":[[5,43]`)
+
+	profileStaticRequest := httptest.NewRequest(http.MethodGet, "/static/official-climb-profile.js", nil)
+	profileStaticResponse := httptest.NewRecorder()
+	server.Handler().ServeHTTP(profileStaticResponse, profileStaticRequest)
+
+	profileScript := profileStaticResponse.Body.String()
+	assert.Equal(t, http.StatusOK, profileStaticResponse.Code)
+	assert.Equal(t, "text/javascript; charset=utf-8", profileStaticResponse.Header().Get("Content-Type"))
+	assert.Contains(t, profileScript, "officialProfileSections")
+	assert.Contains(t, profileScript, "profileStepSizesM = [100, 200, 500, 1000]")
+	assert.Contains(t, profileScript, "displayStepForLength")
+	assert.Contains(t, profileScript, "profileBandForSlope")
+	assert.Contains(t, profileScript, "section.slopePercent.toFixed(1)")
 }
 
 func TestBuildRideProfileIncludesClimbsAndCrossings(t *testing.T) {
