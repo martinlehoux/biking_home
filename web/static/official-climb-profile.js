@@ -1,5 +1,6 @@
 (() => {
   const createOfficialClimbProfileController = (points) => {
+    const { displayStepForLength, officialProfileSections } = window.OfficialClimbProfileLogic;
     const colorProbe = document.createElement("span");
     colorProbe.hidden = true;
     document.body.append(colorProbe);
@@ -8,12 +9,12 @@
       return getComputedStyle(colorProbe).color;
     };
     const colors = {
-      profileDownhill: resolveColor("--color-profile-downhill"),
-      profile0To3: resolveColor("--color-profile-0-3"),
-      profile3To6: resolveColor("--color-profile-3-6"),
-      profile6To9: resolveColor("--color-profile-6-9"),
-      profile9To12: resolveColor("--color-profile-9-12"),
-      profile12Plus: resolveColor("--color-profile-12-plus"),
+      downhill: resolveColor("--color-profile-downhill"),
+      "0-3": resolveColor("--color-profile-0-3"),
+      "3-6": resolveColor("--color-profile-3-6"),
+      "6-9": resolveColor("--color-profile-6-9"),
+      "9-12": resolveColor("--color-profile-9-12"),
+      "12-plus": resolveColor("--color-profile-12-plus"),
       plotSurface: resolveColor("--color-plot-surface"),
       grid: resolveColor("--color-plot-grid"),
       subtle: resolveColor("--color-subtle"),
@@ -21,48 +22,6 @@
     };
     colorProbe.remove();
     const formatDistance = (distance) => `${distance.toFixed(distance < 10 ? 1 : 0)} km`;
-    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-    const profileStepSizesM = [100, 200, 500, 1000];
-    const displayStepForLength = (lengthM) => profileStepSizesM.find((stepM) => Math.ceil(lengthM / stepM) <= 30) || profileStepSizesM[profileStepSizesM.length - 1];
-    const profileBandForSlope = (slopePercent) => {
-      if (slopePercent < 0) return colors.profileDownhill;
-      if (slopePercent < 3) return colors.profile0To3;
-      if (slopePercent < 6) return colors.profile3To6;
-      if (slopePercent < 9) return colors.profile6To9;
-      if (slopePercent < 12) return colors.profile9To12;
-      return colors.profile12Plus;
-    };
-    const officialProfileSections = (startIndex, endIndex, stepM) => {
-      const startDistanceM = points[startIndex].distanceKm * 1000;
-      const endDistanceM = points[endIndex].distanceKm * 1000;
-      const sections = [];
-      let pointIndex = startIndex;
-      const elevationAtDistance = (distanceM) => {
-        while (pointIndex < endIndex - 1 && points[pointIndex + 1].distanceKm * 1000 < distanceM) pointIndex++;
-        const nextIndex = Math.min(pointIndex + 1, endIndex);
-        const first = points[pointIndex];
-        const next = points[nextIndex];
-        const distanceSpan = next.distanceKm * 1000 - first.distanceKm * 1000;
-        if (distanceSpan <= 0) return first.elevationM;
-        const fraction = (distanceM - first.distanceKm * 1000) / distanceSpan;
-        return first.elevationM + clamp(fraction, 0, 1) * (next.elevationM - first.elevationM);
-      };
-      for (let sectionStartM = startDistanceM; sectionStartM < endDistanceM; sectionStartM += stepM) {
-        const sectionEndM = Math.min(sectionStartM + stepM, endDistanceM);
-        const startElevation = elevationAtDistance(sectionStartM);
-        const endElevation = elevationAtDistance(sectionEndM);
-        const slopePercent = (endElevation - startElevation) / (sectionEndM - sectionStartM) * 100;
-        sections.push({
-          startDistanceKm: sectionStartM / 1000,
-          endDistanceKm: sectionEndM / 1000,
-          startElevation,
-          endElevation,
-          slopePercent,
-          color: profileBandForSlope(slopePercent),
-        });
-      }
-      return sections;
-    };
     const drawOfficialProfile = (profileCanvas) => {
       const startIndex = Number.parseInt(profileCanvas.dataset.profileStart, 10);
       const endIndex = Number.parseInt(profileCanvas.dataset.profileEnd, 10);
@@ -77,7 +36,7 @@
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       const plot = { left: 10, right: rect.width - 10, top: 16, bottom: rect.height - 24 };
       const climbLengthM = (points[endIndex].distanceKm - points[startIndex].distanceKm) * 1000;
-      const sections = officialProfileSections(startIndex, endIndex, displayStepForLength(climbLengthM));
+      const sections = officialProfileSections(points, startIndex, endIndex, displayStepForLength(climbLengthM));
       if (sections.length === 0) return;
       let minElevation = sections[0].startElevation;
       let maxElevation = minElevation;
@@ -113,13 +72,13 @@
         context.lineTo(endX, plot.bottom);
         context.closePath();
         context.globalAlpha = 0.25;
-        context.fillStyle = section.color;
+        context.fillStyle = colors[section.band];
         context.fill();
         context.globalAlpha = 1;
         context.beginPath();
         context.moveTo(startX, yForElevation(section.startElevation));
         context.lineTo(endX, yForElevation(section.endElevation));
-        context.strokeStyle = section.color;
+        context.strokeStyle = colors[section.band];
         context.lineWidth = 2.5;
         context.stroke();
       }

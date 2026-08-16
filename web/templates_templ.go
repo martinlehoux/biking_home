@@ -912,7 +912,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\" defer></script> <script src=\"/static/official-climb-profile.js\" defer></script> <script src=\"/static/ride-detail.js\" defer></script>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\" defer></script> <script src=\"/static/official-climb-profile-logic.js\" defer></script> <script src=\"/static/official-climb-profile.js\" defer></script> <script src=\"/static/ride-detail.js\" defer></script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -983,7 +983,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notice)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 188, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 189, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1007,7 +1007,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(data.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 193, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 194, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1049,7 +1049,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 204, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 205, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 			if templ_7745c5c3_Err != nil {
@@ -1062,7 +1062,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 205, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 206, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {

@@ -12,9 +12,15 @@ description = "Format Go sources"
 run = "go fmt ./..."
 
 [tasks.check]
-description = "Run generation, vet, and tests"
+description = "Run formatting, JavaScript and Go gate checks"
 depends = ["generate", "format"]
-run = "go vet ./... && go test ./..."
+run = [
+  "for file in web/static/*.js; do node --check \"$file\"; done",
+  "node --test web/static_test/*.test.js",
+  "go vet ./...",
+  "go build ./...",
+  "go test ./...",
+]
 
 [tasks.build]
 description = "Build the application"
