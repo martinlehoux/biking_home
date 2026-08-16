@@ -134,10 +134,10 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Contains(t, body, `class="ride-detail-columns`)
 	assert.NotContains(t, body, "Climbs to match")
 	assert.Contains(t, body, `class="ride-detail-main"`)
-	assert.Contains(t, body, `<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>`)
-	assert.Contains(t, body, `<script src="/static/official-climb-profile-logic.js" defer></script>`)
-	assert.Contains(t, body, `<script src="/static/official-climb-profile.js" defer></script>`)
-	assert.Contains(t, body, `<script src="/static/ride-detail.js" defer></script>`)
+	assert.Contains(t, body, `<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>`)
+	assert.Contains(t, body, `<script type="module" src="/static/ride-detail.js"></script>`)
+	assert.NotContains(t, body, `<script src="/static/official-climb-profile-logic.js"`)
+	assert.NotContains(t, body, `<script src="/static/official-climb-profile.js"`)
 
 	staticRequest := httptest.NewRequest(http.MethodGet, "/static/ride-detail.js", nil)
 	staticResponse := httptest.NewRecorder()
@@ -168,6 +168,14 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Equal(t, http.StatusOK, logicStaticResponse.Code)
 	assert.Equal(t, "text/javascript; charset=utf-8", logicStaticResponse.Header().Get("Content-Type"))
 	assert.NotEmpty(t, logicStaticResponse.Body.String())
+
+	syncStaticRequest := httptest.NewRequest(http.MethodGet, "/static/sync.js", nil)
+	syncStaticResponse := httptest.NewRecorder()
+	server.Handler().ServeHTTP(syncStaticResponse, syncStaticRequest)
+
+	assert.Equal(t, http.StatusOK, syncStaticResponse.Code)
+	assert.Equal(t, "text/javascript; charset=utf-8", syncStaticResponse.Header().Get("Content-Type"))
+	assert.NotEmpty(t, syncStaticResponse.Body.String())
 }
 
 func TestBuildRideProfileIncludesClimbsAndCrossings(t *testing.T) {
@@ -386,7 +394,16 @@ func TestSyncPageIncludesProgressUIWhenAuthorized(t *testing.T) {
 	assert.Contains(t, body, `id="sync-form"`)
 	assert.Contains(t, body, `id="sync-progress"`)
 	assert.Contains(t, body, `<progress id="sync-progress-bar"`)
-	assert.Contains(t, body, `text/event-stream`)
+	assert.Contains(t, body, `<script type="module" src="/static/sync.js"></script>`)
+	assert.NotContains(t, body, `const consumeEvents = async`)
+
+	syncRequest := httptest.NewRequest(http.MethodGet, "/static/sync.js", nil)
+	syncResponse := httptest.NewRecorder()
+	server.Handler().ServeHTTP(syncResponse, syncRequest)
+
+	assert.Equal(t, http.StatusOK, syncResponse.Code)
+	assert.Equal(t, "text/javascript; charset=utf-8", syncResponse.Header().Get("Content-Type"))
+	assert.Contains(t, syncResponse.Body.String(), `text/event-stream`)
 }
 
 func TestSyncRedirectsToOAuthWhenUnauthenticated(t *testing.T) {

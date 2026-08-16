@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "biome format --write web/static/*.js web/static_test/*.js",
+    "format:check": "biome format web/static/*.js web/static_test/*.js",
+    "lint": "biome lint web/static/*.js web/static_test/*.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test web/static_test/*.test.js",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
+  }
+}

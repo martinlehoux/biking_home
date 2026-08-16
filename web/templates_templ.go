@@ -912,7 +912,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\" defer></script> <script src=\"/static/official-climb-profile-logic.js\" defer></script> <script src=\"/static/official-climb-profile.js\" defer></script> <script src=\"/static/ride-detail.js\" defer></script>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script> <script type=\"module\" src=\"/static/ride-detail.js\"></script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -983,7 +983,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notice)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 189, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 187, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1007,7 +1007,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(data.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 194, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 192, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1049,7 +1049,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 205, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 203, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 			if templ_7745c5c3_Err != nil {
@@ -1062,7 +1062,7 @@ func SyncContent(data SyncPageData) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 206, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 204, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {
@@ -1073,7 +1073,7 @@ func SyncContent(data SyncPageData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</section><script>\n\t\t(() => {\n\t\t\tconst form = document.getElementById(\"sync-form\");\n\t\t\tif (!form) return;\n\t\t\tconst button = form.querySelector(\"button[type=submit]\");\n\t\t\tconst progressPanel = document.getElementById(\"sync-progress\");\n\t\t\tconst progressBar = document.getElementById(\"sync-progress-bar\");\n\t\t\tconst progressCount = document.getElementById(\"sync-progress-count\");\n\t\t\tconst progressDetails = document.getElementById(\"sync-progress-details\");\n\t\t\tconst notice = document.getElementById(\"sync-notice\");\n\t\t\tconst error = document.getElementById(\"sync-error\");\n\n\t\t\tconst showError = (message) => {\n\t\t\t\terror.textContent = message;\n\t\t\t\terror.hidden = false;\n\t\t\t};\n\t\t\tconst updateProgress = (progress) => {\n\t\t\t\tprogressPanel.hidden = false;\n\t\t\t\tprogressBar.max = Math.max(progress.total, 1);\n\t\t\t\tprogressBar.value = progress.completed;\n\t\t\t\tprogressCount.textContent = `${progress.completed} / ${progress.total}`;\n\t\t\t\tprogressDetails.textContent = `${progress.imported} imported · ${progress.skipped} skipped`;\n\t\t\t};\n\t\t\tconst handleEvent = (eventName, data) => {\n\t\t\t\tif (eventName === \"progress\") {\n\t\t\t\t\tupdateProgress(data);\n\t\t\t\t\treturn false;\n\t\t\t\t}\n\t\t\t\tif (eventName === \"complete\") {\n\t\t\t\t\tupdateProgress(data);\n\t\t\t\t\tnotice.textContent = `Sync complete: ${data.imported} imported, ${data.skipped} skipped.`;\n\t\t\t\t\tnotice.hidden = false;\n\t\t\t\t\treturn true;\n\t\t\t\t}\n\t\t\t\tif (eventName === \"error\") {\n\t\t\t\t\tif (data.progress) updateProgress(data.progress);\n\t\t\t\t\tthrow new Error(data.message || \"Strava sync failed\");\n\t\t\t\t}\n\t\t\t\treturn false;\n\t\t\t};\n\t\t\tconst consumeEvents = async (response) => {\n\t\t\t\tconst reader = response.body.getReader();\n\t\t\t\tconst decoder = new TextDecoder();\n\t\t\t\tlet buffer = \"\";\n\t\t\t\tlet completed = false;\n\t\t\t\tconst consumeBlock = (block) => {\n\t\t\t\t\tlet eventName = \"message\";\n\t\t\t\t\tlet data = \"\";\n\t\t\t\t\tfor (const line of block.split(/\\r?\\n/)) {\n\t\t\t\t\t\tif (line.startsWith(\"event: \")) eventName = line.slice(7);\n\t\t\t\t\t\tif (line.startsWith(\"data: \")) data += line.slice(6);\n\t\t\t\t\t}\n\t\t\t\t\tif (data) completed = handleEvent(eventName, JSON.parse(data)) || completed;\n\t\t\t\t};\n\t\t\t\twhile (true) {\n\t\t\t\t\tconst { value, done } = await reader.read();\n\t\t\t\t\tbuffer += decoder.decode(value || new Uint8Array(), { stream: !done });\n\t\t\t\t\tconst blocks = buffer.split(/\\r?\\n\\r?\\n/);\n\t\t\t\t\tbuffer = blocks.pop();\n\t\t\t\t\tfor (const block of blocks) consumeBlock(block);\n\t\t\t\t\tif (done) break;\n\t\t\t\t}\n\t\t\t\tif (buffer.trim()) consumeBlock(buffer);\n\t\t\t\tif (!completed) throw new Error(\"Strava sync ended before completion\");\n\t\t\t};\n\n\t\t\tform.addEventListener(\"submit\", async (event) => {\n\t\t\t\tevent.preventDefault();\n\t\t\t\tbutton.disabled = true;\n\t\t\t\tbutton.textContent = \"Syncing...\";\n\t\t\t\tnotice.hidden = true;\n\t\t\t\terror.hidden = true;\n\t\t\t\tprogressPanel.hidden = false;\n\t\t\t\tprogressCount.textContent = \"0 / 0\";\n\t\t\t\tprogressDetails.textContent = \"Preparing import...\";\n\t\t\t\ttry {\n\t\t\t\t\tconst response = await fetch(form.action, {\n\t\t\t\t\t\tmethod: \"POST\",\n\t\t\t\t\t\tbody: new FormData(form),\n\t\t\t\t\t\theaders: { Accept: \"text/event-stream\" },\n\t\t\t\t\t});\n\t\t\t\t\tif (response.redirected) {\n\t\t\t\t\t\twindow.location.assign(response.url);\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (!response.ok) throw new Error(await response.text() || `Sync failed (HTTP ${response.status})`);\n\t\t\t\t\tif (!response.body) throw new Error(\"The browser does not support streaming responses\");\n\t\t\t\t\tawait consumeEvents(response);\n\t\t\t\t} catch (caught) {\n\t\t\t\t\tshowError(caught instanceof Error ? caught.message : \"Strava sync failed\");\n\t\t\t\t} finally {\n\t\t\t\t\tbutton.disabled = false;\n\t\t\t\t\tbutton.textContent = \"Sync rides\";\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</section><script type=\"module\" src=\"/static/sync.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

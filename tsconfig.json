@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "lib": ["DOM", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "types": ["leaflet", "node"]
+  },
+  "include": ["web/static/**/*.js", "web/static_test/**/*.js", "web/types/**/*.d.ts"]
+}

@@ -1,10 +1,6 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const {
-  displayStepForLength,
-  profileBandForSlope,
-  officialProfileSections,
-} = require("../static/official-climb-profile-logic.js");
+import test from "node:test";
+import assert from "node:assert/strict";
+import { displayStepForLength, profileBandForSlope, officialProfileSections } from "../static/official-climb-profile-logic.js";
 
 test("selects a display step that keeps long profiles readable", () => {
   assert.equal(displayStepForLength(2_400), 100);
