@@ -92,6 +92,8 @@ export interface RideDetailColors {
   forest: string;
   plotSurfaceOverlay: string;
   accentFill: string;
+  profileFill: string;
+  profileLine: string;
   climbLabel: string;
   crossing: string;
   crossingLabel: string;

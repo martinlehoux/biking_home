@@ -28,7 +28,10 @@ export const categoryForCotacol = (cotacol: number): string => {
   return "HC";
 };
 
-export const formatClimbLabel = (name: string, category: string, cotacol: number): string => name || `${category} ${cotacol.toFixed(1)}`;
+export const formatClimbLabel = (name: string, category: string, cotacol: number, officialClimb = false): string => {
+  if (name) return officialClimb ? `${name} (${category})` : name;
+  return `${category} ${cotacol.toFixed(1)}`;
+};
 
 export const elevationAtDistance = (points: ProfilePoint[], index: number, distanceM: number): number => {
   if (index + 1 >= points.length) return points[index].elevationM;

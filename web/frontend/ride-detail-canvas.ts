@@ -137,11 +137,20 @@ export class RideProfileCanvas {
       const endX = clamp(this.xForDistance(metrics.end.distanceKm), plot.left, plot.right);
       this.context.fillStyle = climbIndex === this.focusedClimbIndex ? this.colors.climbFocusFill : this.colors.accentFill;
       this.context.fillRect(startX, plot.top, Math.max(endX - startX, 1), plot.bottom - plot.top);
-      const label = formatClimbLabel(climb.name, metrics.category, metrics.cotacol);
+      const label = formatClimbLabel(climb.name, metrics.category, metrics.cotacol, climb.officialClimbId !== undefined);
       this.context.fillStyle = this.colors.climbLabel;
       this.context.textAlign = "center";
-      this.context.textBaseline = "top";
-      this.context.fillText(label, clamp((startX + endX) / 2, plot.left + 24, plot.right - 24), plot.top + 4);
+      this.context.textBaseline = "middle";
+      const labelWidth = this.context.measureText(label).width;
+      const labelX = clamp((startX + endX) / 2, plot.left + 8, plot.right - 8);
+      const labelAngle = -Math.PI / 3;
+      const labelHeight = Math.abs(Math.sin(labelAngle)) * labelWidth + Math.abs(Math.cos(labelAngle)) * 14;
+      const labelY = clamp(plot.top + labelHeight / 2 + 4, plot.top + labelHeight / 2, plot.bottom - labelHeight / 2);
+      this.context.save();
+      this.context.translate(labelX, labelY);
+      this.context.rotate(labelAngle);
+      this.context.fillText(label, 0, 0);
+      this.context.restore();
     }
 
     for (const crossing of this.profile.crossings || []) {
@@ -161,7 +170,7 @@ export class RideProfileCanvas {
     for (const point of this.points) this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
     this.context.lineTo(this.xForDistance(this.points[this.points.length - 1].distanceKm), plot.bottom);
     this.context.closePath();
-    this.context.fillStyle = this.colors.accentFill;
+    this.context.fillStyle = this.colors.profileFill;
     this.context.fill();
     this.context.beginPath();
     for (let index = 0; index < this.points.length; index++) {
@@ -169,7 +178,7 @@ export class RideProfileCanvas {
       if (index === 0) this.context.moveTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
       else this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
     }
-    this.context.strokeStyle = this.colors.accent;
+    this.context.strokeStyle = this.colors.profileLine;
     this.context.lineWidth = 2.5;
     this.context.stroke();
     for (const crossing of this.profile.crossings || []) {

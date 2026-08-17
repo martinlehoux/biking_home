@@ -33,6 +33,8 @@ export const mountRideDetail = (): void => {
     plotSurfaceOverlay: resolveColor("--color-plot-surface-overlay"),
     grid: resolveColor("--color-plot-grid"),
     accentFill: resolveColor("--color-accent-fill"),
+    profileFill: resolveColor("--color-profile-fill"),
+    profileLine: resolveColor("--color-profile-line"),
     climbLabel: resolveColor("--color-climb-label"),
     crossing: resolveColor("--color-crossing"),
     crossingLabel: resolveColor("--color-crossing-label"),

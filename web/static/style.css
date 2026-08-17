@@ -32,7 +32,9 @@
   --color-plot-surface-overlay: oklch(from var(--color-plot-surface) l c h / 90%);
   --color-plot-grid: var(--color-border-subtle);
   --color-accent-fill: oklch(from var(--palette-coral) l c h / 12%);
-  --color-climb-label: oklch(from var(--palette-coral) calc(l - 0.21) calc(c * 0.72) h);
+  --color-profile-fill: oklch(from var(--palette-leaf) l c h / 16%);
+  --color-profile-line: var(--color-forest);
+  --color-climb-label: oklch(40% 0.12 35deg);
   --color-crossing: oklch(from var(--palette-leaf) l c h / 60%);
   --color-crossing-label: var(--color-notice-text);
   --color-hover-line: oklch(from var(--palette-forest) l c h / 60%);
