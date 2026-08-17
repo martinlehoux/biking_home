@@ -90,6 +90,10 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .ride-map { min-height: 24rem; height: min(65vh, 40rem); }
 .ride-map-pass-icon { display: grid; place-items: center; width: 1.75rem !important; height: 1.75rem !important; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-leaf); color: var(--color-on-dark); box-shadow: 0 .15rem .4rem var(--color-panel-shadow); }
 .ride-map-pass-icon svg { width: 1.15rem; height: 1.15rem; }
+.ride-map-climb-start-icon, .ride-map-climb-end-icon { display: grid; place-items: center; width: 1.625rem !important; height: 1.625rem !important; border: 2px solid var(--color-surface); box-shadow: 0 .15rem .4rem var(--color-panel-shadow); }
+.ride-map-climb-start-icon { border-radius: 50%; background: var(--color-forest); color: var(--color-on-dark); }
+.ride-map-climb-end-icon { border-radius: .3rem; background: var(--color-accent); color: var(--color-on-dark); }
+.ride-map-climb-start-icon svg, .ride-map-climb-end-icon svg { width: 1.1rem; height: 1.1rem; }
 .profile-panel { padding-bottom: 1rem; }
 .profile-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .profile-heading h2 { margin: 0; font-size: 1.2rem; }

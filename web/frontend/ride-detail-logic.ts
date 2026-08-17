@@ -29,6 +29,7 @@ export const categoryForCotacol = (cotacol: number): string => {
 };
 
 type ClimbLabelKind = "official" | "detected";
+export type ClimbBoundary = "start" | "end";
 
 interface ClimbLabelOptions {
   name: string;
@@ -41,6 +42,8 @@ export const formatClimbLabel = ({ name, category, cotacol, kind }: ClimbLabelOp
   if (name) return kind === "official" ? `${name} (${category})` : name;
   return `${category} ${cotacol.toFixed(1)}`;
 };
+
+export const formatClimbBoundaryLabel = (index: number, boundary: ClimbBoundary): string => `Climb ${index + 1} ${boundary}`;
 
 export const elevationAtDistance = (points: ProfilePoint[], index: number, distanceM: number): number => {
   if (index + 1 >= points.length) return points[index].elevationM;

@@ -6,6 +6,7 @@ import {
   cotacolForClimb,
   elevationAtDistance,
   formatClimbLabel,
+  formatClimbBoundaryLabel,
   formatDistance,
   formatElevation,
   nearestPointIndex,
@@ -44,6 +45,11 @@ test("formats profile climb labels with category", () => {
   assert.equal(formatClimbLabel({ name: "", category: "Cat 4", cotacol: 45.9, kind: "detected" }), "Cat 4 45.9");
   assert.equal(formatClimbLabel({ name: "Col de Test", category: "Cat 4", cotacol: 45.9, kind: "detected" }), "Col de Test");
   assert.equal(formatClimbLabel({ name: "Ventoux", category: "HC", cotacol: 600, kind: "official" }), "Ventoux (HC)");
+});
+
+test("formats climb boundary labels", () => {
+  assert.equal(formatClimbBoundaryLabel(0, "start"), "Climb 1 start");
+  assert.equal(formatClimbBoundaryLabel(2, "end"), "Climb 3 end");
 });
 
 test("formats profile labels consistently", () => {

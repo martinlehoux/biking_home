@@ -1,8 +1,9 @@
-import { clamp } from "./ride-detail-logic.js";
+import { clamp, formatClimbBoundaryLabel } from "./ride-detail-logic.js";
 import type { ClimbBounds, RideMapColors, RideMapPass, RideProfilePoint, RideRoute } from "./types.js";
-import type { CircleMarker, LeafletMouseEvent, Map as LeafletMap, Polyline } from "leaflet";
+import type { CircleMarker, DivIcon, LeafletMouseEvent, Map as LeafletMap, Marker, Polyline } from "leaflet";
 
 type LeafletApi = typeof import("leaflet");
+type ClimbBoundaryMarkers = { start: Marker; end: Marker };
 
 interface RideDetailMapOptions {
   leaflet: LeafletApi;
@@ -20,6 +21,7 @@ export class RideDetailMap {
   private readonly colors: RideMapColors;
   private readonly map: LeafletMap;
   private readonly climbLayers: (Polyline | null)[];
+  private readonly climbBoundaryMarkers: (ClimbBoundaryMarkers | null)[];
   private readonly routeCursor: CircleMarker;
 
   constructor({ leaflet, element, route, points, climbs, passes, colors }: RideDetailMapOptions) {
@@ -53,6 +55,19 @@ export class RideDetailMap {
     }
     if (bounds.isValid()) this.map.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
     this.climbLayers = climbs.map((climb) => this.createClimbLayer(climb));
+    const climbStartIcon = leaflet.divIcon({
+      className: "ride-map-climb-start-icon",
+      html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>',
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+    });
+    const climbEndIcon = leaflet.divIcon({
+      className: "ride-map-climb-end-icon",
+      html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18" stroke="currentColor" stroke-width="2"/><path d="M6 4h13v8H6Z" fill="currentColor"/><path d="M6 4h3.25v4H6ZM12.5 4h3.25v4H12.5ZM9.25 8h3.25v4H9.25ZM15.75 8H19v4h-3.25Z" fill="var(--color-forest)"/></svg>',
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+    });
+    this.climbBoundaryMarkers = climbs.map((climb, index) => this.createClimbBoundaryMarkers(index, climb, climbStartIcon, climbEndIcon));
     this.routeCursor = leaflet
       .circleMarker([points[0].latitude, points[0].longitude], {
         color: colors.forest,
@@ -64,6 +79,37 @@ export class RideDetailMap {
         interactive: false,
       })
       .addTo(this.map);
+  }
+
+  createClimbBoundaryMarkers(index: number, bounds: ClimbBounds, startIcon: DivIcon, endIcon: DivIcon): ClimbBoundaryMarkers {
+    const markers = {
+      start: this.createClimbBoundaryMarker(startIcon, formatClimbBoundaryLabel(index, "start"), bounds.startIndex),
+      end: this.createClimbBoundaryMarker(endIcon, formatClimbBoundaryLabel(index, "end"), bounds.endIndex),
+    };
+    return markers;
+  }
+
+  createClimbBoundaryMarker(icon: DivIcon, label: string, pointIndex: number): Marker {
+    const marker = this.leaflet.marker([0, 0], { icon, alt: label });
+    const tooltip = document.createElement("span");
+    tooltip.textContent = label;
+    marker.bindTooltip(tooltip);
+    this.updateBoundaryMarker(marker, pointIndex);
+    return marker;
+  }
+
+  updateBoundaryMarker(marker: Marker, pointIndex: number | undefined): void {
+    if (!this.isValidPointIndex(pointIndex)) {
+      marker.remove();
+      return;
+    }
+    const point = this.points[pointIndex];
+    marker.setLatLng([point.latitude, point.longitude]);
+    if (!this.map.hasLayer(marker)) marker.addTo(this.map);
+  }
+
+  isValidPointIndex(index: number | undefined): index is number {
+    return typeof index === "number" && Number.isInteger(index) && index >= 0 && index < this.points.length;
   }
 
   createClimbLayer(climb: ClimbBounds): Polyline | null {
@@ -95,6 +141,11 @@ export class RideDetailMap {
   }
 
   updateClimbLayer(index: number, bounds: ClimbBounds | undefined, active: boolean): void {
+    const markers = this.climbBoundaryMarkers[index];
+    if (markers) {
+      this.updateBoundaryMarker(markers.start, bounds?.startIndex);
+      this.updateBoundaryMarker(markers.end, bounds?.endIndex);
+    }
     const layer = this.climbLayers[index];
     if (!layer) return;
     if (!bounds || !this.isValidBounds(bounds)) {
