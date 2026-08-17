@@ -3,7 +3,7 @@ import { RideBoundaryController } from "./ride-detail-boundaries.js";
 import { RideProfileCanvas } from "./ride-detail-canvas.js";
 import { RideDetailMap } from "./ride-detail-map.js";
 import { formatDistance, formatElevation } from "./ride-detail-logic.js";
-import type { ClimbBounds, RideDetailColors, RideProfile, RideProfilePoint, RideRoute } from "./types.js";
+import type { ClimbBounds, RideMapColors, RideProfile, RideProfileColors, RideProfilePoint, RideRoute } from "./types.js";
 
 export const mountRideDetail = (): void => {
   const mapElement = document.getElementById("ride-map");
@@ -25,22 +25,25 @@ export const mountRideDetail = (): void => {
     colorProbe.style.color = `var(${name})`;
     return getComputedStyle(colorProbe).color;
   };
-  const colors: RideDetailColors = {
-    accent: resolveColor("--color-accent"),
-    forest: resolveColor("--color-forest"),
+  const profileColors: RideProfileColors = {
     subtle: resolveColor("--color-subtle"),
     plotSurface: resolveColor("--color-plot-surface"),
     plotSurfaceOverlay: resolveColor("--color-plot-surface-overlay"),
     grid: resolveColor("--color-plot-grid"),
-    accentFill: resolveColor("--color-accent-fill"),
     profileFill: resolveColor("--color-profile-fill"),
     profileLine: resolveColor("--color-profile-line"),
+    accentFill: resolveColor("--color-accent-fill"),
     climbLabel: resolveColor("--color-climb-label"),
     crossing: resolveColor("--color-crossing"),
     crossingLabel: resolveColor("--color-crossing-label"),
     hoverLine: resolveColor("--color-hover-line"),
-    climbRoute: resolveColor("--color-climb-route"),
+    forest: resolveColor("--color-forest"),
     climbFocusFill: resolveColor("--color-climb-focus-fill"),
+  };
+  const mapColors: RideMapColors = {
+    accent: resolveColor("--color-accent"),
+    forest: resolveColor("--color-forest"),
+    climbRoute: resolveColor("--color-climb-route"),
   };
   colorProbe.remove();
 
@@ -66,7 +69,7 @@ export const mountRideDetail = (): void => {
     route,
     points,
     climbs: climbBounds,
-    colors,
+    colors: mapColors,
   });
   const officialProfileController = new OfficialClimbProfileController(points);
   let boundaryController: RideBoundaryController | undefined;
@@ -74,7 +77,7 @@ export const mountRideDetail = (): void => {
     canvas: profileCanvasElement,
     points,
     profile,
-    colors,
+    colors: profileColors,
     getClimbBounds: () => climbBounds,
     canSelectPoint: (source) => boundaryController?.isSelecting(source) ?? false,
     onPointSelected: (index) => boundaryController?.choosePoint(index),

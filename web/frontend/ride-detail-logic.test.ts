@@ -41,9 +41,9 @@ test("calculates climb metrics with Cotacol", () => {
 });
 
 test("formats profile climb labels with category", () => {
-  assert.equal(formatClimbLabel("", "Cat 4", 45.9), "Cat 4 45.9");
-  assert.equal(formatClimbLabel("Col de Test", "Cat 4", 45.9), "Col de Test");
-  assert.equal(formatClimbLabel("Ventoux", "HC", 600, true), "Ventoux (HC)");
+  assert.equal(formatClimbLabel({ name: "", category: "Cat 4", cotacol: 45.9, kind: "detected" }), "Cat 4 45.9");
+  assert.equal(formatClimbLabel({ name: "Col de Test", category: "Cat 4", cotacol: 45.9, kind: "detected" }), "Col de Test");
+  assert.equal(formatClimbLabel({ name: "Ventoux", category: "HC", cotacol: 600, kind: "official" }), "Ventoux (HC)");
 });
 
 test("formats profile labels consistently", () => {

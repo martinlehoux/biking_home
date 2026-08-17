@@ -84,8 +84,7 @@ export interface OfficialProfileColors {
   accent: string;
 }
 
-export interface RideDetailColors {
-  accent: string;
+export interface RideProfileColors {
   subtle: string;
   plotSurface: string;
   grid: string;
@@ -98,8 +97,13 @@ export interface RideDetailColors {
   crossing: string;
   crossingLabel: string;
   hoverLine: string;
-  climbRoute: string;
   climbFocusFill: string;
+}
+
+export interface RideMapColors {
+  accent: string;
+  forest: string;
+  climbRoute: string;
 }
 
 export interface SyncProgress {

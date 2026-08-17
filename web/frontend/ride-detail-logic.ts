@@ -28,8 +28,17 @@ export const categoryForCotacol = (cotacol: number): string => {
   return "HC";
 };
 
-export const formatClimbLabel = (name: string, category: string, cotacol: number, officialClimb = false): string => {
-  if (name) return officialClimb ? `${name} (${category})` : name;
+type ClimbLabelKind = "official" | "detected";
+
+interface ClimbLabelOptions {
+  name: string;
+  category: string;
+  cotacol: number;
+  kind: ClimbLabelKind;
+}
+
+export const formatClimbLabel = ({ name, category, cotacol, kind }: ClimbLabelOptions): string => {
+  if (name) return kind === "official" ? `${name} (${category})` : name;
   return `${category} ${cotacol.toFixed(1)}`;
 };
 

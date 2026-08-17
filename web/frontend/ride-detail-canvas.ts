@@ -1,5 +1,5 @@
 import { clamp, climbMetrics, formatClimbLabel, formatDistance, formatElevation, nearestPointIndex } from "./ride-detail-logic.js";
-import type { BoundarySource, ClimbBounds, RideDetailColors, RideProfile, RideProfilePoint } from "./types.js";
+import type { BoundarySource, ClimbBounds, RideProfile, RideProfileColors, RideProfilePoint } from "./types.js";
 
 interface Plot {
   left: number;
@@ -12,7 +12,7 @@ interface RideProfileCanvasOptions {
   canvas: HTMLCanvasElement;
   points: RideProfilePoint[];
   profile: RideProfile;
-  colors: RideDetailColors;
+  colors: RideProfileColors;
   getClimbBounds: () => ClimbBounds[];
   canSelectPoint: (source: BoundarySource) => boolean;
   onPointSelected: (index: number) => void;
@@ -23,7 +23,7 @@ export class RideProfileCanvas {
   private readonly canvas: HTMLCanvasElement;
   private readonly points: RideProfilePoint[];
   private readonly profile: RideProfile;
-  private readonly colors: RideDetailColors;
+  private readonly colors: RideProfileColors;
   private readonly getClimbBounds: () => ClimbBounds[];
   private readonly canSelectPoint: (source: BoundarySource) => boolean;
   private readonly onPointSelected: (index: number) => void;
@@ -112,7 +112,20 @@ export class RideProfileCanvas {
     this.context.fillRect(0, 0, rect.width, rect.height);
 
     this.context.font = "12px system-ui, sans-serif";
-    this.context.textBaseline = "middle";
+    this.drawGrid(plot);
+    const climbBounds = this.getClimbBounds();
+    this.drawProfileArea(plot);
+    this.drawClimbBands(plot, climbBounds);
+    this.drawCrossingLines(plot);
+    this.drawProfileLine();
+    this.drawClimbLabels(plot, climbBounds);
+    this.drawCrossingLabels(plot);
+    this.drawDistanceLabels(plot);
+
+    if (this.hoveredIndex >= 0) this.drawHover(plot);
+  }
+
+  private drawGrid(plot: Plot): void {
     for (let step = 0; step <= 4; step++) {
       const fraction = step / 4;
       const y = plot.top + fraction * (plot.bottom - plot.top);
@@ -127,17 +140,68 @@ export class RideProfileCanvas {
       this.context.textAlign = "right";
       this.context.fillText(formatElevation(elevation), plot.left - 8, y);
     }
+  }
 
-    const climbBounds = this.getClimbBounds();
+  private drawProfileArea(plot: Plot): void {
+    this.context.beginPath();
+    this.context.moveTo(this.xForDistance(this.points[0].distanceKm), plot.bottom);
+    for (const point of this.points) this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
+    this.context.lineTo(this.xForDistance(this.points[this.points.length - 1].distanceKm), plot.bottom);
+    this.context.closePath();
+    this.context.fillStyle = this.colors.profileFill;
+    this.context.fill();
+  }
+
+  private drawClimbBands(plot: Plot, climbBounds: ClimbBounds[]): void {
     for (let climbIndex = 0; climbIndex < (this.profile.climbs || []).length; climbIndex++) {
-      const climb = this.profile.climbs[climbIndex];
       const metrics = climbMetrics(this.points, climbBounds[climbIndex]);
       if (!metrics) continue;
       const startX = clamp(this.xForDistance(metrics.start.distanceKm), plot.left, plot.right);
       const endX = clamp(this.xForDistance(metrics.end.distanceKm), plot.left, plot.right);
       this.context.fillStyle = climbIndex === this.focusedClimbIndex ? this.colors.climbFocusFill : this.colors.accentFill;
       this.context.fillRect(startX, plot.top, Math.max(endX - startX, 1), plot.bottom - plot.top);
-      const label = formatClimbLabel(climb.name, metrics.category, metrics.cotacol, climb.officialClimbId !== undefined);
+    }
+  }
+
+  private drawCrossingLines(plot: Plot): void {
+    for (const crossing of this.profile.crossings || []) {
+      const x = this.xForDistance(crossing.distanceKm);
+      this.context.strokeStyle = this.colors.crossing;
+      this.context.lineWidth = 1;
+      this.context.setLineDash([4, 3]);
+      this.context.beginPath();
+      this.context.moveTo(x, plot.top);
+      this.context.lineTo(x, plot.bottom);
+      this.context.stroke();
+      this.context.setLineDash([]);
+    }
+  }
+
+  private drawProfileLine(): void {
+    this.context.beginPath();
+    for (let index = 0; index < this.points.length; index++) {
+      const point = this.points[index];
+      if (index === 0) this.context.moveTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
+      else this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
+    }
+    this.context.strokeStyle = this.colors.profileLine;
+    this.context.lineWidth = 2.5;
+    this.context.stroke();
+  }
+
+  private drawClimbLabels(plot: Plot, climbBounds: ClimbBounds[]): void {
+    for (let climbIndex = 0; climbIndex < (this.profile.climbs || []).length; climbIndex++) {
+      const climb = this.profile.climbs[climbIndex];
+      const metrics = climbMetrics(this.points, climbBounds[climbIndex]);
+      if (!metrics) continue;
+      const startX = clamp(this.xForDistance(metrics.start.distanceKm), plot.left, plot.right);
+      const endX = clamp(this.xForDistance(metrics.end.distanceKm), plot.left, plot.right);
+      const label = formatClimbLabel({
+        name: climb.name,
+        category: metrics.category,
+        cotacol: metrics.cotacol,
+        kind: climb.officialClimbId !== undefined ? "official" : "detected",
+      });
       this.context.fillStyle = this.colors.climbLabel;
       this.context.textAlign = "center";
       this.context.textBaseline = "middle";
@@ -152,35 +216,9 @@ export class RideProfileCanvas {
       this.context.fillText(label, 0, 0);
       this.context.restore();
     }
+  }
 
-    for (const crossing of this.profile.crossings || []) {
-      const x = this.xForDistance(crossing.distanceKm);
-      this.context.strokeStyle = this.colors.crossing;
-      this.context.lineWidth = 1;
-      this.context.setLineDash([4, 3]);
-      this.context.beginPath();
-      this.context.moveTo(x, plot.top);
-      this.context.lineTo(x, plot.bottom);
-      this.context.stroke();
-      this.context.setLineDash([]);
-    }
-
-    this.context.beginPath();
-    this.context.moveTo(this.xForDistance(this.points[0].distanceKm), plot.bottom);
-    for (const point of this.points) this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
-    this.context.lineTo(this.xForDistance(this.points[this.points.length - 1].distanceKm), plot.bottom);
-    this.context.closePath();
-    this.context.fillStyle = this.colors.profileFill;
-    this.context.fill();
-    this.context.beginPath();
-    for (let index = 0; index < this.points.length; index++) {
-      const point = this.points[index];
-      if (index === 0) this.context.moveTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
-      else this.context.lineTo(this.xForDistance(point.distanceKm), this.yForElevation(point.elevationM));
-    }
-    this.context.strokeStyle = this.colors.profileLine;
-    this.context.lineWidth = 2.5;
-    this.context.stroke();
+  private drawCrossingLabels(plot: Plot): void {
     for (const crossing of this.profile.crossings || []) {
       const x = this.xForDistance(crossing.distanceKm);
       const label = `${crossing.name} ${Math.round(crossing.passElevationM)} m`;
@@ -194,7 +232,9 @@ export class RideProfileCanvas {
       this.context.textBaseline = "bottom";
       this.context.fillText(label, labelX, labelY);
     }
+  }
 
+  private drawDistanceLabels(plot: Plot): void {
     this.context.fillStyle = this.colors.subtle;
     this.context.textAlign = "center";
     this.context.textBaseline = "top";
@@ -202,24 +242,24 @@ export class RideProfileCanvas {
       const distance = this.minDistance + (step / 4) * (this.maxDistance - this.minDistance);
       this.context.fillText(formatDistance(distance), this.xForDistance(distance), plot.bottom + 10);
     }
+  }
 
-    if (this.hoveredIndex >= 0) {
-      const point = this.points[this.hoveredIndex];
-      const x = this.xForDistance(point.distanceKm);
-      const y = this.yForElevation(point.elevationM);
-      this.context.strokeStyle = this.colors.hoverLine;
-      this.context.lineWidth = 1;
-      this.context.setLineDash([3, 3]);
-      this.context.beginPath();
-      this.context.moveTo(x, plot.top);
-      this.context.lineTo(x, plot.bottom);
-      this.context.stroke();
-      this.context.setLineDash([]);
-      this.context.fillStyle = this.colors.forest;
-      this.context.beginPath();
-      this.context.arc(x, y, 5, 0, 2 * Math.PI);
-      this.context.fill();
-    }
+  private drawHover(plot: Plot): void {
+    const point = this.points[this.hoveredIndex];
+    const x = this.xForDistance(point.distanceKm);
+    const y = this.yForElevation(point.elevationM);
+    this.context.strokeStyle = this.colors.hoverLine;
+    this.context.lineWidth = 1;
+    this.context.setLineDash([3, 3]);
+    this.context.beginPath();
+    this.context.moveTo(x, plot.top);
+    this.context.lineTo(x, plot.bottom);
+    this.context.stroke();
+    this.context.setLineDash([]);
+    this.context.fillStyle = this.colors.forest;
+    this.context.beginPath();
+    this.context.arc(x, y, 5, 0, 2 * Math.PI);
+    this.context.fill();
   }
 
   clearHover(): void {

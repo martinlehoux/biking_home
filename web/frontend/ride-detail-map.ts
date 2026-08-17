@@ -1,5 +1,5 @@
 import { clamp } from "./ride-detail-logic.js";
-import type { ClimbBounds, RideDetailColors, RideProfilePoint, RideRoute } from "./types.js";
+import type { ClimbBounds, RideMapColors, RideProfilePoint, RideRoute } from "./types.js";
 import type { CircleMarker, LeafletMouseEvent, Map as LeafletMap, Polyline } from "leaflet";
 
 type LeafletApi = typeof import("leaflet");
@@ -10,13 +10,13 @@ interface RideDetailMapOptions {
   route: RideRoute;
   points: RideProfilePoint[];
   climbs: ClimbBounds[];
-  colors: RideDetailColors;
+  colors: RideMapColors;
 }
 
 export class RideDetailMap {
   private readonly leaflet: LeafletApi;
   private readonly points: RideProfilePoint[];
-  private readonly colors: RideDetailColors;
+  private readonly colors: RideMapColors;
   private readonly map: LeafletMap;
   private readonly climbLayers: (Polyline | null)[];
   private readonly routeCursor: CircleMarker;
