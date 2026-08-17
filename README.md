@@ -142,15 +142,6 @@ TypeScript checks can also be run directly with `npm run check`, covering format
     - Record ride times on official climbs
     - Destination via Start
 - Planning rides
-- Ride details
-    - Map
-        - Display mountain pass in bounding box
-        - display climb start and end icons
-    - Climb to match
-        - refactor buttons
-    - Official climb
-        - y axis altitude label & grid
-        - x axis grid
 
 ## Resources
 
