@@ -38,6 +38,8 @@ export class OfficialClimbProfileController {
       "9-plus": resolveColor("--color-profile-9-plus"),
       plotSurface: resolveColor("--color-plot-surface"),
       grid: resolveColor("--color-plot-grid"),
+      xGrid: resolveColor("--color-profile-grid-x"),
+      yGrid: resolveColor("--color-profile-grid-y"),
       subtle: resolveColor("--color-subtle"),
       accent: resolveColor("--color-accent"),
     };
@@ -65,7 +67,7 @@ export class OfficialClimbProfileController {
     profileCanvas.width = Math.floor(rect.width * ratio);
     profileCanvas.height = Math.floor(rect.height * ratio);
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const plot = { left: 10, right: rect.width - 10, top: 16, bottom: rect.height - 34 };
+    const plot = { left: 10, right: Math.max(11, rect.width - 44), top: 16, bottom: rect.height - 34 };
     const climbLengthM = (points[endIndex].distanceKm - points[startIndex].distanceKm) * 1000;
     const sections = officialProfileSections(points, startIndex, endIndex, displayStepForLength(climbLengthM));
     if (sections.length === 0) return;
@@ -87,8 +89,40 @@ export class OfficialClimbProfileController {
     context.clearRect(0, 0, rect.width, rect.height);
     context.fillStyle = colors.plotSurface;
     context.fillRect(0, 0, rect.width, rect.height);
-    context.strokeStyle = colors.grid;
+    context.font = "9px system-ui, sans-serif";
     context.lineWidth = 1;
+    context.setLineDash([4, 4]);
+    context.strokeStyle = colors.yGrid;
+    const yGridElevations: number[] = [];
+    for (let elevationM = Math.ceil(minElevation / 100) * 100; elevationM <= maxElevation; elevationM += 100) {
+      yGridElevations.push(elevationM);
+    }
+    context.save();
+    context.beginPath();
+    context.moveTo(plot.left, plot.bottom);
+    context.lineTo(plot.left, yForElevation(sections[0].startElevation));
+    for (const section of sections) {
+      context.lineTo(xForDistance(section.endDistanceKm), yForElevation(section.endElevation));
+    }
+    context.lineTo(plot.right, plot.bottom);
+    context.closePath();
+    context.clip();
+    for (const elevationM of yGridElevations) {
+      const y = yForElevation(elevationM);
+      context.beginPath();
+      context.moveTo(plot.left, y);
+      context.lineTo(plot.right, y);
+      context.stroke();
+    }
+    context.restore();
+    context.fillStyle = colors.yGrid;
+    context.textAlign = "left";
+    context.textBaseline = "middle";
+    for (const elevationM of yGridElevations) {
+      context.fillText(`${elevationM} m`, plot.right + 6, yForElevation(elevationM));
+    }
+    context.setLineDash([]);
+    context.strokeStyle = colors.grid;
     context.beginPath();
     context.moveTo(plot.left, plot.bottom);
     context.lineTo(plot.right, plot.bottom);
@@ -113,6 +147,29 @@ export class OfficialClimbProfileController {
       context.lineWidth = 2.5;
       context.stroke();
     }
+    context.save();
+    context.beginPath();
+    context.moveTo(plot.left, plot.bottom);
+    context.lineTo(plot.left, yForElevation(sections[0].startElevation));
+    for (const section of sections) {
+      context.lineTo(xForDistance(section.endDistanceKm), yForElevation(section.endElevation));
+    }
+    context.lineTo(plot.right, plot.bottom);
+    context.closePath();
+    context.clip();
+    context.strokeStyle = colors.xGrid;
+    context.lineWidth = 1;
+    context.setLineDash([4, 4]);
+    for (let sectionIndex = 0; sectionIndex <= sections.length; sectionIndex++) {
+      const distanceKm = sectionIndex === sections.length ? maxDistance : sections[sectionIndex].startDistanceKm;
+      const x = xForDistance(distanceKm);
+      context.beginPath();
+      context.moveTo(x, plot.top);
+      context.lineTo(x, plot.bottom);
+      context.stroke();
+    }
+    context.restore();
+    context.setLineDash([]);
     context.font = "9px system-ui, sans-serif";
     context.fillStyle = colors.subtle;
     context.textBaseline = "bottom";

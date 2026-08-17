@@ -31,6 +31,8 @@
   --color-plot-surface: oklch(from var(--palette-paper) calc(l + 0.03) calc(c * 0.35) h);
   --color-plot-surface-overlay: oklch(from var(--color-plot-surface) l c h / 90%);
   --color-plot-grid: var(--color-border-subtle);
+  --color-profile-grid-x: var(--palette-white);
+  --color-profile-grid-y: oklch(0% 0 0deg);
   --color-accent-fill: oklch(from var(--palette-coral) l c h / 12%);
   --color-profile-fill: oklch(from var(--palette-leaf) l c h / 16%);
   --color-profile-line: var(--color-forest);
@@ -116,7 +118,7 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .official-climb-chevron { color: var(--color-accent); font-size: 1.5rem; font-weight: 500; line-height: 1; }
 .official-climb-card[open] .official-climb-chevron { transform: rotate(180deg); }
 .official-climb-card-body { padding: .9rem 1rem 1rem; border-top: 1px solid var(--color-border-subtle); background: var(--color-surface); }
-.official-climb-profile { display: block; width: 100%; height: 10rem; margin-top: .75rem; border-radius: .55rem; background: var(--color-plot-surface); outline: none; }
+.official-climb-profile { display: block; width: 100%; height: auto; aspect-ratio: 3 / 1; margin-top: .75rem; border-radius: .55rem; background: var(--color-plot-surface); outline: none; }
 .official-climb-profile:focus-visible { box-shadow: 0 0 0 .2rem var(--color-focus); }
 .official-climb-profile-legend { display: flex; flex-wrap: wrap; gap: .45rem .8rem; margin-top: .65rem; color: var(--color-muted); font-size: .72rem; }
 .official-climb-profile-legend > span { display: inline-flex; align-items: center; gap: .3rem; }

@@ -80,6 +80,8 @@ export interface OfficialProfileColors {
   "9-plus": string;
   plotSurface: string;
   grid: string;
+  xGrid: string;
+  yGrid: string;
   subtle: string;
   accent: string;
 }
