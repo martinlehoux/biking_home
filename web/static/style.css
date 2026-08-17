@@ -128,19 +128,17 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .profile-band-9-plus { background: var(--color-profile-9-plus); }
 .climb-list { display: grid; gap: 1rem; margin-top: 1.25rem; }
 .climb-item { padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); }
+.climb-item.focused { background: var(--color-plot-surface); }
 .climb-item-heading { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.todo-item { padding-left: .8rem; border-left: .2rem solid var(--color-accent); }
-.todo-item.focused { border-left-color: var(--color-forest); background: var(--color-plot-surface); }
-.todo-check { display: inline-block; width: .9rem; height: .9rem; margin-right: .5rem; border: 2px solid var(--color-accent); border-radius: .2rem; vertical-align: -.05rem; }
 .climb-number { display: inline-block; margin-right: .45rem; color: var(--color-accent); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
 .climb-item-heading > span, .climb-status { color: var(--color-muted); font-size: .9rem; }
 .climb-metrics { margin: .35rem 0 0; color: var(--color-muted); font-size: .9rem; }
 .climb-status { margin: .35rem 0 0; }
 .climb-status.matched { color: var(--color-notice-text); }
 .official-climb-form { display: grid; gap: .8rem; margin-top: .8rem; padding: .8rem; border: 1px solid var(--color-border-subtle); border-radius: .65rem; background: var(--color-plot-surface); }
-.boundary-controls { display: flex; gap: .75rem; flex-wrap: wrap; }
-.boundary-controls > div { display: grid; gap: .35rem; }
-.boundary-controls > div > div { display: flex; gap: .35rem; flex-wrap: wrap; }
+.boundary-controls { display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1fr) max-content; align-items: center; gap: .35rem; white-space: nowrap; }
+.boundary-controls > div { display: contents; }
+.boundary-controls .button { width: 100%; padding: .45rem .6rem; font-size: .8rem; }
 .boundary-controls output { color: var(--color-muted); font-size: .85rem; }
 .boundary-controls .button.active { outline: .2rem solid var(--color-focus); }
 .boundary-preview { color: var(--color-notice-text); font-size: .9rem; }

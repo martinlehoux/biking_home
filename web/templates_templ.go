@@ -702,27 +702,27 @@ func RideDetailContent(data RideDetailView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				for _, climb := range data.Profile.UnmatchedClimbs() {
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"climb-item todo-item\" data-climb-item data-climb-index=\"")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"climb-item\" data-climb-item data-climb-index=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var43 string
 					templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(formatRouteIndex(climb.Index))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 128, Col: 109}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 128, Col: 99}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"climb-item-heading\"><strong><span class=\"todo-check\" aria-hidden=\"true\"></span><span class=\"climb-number\">Climb ")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"climb-item-heading\"><strong><span class=\"climb-number\">Climb ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var44 string
 					templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(formatClimbNumber(climb.Index))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 130, Col: 133}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 130, Col: 82}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 					if templ_7745c5c3_Err != nil {
@@ -735,7 +735,7 @@ func RideDetailContent(data RideDetailView) templ.Component {
 					var templ_7745c5c3_Var45 string
 					templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(climb.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 130, Col: 154}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 130, Col: 103}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 					if templ_7745c5c3_Err != nil {
@@ -848,33 +848,33 @@ func RideDetailContent(data RideDetailView) templ.Component {
 					var templ_7745c5c3_Var54 string
 					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(formatRouteIndex(climb.EndIndex))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 138, Col: 88}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 138, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" data-boundary-input=\"end\"><div class=\"boundary-controls\"><div><strong>Start</strong><div><button class=\"button secondary\" type=\"button\" data-boundary-button=\"start\" data-boundary-source=\"profile\">Select on profile</button><button class=\"button secondary\" type=\"button\" data-boundary-button=\"start\" data-boundary-source=\"map\">Select on map</button></div><output data-boundary-output=\"start\">")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" data-boundary-input=\"end\"><div class=\"boundary-controls\"><div><strong>Start</strong><button class=\"button secondary\" type=\"button\" data-boundary-button=\"start\" data-boundary-source=\"profile\" aria-label=\"Select on profile for start\">Profile</button><button class=\"button secondary\" type=\"button\" data-boundary-button=\"start\" data-boundary-source=\"map\" aria-label=\"Select on map for start\">Map</button><output data-boundary-output=\"start\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var55 string
 					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(formatProfileDistance(climb.StartKm))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 140, Col: 382}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 140, Col: 428}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</output></div><div><strong>End</strong><div><button class=\"button secondary\" type=\"button\" data-boundary-button=\"end\" data-boundary-source=\"profile\">Select on profile</button><button class=\"button secondary\" type=\"button\" data-boundary-button=\"end\" data-boundary-source=\"map\">Select on map</button></div><output data-boundary-output=\"end\">")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</output></div><div><strong>End</strong><button class=\"button secondary\" type=\"button\" data-boundary-button=\"end\" data-boundary-source=\"profile\" aria-label=\"Select on profile for end\">Profile</button><button class=\"button secondary\" type=\"button\" data-boundary-button=\"end\" data-boundary-source=\"map\" aria-label=\"Select on map for end\">Map</button><output data-boundary-output=\"end\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var56 string
 					templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(formatProfileDistance(climb.EndKm))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 141, Col: 372}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/templates.templ`, Line: 141, Col: 414}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 					if templ_7745c5c3_Err != nil {
