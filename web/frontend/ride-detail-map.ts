@@ -1,5 +1,5 @@
 import { clamp } from "./ride-detail-logic.js";
-import type { ClimbBounds, RideMapColors, RideProfilePoint, RideRoute } from "./types.js";
+import type { ClimbBounds, RideMapColors, RideMapPass, RideProfilePoint, RideRoute } from "./types.js";
 import type { CircleMarker, LeafletMouseEvent, Map as LeafletMap, Polyline } from "leaflet";
 
 type LeafletApi = typeof import("leaflet");
@@ -10,6 +10,7 @@ interface RideDetailMapOptions {
   route: RideRoute;
   points: RideProfilePoint[];
   climbs: ClimbBounds[];
+  passes: RideMapPass[];
   colors: RideMapColors;
 }
 
@@ -21,7 +22,7 @@ export class RideDetailMap {
   private readonly climbLayers: (Polyline | null)[];
   private readonly routeCursor: CircleMarker;
 
-  constructor({ leaflet, element, route, points, climbs, colors }: RideDetailMapOptions) {
+  constructor({ leaflet, element, route, points, climbs, passes, colors }: RideDetailMapOptions) {
     this.leaflet = leaflet;
     this.points = points;
     this.colors = colors;
@@ -37,6 +38,19 @@ export class RideDetailMap {
       })
       .addTo(this.map);
     const bounds = routeLayer.getBounds();
+    const passIcon = leaflet.divIcon({
+      className: "ride-map-pass-icon",
+      html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19 10.5 6l3.25 5.5L16 8l5 11H3Z" fill="currentColor"/></svg>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+    for (const pass of passes) {
+      const marker = leaflet.marker([pass.latitude, pass.longitude], { icon: passIcon, alt: pass.name || "Mountain pass" }).addTo(this.map);
+      const tooltip = document.createElement("span");
+      tooltip.textContent = `${pass.name || "Mountain pass"} | ${Math.round(pass.elevationM)} m`;
+      marker.bindTooltip(tooltip);
+      bounds.extend(marker.getLatLng());
+    }
     if (bounds.isValid()) this.map.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
     this.climbLayers = climbs.map((climb) => this.createClimbLayer(climb));
     this.routeCursor = leaflet

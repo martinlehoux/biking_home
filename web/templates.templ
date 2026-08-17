@@ -169,6 +169,7 @@ templ RideDetailContent(data RideDetailView) {
 	if data.HasRoute {
 		@templ.JSONScript("ride-route", data.Route)
 		@templ.JSONScript("ride-profile", data.Profile)
+		@templ.JSONScript("ride-passes", data.Passes)
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script type="module" src="/static/ride-detail.js"></script>
 	}

@@ -113,6 +113,14 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 		StartDate:  time.Date(2026, 8, 1, 7, 0, 0, 0, time.UTC),
 		DistanceM:  20_000,
 	}))
+	_, err := db.Exec(`
+		INSERT INTO mountain_passes (external_id, name, country_code, department_code, elevation, latitude, longitude)
+		VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)
+	`,
+		"550e8400-e29b-41d4-a716-446655440000", "Nearby pass", "FR", "13", 400, 43.05, 5.05,
+		"6ba7b810-9dad-41d1-80b4-00c04fd430c8", "Distant pass", "FR", "13", 500, 43.2, 5.2,
+	)
+	require.NoError(t, err)
 	item, found, err := rides.GetByExternalID(db, "strava:550e8400-e29b-41d4-a716-446655440000")
 	require.NoError(t, err)
 	require.True(t, found)
@@ -128,6 +136,7 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.NotContains(t, body, `<p class="eyebrow">Ride detail</p>`)
 	assert.Contains(t, body, `id="ride-route"`)
 	assert.Contains(t, body, `id="ride-profile"`)
+	assert.Contains(t, body, `id="ride-passes"`)
 	assert.Contains(t, body, `id="ride-profile-chart"`)
 	assert.Contains(t, body, `id="ride-map"`)
 	assert.Contains(t, body, `class="ride-detail-grid"`)
@@ -151,6 +160,8 @@ func TestHandlerRendersRideDetailWithEmbeddedRoute(t *testing.T) {
 	assert.Contains(t, body, `"type":"FeatureCollection"`)
 	assert.Contains(t, body, `"type":"LineString"`)
 	assert.Contains(t, body, `"coordinates":[[5,43]`)
+	assert.Contains(t, body, "Nearby pass")
+	assert.NotContains(t, body, "Distant pass")
 	assert.NotContains(t, body, `"score":`)
 
 	profileStaticRequest := httptest.NewRequest(http.MethodGet, "/static/official-climb-profile.js", nil)

@@ -57,6 +57,13 @@ export interface RideRouteFeature {
   properties?: Record<string, unknown>;
 }
 
+export interface RideMapPass {
+  name: string;
+  elevationM: number;
+  latitude: number;
+  longitude: number;
+}
+
 export interface ClimbBounds {
   startIndex: number;
   endIndex: number;

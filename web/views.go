@@ -21,11 +21,19 @@ type RideView struct {
 type RideDetailView struct {
 	RideView
 	Route       GeoJSONFeatureCollection
+	Passes      []RideMapPass
 	HasRoute    bool
 	Profile     RideProfile
 	RouteError  string
 	ActionError string
 	Notice      string
+}
+
+type RideMapPass struct {
+	Name       string  `json:"name"`
+	ElevationM int     `json:"elevationM"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
 }
 
 type RideProfile struct {
@@ -228,6 +236,7 @@ func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pa
 	profile := buildRideProfile(parsed, passes, officialClimbs, matchPolicy)
 	return RideDetailView{
 		RideView: buildRideView(item),
+		Passes:   buildRideMapPasses(passes),
 		Route: GeoJSONFeatureCollection{
 			Type: "FeatureCollection",
 			Features: []GeoJSONFeature{{
@@ -241,6 +250,22 @@ func buildRideDetailView(item rides.Ride, parsed ride.Ride, passes []mountain_pa
 		HasRoute: true,
 		Profile:  profile,
 	}
+}
+
+func buildRideMapPasses(passes []mountain_pass.MountainPass) []RideMapPass {
+	mapPasses := make([]RideMapPass, 0, len(passes))
+	for _, mountainPass := range passes {
+		if mountainPass.Coord == nil {
+			continue
+		}
+		mapPasses = append(mapPasses, RideMapPass{
+			Name:       mountainPass.Name,
+			ElevationM: mountainPass.Elevation,
+			Latitude:   mountainPass.Coord.Lat,
+			Longitude:  mountainPass.Coord.Lon,
+		})
+	}
+	return mapPasses
 }
 
 func buildRideProfile(parsed ride.Ride, passes []mountain_pass.MountainPass, officialClimbs []official_climb.OfficialClimb, matchPolicy official_climb.MatchPolicy) RideProfile {

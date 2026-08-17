@@ -88,6 +88,8 @@ th { color: var(--color-subtle); font-size: .78rem; letter-spacing: .08em; text-
 .empty { padding: 2.5rem 1rem; text-align: center; color: var(--color-subtle); }
 .map-panel { padding: 0; overflow: hidden; }
 .ride-map { min-height: 24rem; height: min(65vh, 40rem); }
+.ride-map-pass-icon { display: grid; place-items: center; width: 1.75rem !important; height: 1.75rem !important; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-leaf); color: var(--color-on-dark); box-shadow: 0 .15rem .4rem var(--color-panel-shadow); }
+.ride-map-pass-icon svg { width: 1.15rem; height: 1.15rem; }
 .profile-panel { padding-bottom: 1rem; }
 .profile-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .profile-heading h2 { margin: 0; font-size: 1.2rem; }

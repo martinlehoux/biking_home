@@ -108,9 +108,9 @@ func (s *Server) handleRide(w http.ResponseWriter, r *http.Request) {
 		}), w)
 		return
 	}
-	passes, err := mountain_pass.LoadMountainPasses(s.db)
+	passes, err := mountain_pass.LoadMountainPassesAroundRide(s.db, parsed, rideDetailMountainPassMarginM)
 	if err != nil {
-		slog.Warn("Failed to load mountain passes for ride detail", "ride_id", id, "error", err)
+		slog.Warn("Failed to load nearby mountain passes for ride detail", "ride_id", id, "error", err)
 	}
 	officialClimbs, err := official_climb.List(s.db)
 	if err != nil {
@@ -204,6 +204,7 @@ func (s *Server) listRides(rideSort RideSort) ([]rides.Ride, error) {
 }
 
 const minimumDisplayedDistanceM = 10_000
+const rideDetailMountainPassMarginM = 10_000
 
 func buildRideViews(items []rides.Ride) []RideView {
 	views := make([]RideView, 0, len(items))

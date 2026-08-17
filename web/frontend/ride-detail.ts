@@ -3,17 +3,19 @@ import { RideBoundaryController } from "./ride-detail-boundaries.js";
 import { RideProfileCanvas } from "./ride-detail-canvas.js";
 import { RideDetailMap } from "./ride-detail-map.js";
 import { formatDistance, formatElevation } from "./ride-detail-logic.js";
-import type { ClimbBounds, RideMapColors, RideProfile, RideProfileColors, RideProfilePoint, RideRoute } from "./types.js";
+import type { ClimbBounds, RideMapColors, RideMapPass, RideProfile, RideProfileColors, RideProfilePoint, RideRoute } from "./types.js";
 
 export const mountRideDetail = (): void => {
   const mapElement = document.getElementById("ride-map");
   const routeElement = document.getElementById("ride-route");
   const profileElement = document.getElementById("ride-profile");
+  const passesElement = document.getElementById("ride-passes");
   const canvas = document.getElementById("ride-profile-chart");
   const hoverOutput = document.getElementById("ride-profile-hover");
-  if (!mapElement || !routeElement || !profileElement || !canvas || !hoverOutput) return;
+  if (!mapElement || !routeElement || !profileElement || !passesElement || !canvas || !hoverOutput) return;
   const routeScript = routeElement as HTMLScriptElement;
   const profileScript = profileElement as HTMLScriptElement;
+  const passesScript = passesElement as HTMLScriptElement;
   const profileCanvasElement = canvas as HTMLCanvasElement;
   const leaflet = window.L;
   if (!leaflet) return;
@@ -49,6 +51,7 @@ export const mountRideDetail = (): void => {
 
   const route = JSON.parse(routeScript.textContent ?? "") as RideRoute;
   const profile = JSON.parse(profileScript.textContent ?? "") as RideProfile;
+  const passes = JSON.parse(passesScript.textContent ?? "") as RideMapPass[];
   const points: RideProfilePoint[] = profile.points;
   if (points.length === 0) return;
 
@@ -69,6 +72,7 @@ export const mountRideDetail = (): void => {
     route,
     points,
     climbs: climbBounds,
+    passes,
     colors: mapColors,
   });
   const officialProfileController = new OfficialClimbProfileController(points);

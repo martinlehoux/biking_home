@@ -3,6 +3,7 @@ package mountain_pass
 import (
 	"database/sql"
 	"fmt"
+	"math"
 
 	"github.com/jftuga/geodist"
 	"github.com/martinlehoux/biking_home/ride"
@@ -17,11 +18,56 @@ type Crossing struct {
 }
 
 func LoadMountainPasses(db *sql.DB) ([]MountainPass, error) {
-	rows, err := db.Query(`
+	return loadMountainPasses(db, nil)
+}
+
+func LoadMountainPassesAroundRide(db *sql.DB, route ride.Ride, marginM float64) ([]MountainPass, error) {
+	return loadMountainPasses(db, rideBounds(route, marginM))
+}
+
+type coordinateBounds struct {
+	minLatitude  float64
+	minLongitude float64
+	maxLatitude  float64
+	maxLongitude float64
+}
+
+func rideBounds(route ride.Ride, marginM float64) *coordinateBounds {
+	minLatitude, maxLatitude := route.Coord(0).Lat, route.Coord(0).Lat
+	minLongitude, maxLongitude := route.Coord(0).Lon, route.Coord(0).Lon
+	for index := 1; index < route.Len(); index++ {
+		coordinate := route.Coord(index)
+		minLatitude = math.Min(minLatitude, coordinate.Lat)
+		maxLatitude = math.Max(maxLatitude, coordinate.Lat)
+		minLongitude = math.Min(minLongitude, coordinate.Lon)
+		maxLongitude = math.Max(maxLongitude, coordinate.Lon)
+	}
+	latitudeMargin := marginM / 111_320
+	longitudeScale := math.Cos((minLatitude + maxLatitude) / 2 * math.Pi / 180)
+	longitudeMargin := marginM / (111_320 * math.Max(longitudeScale, 0.01))
+	return &coordinateBounds{
+		minLatitude:  minLatitude - latitudeMargin,
+		minLongitude: minLongitude - longitudeMargin,
+		maxLatitude:  maxLatitude + latitudeMargin,
+		maxLongitude: maxLongitude + longitudeMargin,
+	}
+}
+
+func loadMountainPasses(db *sql.DB, bounds *coordinateBounds) ([]MountainPass, error) {
+	query := `
 		SELECT external_id, name, country_code, department_code, elevation, latitude, longitude
-		FROM mountain_passes
-		ORDER BY elevation
-	`)
+		FROM mountain_passes`
+	args := make([]any, 0, 4)
+	if bounds != nil {
+		query += `
+		WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+		  AND latitude BETWEEN ? AND ?
+		  AND longitude BETWEEN ? AND ?`
+		args = append(args, bounds.minLatitude, bounds.maxLatitude, bounds.minLongitude, bounds.maxLongitude)
+	}
+	query += `
+		ORDER BY elevation`
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

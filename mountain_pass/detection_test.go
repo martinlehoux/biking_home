@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/jftuga/geodist"
+	"github.com/martinlehoux/biking_home/internal/dbtest"
 	"github.com/martinlehoux/biking_home/mountain_pass"
 	"github.com/martinlehoux/biking_home/ride"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDetectCrossingsFindsPass(t *testing.T) {
@@ -21,6 +23,34 @@ func TestDetectCrossingsFindsPass(t *testing.T) {
 	assert.Equal(t, "Pas de Magnan", crossings[0].Pass.Name)
 	assert.Less(t, crossings[0].DistanceToM, 10.0)
 	assert.Less(t, crossings[0].ElevationDiff, 25.0)
+}
+
+func TestLoadMountainPassesAroundRideUsesExpandedBounds(t *testing.T) {
+	db := dbtest.New(t)
+	_, err := db.Exec(`
+		INSERT INTO mountain_passes (external_id, name, country_code, department_code, elevation, latitude, longitude)
+		VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)
+	`,
+		"550e8400-e29b-41d4-a716-446655440000", "On route", "FR", "13", 400, 43.05, 5.05,
+		"6ba7b810-9dad-41d1-80b4-00c04fd430c8", "Within margin", "FR", "13", 500, 43.18, 5.20,
+		"6ba7b811-9dad-41d1-80b4-00c04fd430c8", "Outside margin", "FR", "13", 600, 43.21, 5.20,
+		"6ba7b812-9dad-41d1-80b4-00c04fd430c8", "Missing coordinates", "FR", "13", 700, nil, nil,
+		"6ba7b813-9dad-41d1-80b4-00c04fd430c8", "On route edge", "FR", "13", 300, 43.10, 5.10,
+	)
+	require.NoError(t, err)
+
+	route := ride.FromColumns(
+		[]float64{0, 1000},
+		[]float64{100, 200},
+		[]geodist.Coord{{Lat: 43.0, Lon: 5.0}, {Lat: 43.1, Lon: 5.1}},
+		make([]time.Time, 2),
+	)
+	passes, err := mountain_pass.LoadMountainPassesAroundRide(db, route, 10_000)
+	require.NoError(t, err)
+	require.Len(t, passes, 3)
+	assert.Equal(t, "On route edge", passes[0].Name)
+	assert.Contains(t, []string{passes[1].Name, passes[2].Name}, "On route")
+	assert.Contains(t, []string{passes[1].Name, passes[2].Name}, "Within margin")
 }
 
 func TestDetectCrossingsIgnoresDistantPass(t *testing.T) {
