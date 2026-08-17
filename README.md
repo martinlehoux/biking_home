@@ -23,14 +23,14 @@ A Go toolkit for analyzing cycling rides from GPX exports: parse rides, detect c
 ## Getting started
 
 ```bash
-go build -o biking_home .
+mise run build
 ```
 
 ## Usage
 
 ```bash
 # Start the web server on http://localhost:8080
-mise watch dev-watch --restart --exts go,templ,css,js --ignore '*_templ.go'
+mise watch dev-watch --restart --exts go,templ,css,ts --ignore '*_templ.go'
 
 # Recompute and persist all ride computed values
 ./biking_home -backfill
@@ -127,9 +127,10 @@ mise run check
 mise run build
 ```
 
+TypeScript checks can also be run directly with `npm run check`, covering formatting, linting, compilation, type checking, and tests.
+
 ## TODO
 
-- Bug: cotacol on global profile differs from cotacol in climbs to match
 - Compute estimated power, speed
 - Plot speed and slope per segment, colored by heart rate
 - Plot speed vs ctc/100km
@@ -138,11 +139,18 @@ mise run build
 - OffClimb
     - Keep trace appart from ride to display slope profile, compute cotacol
     - Profile - Adaptative to show ramps
+    - Record ride times on official climbs
+    - Destination via Start
 - Planning rides
 - Ride details
-    - Display mountain pass on map in bounding box
-    - pretty climb card, to reuse for official as well as preview and detected
-    - Climb on map - display start and end icons
+    - Map
+        - Display mountain pass in bounding box
+        - display climb start and end icons
+    - Climb to match
+        - refactor buttons
+    - Official climb
+        - y axis altitude label & grid
+        - x axis grid
 
 ## Resources
 
